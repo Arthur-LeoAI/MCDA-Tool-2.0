@@ -7,7 +7,12 @@
 ## 目录结构
 
 ```
-backend/              Python 计算核心（以后也放 FastAPI 服务）
+backend/              Python 后端
+  src/mcda_api/       FastAPI 服务（HTTP 接口）
+    main.py           应用入口、配置（CORS、上传大小）
+    routes.py         接口实现
+    schemas.py        请求/响应数据结构
+    errors.py         统一的错误格式
   src/mcda_core/
     model.py          数据模型：方案 × 准则矩阵、权重、方向（效益型/成本型）、校验
     normalization.py  归一化：none / min_max / fixed_range / vector
@@ -17,7 +22,8 @@ backend/              Python 计算核心（以后也放 FastAPI 服务）
     sensitivity.py    权重稳定区间（加权和；全排序 / 第一名）
     io/template.py    标准模板导入导出（.xlsx / .csv）
     io/legacy.py      读取旧版 "MCDA ELT V7" 工作簿
-  tests/              单元测试，以及与旧版 Excel 结果的对照测试
+    io/report.py      Excel 报告导出
+  tests/              单元测试、API 测试，以及与旧版 Excel 结果的对照测试
 data/legacy/          旧版 V7 工作簿，作为对照参考数据
 docs/data-format.md   输入模板格式说明
 frontend/             前端（阶段 3）
@@ -32,6 +38,50 @@ cd backend
 uv sync
 uv run pytest
 ```
+
+### 启动 API
+
+```bash
+cd backend
+uv run uvicorn mcda_api.main:app --reload
+```
+
+启动后打开 http://127.0.0.1:8000/docs ，可以看到交互式接口文档，并直接在页面上试用每个接口。
+
+可用环境变量配置：
+
+| 变量 | 默认值 | 作用 |
+|---|---|---|
+| `MCDA_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | 允许跨域访问的前端地址，逗号分隔 |
+| `MCDA_MAX_UPLOAD_MB` | `5` | 上传文件的大小上限 |
+
+### 接口一览
+
+API 是**无状态**的：前端在每次请求里带上完整的问题数据，服务器不保存任何内容。
+
+| 接口 | 作用 |
+|---|---|
+| `GET /api/health` | 健康检查 |
+| `GET /api/methods` | 可用方法、可选的归一化方式和默认参数 |
+| `POST /api/problems/import` | 上传 `.xlsx` / `.csv`，自动识别标准模板或旧版 V7 工作簿 |
+| `POST /api/problems/validate` | 校验问题数据 |
+| `POST /api/evaluate` | 用一种或多种方法计算得分和排名 |
+| `POST /api/pareto` | Pareto 支配分析 |
+| `POST /api/sensitivity/stability` | 权重稳定区间（全排序或第一名） |
+| `GET /api/template` | 下载示例模板（xlsx / csv） |
+| `POST /api/export/problem` | 把问题导出为模板文件 |
+| `POST /api/export/report` | 导出 Excel 报告：结果、稳定区间、Pareto，以及可重新导入的原始数据 |
+
+所有错误都用同一种格式返回，方便前端直接逐条显示：
+
+```json
+{"detail": "Invalid decision problem",
+ "issues": [{"location": "C4", "message": "value must be a number"}]}
+```
+
+稳定区间里，上限为 `null` 表示该权重可以无限增大而排名不变。
+
+### 在 Python 里直接调用
 
 ```python
 from mcda_core import weighted_sum, topsis, compromise_programming, weight_stability_intervals
@@ -71,6 +121,6 @@ print(weight_stability_intervals(problem))
 
 - [x] 阶段 0：新项目骨架、`.gitignore`
 - [x] 阶段 1：计算核心、导入校验、单元测试
-- [ ] 阶段 2：FastAPI 后端（上传、计算、敏感性分析、导出）
+- [x] 阶段 2：FastAPI 后端（上传、计算、敏感性分析、导出）
 - [ ] 阶段 3：前端（React + TypeScript + Vite + ECharts）
 - [ ] 阶段 4：情景对比、蒙特卡洛权重模拟、AHP / 熵权法、VIKOR / PROMETHEE、报告导出

@@ -1,3 +1,5 @@
+import io
+
 import numpy as np
 import openpyxl
 import pytest
@@ -73,3 +75,26 @@ def test_wrong_labels_are_reported():
 def test_unsupported_file_type(tmp_path):
     with pytest.raises(ValueError, match="unsupported"):
         read_problem(tmp_path / "data.json")
+
+
+@pytest.mark.parametrize("suffix", [".xlsx", ".csv"])
+def test_round_trip_through_streams(cars, suffix):
+    buffer = io.BytesIO()
+    write_problem(cars, buffer, suffix=suffix)
+    buffer.seek(0)
+    assert read_problem(buffer, suffix=suffix).criteria == cars.criteria
+
+
+def test_streams_need_a_suffix(cars):
+    with pytest.raises(ValueError, match="suffix"):
+        read_problem(io.BytesIO(b""))
+    with pytest.raises(ValueError, match="suffix"):
+        write_problem(cars, io.BytesIO())
+
+
+def test_windows_codepage_csv(tmp_path):
+    path = tmp_path / "excel.csv"
+    path.write_bytes("Criterion;Größe\nDirection;max\nWeight;1\nÄ;1\nÖ;2\n".encode("cp1252"))
+    problem = read_problem(path)
+    assert problem.criterion_names == ("Größe",)
+    assert problem.alternatives == ("Ä", "Ö")

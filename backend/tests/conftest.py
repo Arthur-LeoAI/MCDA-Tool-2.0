@@ -18,3 +18,21 @@ def cars() -> DecisionProblem:
         ),
         matrix=[[100.0, 30.0], [150.0, 50.0], [120.0, 30.0]],
     )
+
+
+@pytest.fixture
+def client():
+    from fastapi.testclient import TestClient
+
+    from mcda_api.main import Settings, create_app
+
+    settings = Settings(cors_origins=["http://localhost:5173"], max_upload_bytes=200 * 1024)
+    with TestClient(create_app(settings)) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def cars_json(cars) -> dict:
+    from mcda_api.schemas import ProblemModel
+
+    return ProblemModel.from_domain(cars).model_dump(mode="json")

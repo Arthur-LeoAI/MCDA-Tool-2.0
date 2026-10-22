@@ -18,11 +18,10 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from pathlib import Path
 
 from ..errors import ProblemValidationError, ValidationIssue
 from ..model import Criterion, DecisionProblem, Direction
-from ._cells import cell_ref, is_blank, parse_number, read_xlsx_rows
+from ._cells import Rows, Source, cell_ref, is_blank, parse_number, read_xlsx_rows
 
 WEIGHT_LABEL = "Criteria Weight"
 RANK_HEADER = "Rank"
@@ -54,12 +53,25 @@ class LegacyWorkbook:
     intervals: dict[tuple[str, bool], dict[str, LegacyInterval]]
 
 
-def read_legacy_workbook(path: str | Path) -> LegacyWorkbook:
-    rows = read_xlsx_rows(Path(path))
-    issues: list[ValidationIssue] = []
-    labels = [str(row[0]).strip() if row and not is_blank(row[0]) else "" for row in rows]
+def read_legacy_workbook(source: Source) -> LegacyWorkbook:
+    return parse_legacy_rows(read_xlsx_rows(source))
 
-    if WEIGHT_LABEL not in labels or len(rows) < 4:
+
+def looks_like_legacy(rows: Rows) -> bool:
+    """True for sheets in the legacy layout rather than the standard template."""
+    labels = _labels(rows)
+    return len(rows) >= 4 and WEIGHT_LABEL in labels and labels[0].lower() != "criterion"
+
+
+def _labels(rows: Rows) -> list[str]:
+    return [str(row[0]).strip() if row and not is_blank(row[0]) else "" for row in rows]
+
+
+def parse_legacy_rows(rows: Rows) -> LegacyWorkbook:
+    issues: list[ValidationIssue] = []
+    labels = _labels(rows)
+
+    if not looks_like_legacy(rows):
         raise ProblemValidationError([ValidationIssue(f"no '{WEIGHT_LABEL}' row found; not a legacy V7 workbook")])
     weight_row = labels.index(WEIGHT_LABEL)
 

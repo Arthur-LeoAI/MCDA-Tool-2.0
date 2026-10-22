@@ -20,21 +20,28 @@ import openpyxl
 
 from ..errors import ProblemValidationError, ValidationIssue
 from ..model import Criterion, DecisionProblem, Direction
-from ._cells import Rows, cell_ref, is_blank, parse_number, read_xlsx_rows
+from ._cells import Rows, Source, cell_ref, is_blank, parse_number, read_xlsx_rows
 
 TEMPLATE_SHEET = "Decision"
 HEADER_LABELS = ("Criterion", "Direction", "Weight")
 
 
-def read_problem(path: str | Path) -> DecisionProblem:
-    """Read a decision problem from a template file (.xlsx or .csv)."""
-    path = Path(path)
-    suffix = path.suffix.lower()
+def read_problem(source: Source, suffix: str | None = None) -> DecisionProblem:
+    """Read a decision problem from a template file (.xlsx or .csv).
+
+    ``source`` is a path or a binary stream; streams need ``suffix``
+    (e.g. ``".xlsx"``) since they carry no file name.
+    """
+    if suffix is None:
+        if not isinstance(source, (str, Path)):
+            raise ValueError("suffix is required when reading from a stream")
+        suffix = Path(source).suffix
+    suffix = suffix.lower()
     if suffix == ".csv":
-        rows: Rows = _read_csv_rows(path)
+        data = Path(source).read_bytes() if isinstance(source, (str, Path)) else source.read()
+        rows: Rows = _parse_csv(_decode(data))
     elif suffix in (".xlsx", ".xlsm"):
-        sheets = openpyxl.load_workbook(path, read_only=True).sheetnames
-        rows = read_xlsx_rows(path, TEMPLATE_SHEET if TEMPLATE_SHEET in sheets else None)
+        rows = read_xlsx_rows(source, prefer_sheet=TEMPLATE_SHEET)
     else:
         raise ValueError(f"unsupported file type {suffix!r} (use .xlsx or .csv)")
     return parse_rows(rows)
@@ -43,13 +50,20 @@ def read_problem(path: str | Path) -> DecisionProblem:
 _DECIMAL_COMMA = re.compile(r"^\s*[-+]?\d+,\d+\s*$")
 
 
-def _read_csv_rows(path: Path) -> Rows:
-    """Read CSV with ',' or ';' delimiters.
+def _decode(data: bytes) -> str:
+    # Excel's plain "CSV" export uses the Windows code page, not UTF-8.
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return data.decode("cp1252")
+
+
+def _parse_csv(text: str) -> Rows:
+    """Parse CSV with ',' or ';' delimiters.
 
     Semicolon files (common in German/European Excel exports) may use a
     decimal comma, so "0,6" is read as 0.6 there.
     """
-    text = path.read_text(encoding="utf-8-sig")
     try:
         delimiter = csv.Sniffer().sniff(text[:4096], delimiters=",;\t").delimiter
     except csv.Error:
@@ -126,25 +140,41 @@ def parse_rows(rows: Rows) -> DecisionProblem:
     return DecisionProblem(tuple(alternatives), tuple(criteria), matrix)
 
 
-def write_problem(problem: DecisionProblem, path: str | Path) -> None:
-    """Write a problem in the template layout (.xlsx or .csv)."""
-    path = Path(path)
-    rows: Rows = [
+def template_rows(problem: DecisionProblem) -> Rows:
+    return [
         ["Criterion", *problem.criterion_names],
         ["Direction", *(d.value for d in problem.directions)],
         ["Weight", *(c.weight for c in problem.criteria)],
         *([name, *map(float, values)] for name, values in zip(problem.alternatives, problem.matrix)),
     ]
-    suffix = path.suffix.lower()
+
+
+def add_template_sheet(workbook: openpyxl.Workbook, problem: DecisionProblem) -> None:
+    """Add a "Decision" sheet, which read_problem() can read back."""
+    worksheet = workbook.create_sheet(TEMPLATE_SHEET)
+    for row in template_rows(problem):
+        worksheet.append(row)
+
+
+def write_problem(problem: DecisionProblem, target: Source, suffix: str | None = None) -> None:
+    """Write a problem in the template layout (.xlsx or .csv) to a path or binary stream."""
+    if suffix is None:
+        if not isinstance(target, (str, Path)):
+            raise ValueError("suffix is required when writing to a stream")
+        suffix = Path(target).suffix
+    suffix = suffix.lower()
     if suffix == ".csv":
-        with path.open("w", newline="", encoding="utf-8") as handle:
-            csv.writer(handle).writerows(rows)
+        text = io.StringIO()
+        csv.writer(text, lineterminator="\n").writerows(template_rows(problem))
+        data = text.getvalue().encode("utf-8")
+        if isinstance(target, (str, Path)):
+            Path(target).write_bytes(data)
+        else:
+            target.write(data)
     elif suffix == ".xlsx":
         workbook = openpyxl.Workbook()
-        worksheet = workbook.active
-        worksheet.title = TEMPLATE_SHEET
-        for row in rows:
-            worksheet.append(row)
-        workbook.save(path)
+        workbook.remove(workbook.active)
+        add_template_sheet(workbook, problem)
+        workbook.save(target)
     else:
         raise ValueError(f"unsupported file type {suffix!r} (use .xlsx or .csv)")

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# Node (frontend, phase 3)
+node_modules/
+frontend/dist/
+
+# Generated output (charts, reports, uploads)
+output/
+uploads/
+
+# Local environment
+.env
+.env.*
+
+# Office lock files and OS clutter
+~$*
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/

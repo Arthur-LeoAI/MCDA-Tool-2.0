@@ -1,0 +1,25 @@
+[project]
+name = "mcda-core"
+version = "0.1.0"
+description = "Calculation core for the MCDA decision-support tool"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "openpyxl>=3.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcda_core"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

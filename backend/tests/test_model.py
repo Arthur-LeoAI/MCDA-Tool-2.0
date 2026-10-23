@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pytest
 
-from mcda_core import Criterion, DecisionProblem, Direction, ProblemValidationError
+from mcda_core import Criterion, DecisionProblem, Direction, Location, ProblemValidationError
 
 
 def make(alternatives=("A", "B"), criteria=None, matrix=None):
@@ -50,12 +50,14 @@ def test_reports_all_issues_at_once():
             criteria=(Criterion("c1", Direction.BENEFIT, -1.0), Criterion("c1", Direction.BENEFIT, math.nan)),
             matrix=[[1, 2], [3, 4], [5, 6]],
         )
-    messages = [str(i) for i in excinfo.value.issues]
-    assert any("duplicate alternative" in m for m in messages)
-    assert any("alternative #3" in m for m in messages)
-    assert any("duplicate criterion" in m for m in messages)
-    assert any("must not be negative" in m for m in messages)
-    assert any("finite number" in m for m in messages)
+    found = {(i.code, i.location) for i in excinfo.value.issues}
+    assert found == {
+        ("duplicate_name", Location("alternative", name="A")),
+        ("empty_name", Location("alternative", index=3)),
+        ("duplicate_name", Location("criterion", name="c1")),
+        ("weight_negative", Location("criterion", name="c1")),
+        ("weight_not_finite", Location("criterion", name="c1")),
+    }
 
 
 def test_rejects_zero_total_weight():
@@ -64,10 +66,15 @@ def test_rejects_zero_total_weight():
 
 
 def test_rejects_wrong_shape_and_non_finite_values():
-    with pytest.raises(ProblemValidationError, match="shape"):
+    with pytest.raises(ProblemValidationError) as excinfo:
         make(matrix=[[1.0, 2.0], [3.0, 4.0]])
-    with pytest.raises(ProblemValidationError, match="alternative 'B', criterion 'c1'"):
+    (issue,) = excinfo.value.issues
+    assert issue.code == "matrix_shape"
+    assert issue.params == {"rows": 2, "cols": 2, "expected_rows": 2, "expected_cols": 1}
+    with pytest.raises(ProblemValidationError) as excinfo:
         make(matrix=[[1.0], [math.inf]])
+    (issue,) = excinfo.value.issues
+    assert issue.location == Location("value", alternative="B", criterion="c1")
 
 
 def test_needs_two_alternatives():

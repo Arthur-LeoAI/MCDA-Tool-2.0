@@ -28,10 +28,10 @@ export function ResultsPage() {
   const problem = checked.problem
 
   const evaluation = useApiPost<EvaluateResponse>(
-    '/api/evaluate',
+    '/evaluate',
     problem && specs.length ? { problem, methods: specs } : null,
   )
-  const pareto = useApiPost<ParetoResponse>('/api/pareto', problem && { problem })
+  const pareto = useApiPost<ParetoResponse>('/pareto', problem && { problem })
   const results = evaluation.data?.results ?? []
 
   return (

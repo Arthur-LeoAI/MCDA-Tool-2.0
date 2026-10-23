@@ -1,6 +1,6 @@
 import { ArrowRight, CircleCheck, FileDown, History, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { ApiError, downloadFile, uploadFile } from '../api/client'
+import { ApiError, asApiError, downloadFile, getBlob, uploadFile } from '../api/client'
 import type { ImportResponse, Problem } from '../api/types'
 import { DataGrid } from '../components/DataGrid'
 import { FileDrop } from '../components/FileDrop'
@@ -18,15 +18,15 @@ export function DataPage() {
   const [error, setError] = useState<ApiError | null>(null)
   const replaceInput = useRef<HTMLInputElement>(null)
   // Rules only the server checks (duplicate names, weights, ...).
-  const validation = useApiPost<Problem>('/api/problems/validate', checked?.problem ?? null, 400)
+  const validation = useApiPost<Problem>('/problems/validate', checked?.problem ?? null, 400)
 
   const importBlob = async (blob: Blob, filename: string) => {
     setBusy(true)
     setError(null)
     try {
-      loadImport(await uploadFile<ImportResponse>('/api/problems/import', blob, filename))
+      loadImport(await uploadFile<ImportResponse>('/problems/import', blob, filename))
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, String(err)))
+      setError(asApiError(err))
     } finally {
       setBusy(false)
     }
@@ -34,16 +34,14 @@ export function DataPage() {
 
   const loadExample = async () => {
     try {
-      const response = await fetch('/api/template?format=csv')
-      if (!response.ok) throw new ApiError(response.status, response.statusText)
-      await importBlob(await response.blob(), 'example.csv')
+      await importBlob(await getBlob('/template?format=csv'), 'example.csv')
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, String(err)))
+      setError(asApiError(err))
     }
   }
 
   const download = (format: 'xlsx' | 'csv') =>
-    downloadFile(`/api/template?format=${format}`).catch((err) => setError(err))
+    downloadFile(`/template?format=${format}`).catch((err) => setError(asApiError(err)))
 
   const templateButtons = (
     <>

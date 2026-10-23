@@ -19,7 +19,7 @@ export function SensitivityPage() {
   const problem = checked.problem
 
   const stability = useApiPost<StabilityResponse>(
-    '/api/sensitivity/stability',
+    '/sensitivity/stability',
     problem && { problem, scope: stabilityScope, normalization: spec.normalization, bounds: spec.bounds },
   )
   const rows = useMemo(() => intervalRows(stability.data?.intervals ?? [], includeZero), [stability.data, includeZero])

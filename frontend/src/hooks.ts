@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ApiError, postJson } from './api/client'
+import { type ApiError, asApiError, postJson } from './api/client'
 import { checkDraft } from './lib/problem'
 import { useStore } from './store'
 
@@ -30,7 +30,7 @@ export function useApiPost<T>(path: string, body: unknown, delay = 250): ApiStat
         .then((data) => setSettled({ key, data, error: null }))
         .catch((error: Error) => {
           if (error.name === 'AbortError') return
-          setSettled({ key, data: null, error: error instanceof ApiError ? error : new ApiError(0, error.message) })
+          setSettled({ key, data: null, error: asApiError(error) })
         })
     }, delay)
     return () => {

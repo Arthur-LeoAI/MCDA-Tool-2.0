@@ -1,6 +1,6 @@
 import { FileDown, FileSpreadsheet } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { ApiError, downloadFile } from '../api/client'
+import { ApiError, asApiError, downloadFile } from '../api/client'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { Button, Card, PageHeader, Spinner } from '../components/ui'
 import { useCheckedDraft } from '../hooks'
@@ -25,7 +25,7 @@ export function ExportPage() {
     try {
       await action()
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, String(err)))
+      setError(asApiError(err))
     } finally {
       setBusy(null)
     }
@@ -34,7 +34,7 @@ export function ExportPage() {
   const ws = settings.weighted_sum
   const downloadReport = () =>
     run('report', () =>
-      downloadFile('/api/export/report', {
+      downloadFile('/export/report', {
         problem,
         methods: specs,
         stability: includeStability ? { normalization: ws.normalization, bounds: ws.bounds } : null,
@@ -109,7 +109,7 @@ export function ExportPage() {
               key={format}
               icon={<FileDown className="size-4" />}
               disabled={!problem || busy !== null}
-              onClick={() => run(format, () => downloadFile(`/api/export/problem?format=${format}`, problem))}
+              onClick={() => run(format, () => downloadFile(`/export/problem?format=${format}`, problem))}
             >
               .{format}
             </Button>

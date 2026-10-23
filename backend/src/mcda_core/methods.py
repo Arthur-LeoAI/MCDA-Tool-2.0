@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .errors import McdaError
 from .model import DecisionProblem, Direction
 from .normalization import Bounds, Normalization, normalize
 from .ranking import rank_scores
@@ -108,9 +109,9 @@ def compromise_programming(
     """
     normalization = Normalization(normalization)
     if normalization not in (Normalization.MIN_MAX, Normalization.FIXED_RANGE):
-        raise ValueError("compromise programming needs min_max or fixed_range normalization")
+        raise McdaError("cp_normalization")
     if not p >= 1:
-        raise ValueError(f"p must be >= 1 (or math.inf), got {p}")
+        raise McdaError("cp_p_invalid", p=p)
     regret = 1.0 - normalize(problem.matrix, problem.directions, normalization, bounds)
     weighted = regret * problem.normalized_weights
     scores = weighted.max(axis=1) if math.isinf(p) else (weighted**p).sum(axis=1) ** (1.0 / p)

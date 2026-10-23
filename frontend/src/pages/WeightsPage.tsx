@@ -175,7 +175,7 @@ function LiveRanking({ problem }: { problem: Problem | null }) {
   const spec = useStore((s) => s.settings.weighted_sum)
   const importedWeights = useStore((s) => s.importedWeights)
 
-  const current = useApiPost<EvaluateResponse>('/api/evaluate', problem && { problem, methods: [spec] }, 150)
+  const current = useApiPost<EvaluateResponse>('/evaluate', problem && { problem, methods: [spec] }, 150)
   const baselineProblem = useMemo(
     () =>
       problem && importedWeights?.length === problem.criteria.length
@@ -184,7 +184,7 @@ function LiveRanking({ problem }: { problem: Problem | null }) {
     [problem, importedWeights],
   )
   const baseline = useApiPost<EvaluateResponse>(
-    '/api/evaluate',
+    '/evaluate',
     baselineProblem && { problem: baselineProblem, methods: [spec] },
     150,
   )

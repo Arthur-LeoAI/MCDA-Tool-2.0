@@ -24,10 +24,12 @@ const zh = {
   'common.rank': '名次',
   'common.score': '得分',
   'common.unbounded': '无上限',
-  'common.network': '无法连接后端服务，请确认 API 已启动（端口 8000）。',
+  'common.requestId': '请求编号',
+  'loc.cell': '单元格 {ref}',
+  'loc.row': '第 {index} 行',
+  'loc.alternativeIndex': '第 {index} 个方案',
+  'loc.criterionIndex': '第 {index} 个准则',
 
-  'issue.missing_value': '缺少数值',
-  'issue.empty_name': '名称不能为空',
   'issue.title': '数据有 {n} 个问题需要处理',
 
   'data.title': '导入数据',
@@ -149,10 +151,12 @@ const en: Record<MessageKey, string> = {
   'common.rank': 'Rank',
   'common.score': 'Score',
   'common.unbounded': 'unbounded',
-  'common.network': 'Cannot reach the backend. Is the API running (port 8000)?',
+  'common.requestId': 'Request ID',
+  'loc.cell': 'cell {ref}',
+  'loc.row': 'row {index}',
+  'loc.alternativeIndex': 'alternative #{index}',
+  'loc.criterionIndex': 'criterion #{index}',
 
-  'issue.missing_value': 'value missing',
-  'issue.empty_name': 'name must not be empty',
   'issue.title': '{n} issue(s) to fix in the data',
 
   'data.title': 'Import data',

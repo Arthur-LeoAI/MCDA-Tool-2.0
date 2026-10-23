@@ -9,12 +9,23 @@ from typing import BinaryIO
 import openpyxl
 from openpyxl.utils import get_column_letter
 
+from ..errors import Location
+
 Rows = list[list[object]]
 
 
 def cell_ref(row: int, col: int) -> str:
     """Excel-style reference for 0-based indices, e.g. (2, 1) -> 'B3'."""
     return f"{get_column_letter(col + 1)}{row + 1}"
+
+
+def cell_location(row: int, col: int) -> Location:
+    return Location("cell", ref=cell_ref(row, col))
+
+
+def as_text(value: object) -> str | None:
+    """Cell content as JSON-safe text for error parameters."""
+    return None if value is None else str(value)
 
 
 def is_blank(value: object) -> bool:

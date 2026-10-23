@@ -14,6 +14,8 @@ from mcda_core import (
     Criterion,
     DecisionProblem,
     Direction,
+    Location,
+    McdaError,
     Normalization,
     ProblemValidationError,
     StabilityScope,
@@ -35,6 +37,7 @@ from mcda_core.io import (
 
 from . import __version__
 from .errors import ApiError
+from .observability import logger
 from .schemas import (
     METHOD_SPECS,
     DominanceModel,
@@ -58,18 +61,18 @@ XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.s
 UPLOAD_SUFFIXES = (".xlsx", ".xlsm", ".csv")
 ERRORS: dict[int | str, dict[str, Any]] = {422: {"model": ErrorResponse}}
 
-router = APIRouter(prefix="/api", responses=ERRORS)
+router = APIRouter(prefix="/api/v1", responses=ERRORS)
 T = TypeVar("T")
 
 
 def compute(func: Callable[[], T]) -> T:
-    """Run a calculation, turning invalid settings (ValueError) into a 422."""
+    """Run a calculation; any ValueError without a code still becomes a 422, not a 500."""
     try:
         return func()
-    except ProblemValidationError:
-        raise
+    except (ProblemValidationError, McdaError):
+        raise  # handled with their own codes
     except ValueError as exc:
-        raise ApiError(422, str(exc)) from exc
+        raise ApiError(422, "invalid_value", {"detail": str(exc)}) from exc
 
 
 # --- Meta --------------------------------------------------------------------
@@ -127,10 +130,8 @@ def pareto(request: ParetoRequest) -> ParetoResponse:
     if request.criteria is not None:
         unknown = [name for name in request.criteria if name not in problem.criterion_names]
         if unknown or not request.criteria:
-            issues = [ValidationIssue("unknown criterion", f"criteria: '{name}'") for name in unknown]
-            raise ApiError(
-                422, "Invalid criteria selection", issues or [ValidationIssue("select at least one criterion")]
-            )
+            issues = [ValidationIssue("unknown_criterion", location=Location("criterion", name=n)) for n in unknown]
+            raise ApiError(422, "invalid_criteria_selection", issues=issues or [ValidationIssue("empty_selection")])
     return ParetoResponse(
         front=list(pareto_front(problem, request.criteria)),
         alternatives=[DominanceModel.build(info) for info in pareto_analysis(problem, request.criteria)],
@@ -164,12 +165,12 @@ def import_problem(http_request: Request, file: Annotated[UploadFile, File()]) -
     filename = PurePath(file.filename or "upload").name
     suffix = PurePath(filename).suffix.lower()
     if suffix not in UPLOAD_SUFFIXES:
-        raise ApiError(415, f"unsupported file type {suffix or '(none)'!r}; upload .xlsx or .csv")
+        raise ApiError(415, "unsupported_file_type", {"suffix": suffix})
 
     max_bytes = http_request.app.state.settings.max_upload_bytes
     data = file.file.read(max_bytes + 1)
     if len(data) > max_bytes:
-        raise ApiError(413, f"file is larger than {max_bytes // (1024 * 1024)} MB")
+        raise ApiError(413, "file_too_large", {"max_mb": round(max_bytes / (1024 * 1024), 2)})
 
     try:
         if suffix == ".csv":
@@ -182,7 +183,8 @@ def import_problem(http_request: Request, file: Annotated[UploadFile, File()]) -
     except ProblemValidationError:
         raise
     except Exception as exc:  # corrupt or non-spreadsheet content
-        raise ApiError(422, f"could not read {filename} as {suffix} file: {exc}") from exc
+        logger.info("unreadable upload: %s", exc)
+        raise ApiError(422, "file_unreadable", {"filename": filename, "suffix": suffix}) from exc
 
     if looks_like_legacy(rows):
         legacy = parse_legacy_rows(rows)

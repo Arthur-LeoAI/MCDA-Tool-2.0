@@ -21,7 +21,7 @@ from dataclasses import dataclass
 
 from ..errors import ProblemValidationError, ValidationIssue
 from ..model import Criterion, DecisionProblem, Direction
-from ._cells import Rows, Source, cell_ref, is_blank, parse_number, read_xlsx_rows
+from ._cells import Rows, Source, as_text, cell_location, is_blank, parse_number, read_xlsx_rows
 
 WEIGHT_LABEL = "Criteria Weight"
 RANK_HEADER = "Rank"
@@ -72,7 +72,7 @@ def parse_legacy_rows(rows: Rows) -> LegacyWorkbook:
     labels = _labels(rows)
 
     if not looks_like_legacy(rows):
-        raise ProblemValidationError([ValidationIssue(f"no '{WEIGHT_LABEL}' row found; not a legacy V7 workbook")])
+        raise ProblemValidationError([ValidationIssue("not_legacy_workbook")])
     weight_row = labels.index(WEIGHT_LABEL)
 
     header = rows[2]
@@ -88,11 +88,13 @@ def parse_legacy_rows(rows: Rows) -> LegacyWorkbook:
         try:
             direction = Direction.parse(rows[0][col])
         except ValueError:
-            issues.append(ValidationIssue(f"goal must be 1 (max) or 0 (min), found {rows[0][col]!r}", cell_ref(0, col)))
+            params = {"value": as_text(rows[0][col])}
+            issues.append(ValidationIssue("legacy_goal_invalid", params, cell_location(0, col)))
             direction = Direction.BENEFIT
         weight = parse_number(rows[weight_row][col])
         if weight is None:
-            issues.append(ValidationIssue("weight must be a number", cell_ref(weight_row, col)))
+            params = {"value": as_text(rows[weight_row][col])}
+            issues.append(ValidationIssue("weight_not_number", params, cell_location(weight_row, col)))
             weight = 0.0
         criteria.append(Criterion(str(header[col]).strip(), direction, weight))
         prescaled.append(parse_number(rows[1][col]) == 1)
@@ -106,7 +108,8 @@ def parse_legacy_rows(rows: Rows) -> LegacyWorkbook:
         for col in columns:
             value = parse_number(rows[r][col])
             if value is None:
-                issues.append(ValidationIssue("value must be a number", cell_ref(r, col)))
+                params = {"value": as_text(rows[r][col])}
+                issues.append(ValidationIssue("value_not_number", params, cell_location(r, col)))
                 value = 0.0
             values.append(value)
         alternatives.append(str(rows[r][0]).strip())
@@ -117,7 +120,8 @@ def parse_legacy_rows(rows: Rows) -> LegacyWorkbook:
         for r in range(3, 3 + len(alternatives)):
             number = parse_number(rows[r][rank_col])
             if number is None or not number.is_integer() or not 1 <= number <= len(alternatives):
-                issues.append(ValidationIssue("rank entry must be an alternative number", cell_ref(r, rank_col)))
+                params = {"value": as_text(rows[r][rank_col])}
+                issues.append(ValidationIssue("legacy_rank_invalid", params, cell_location(r, rank_col)))
                 continue
             reference_order.append(alternatives[int(number) - 1])
 

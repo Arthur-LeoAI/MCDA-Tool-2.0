@@ -22,6 +22,7 @@ export type Interval = Schemas['IntervalModel']
 export type ImportResponse = Schemas['ImportResponse']
 export type LegacyInfo = Schemas['LegacyInfo']
 export type Issue = Schemas['IssueModel']
+export type Location = Schemas['LocationModel']
 
 /** A problem while it is being edited: cells may still be empty. */
 export interface DraftProblem {

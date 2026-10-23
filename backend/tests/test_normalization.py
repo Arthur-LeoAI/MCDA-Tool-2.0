@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mcda_core import Direction, Normalization, normalize
+from mcda_core import Direction, McdaError, Normalization, normalize
 
 B, C = Direction.BENEFIT, Direction.COST
 
@@ -38,5 +38,6 @@ def test_none_requires_benefit_criteria():
 
 
 def test_vector_is_reserved_for_topsis():
-    with pytest.raises(ValueError, match="topsis"):
+    with pytest.raises(McdaError, match="TOPSIS") as excinfo:
         normalize(np.ones((2, 1)), [B], Normalization.VECTOR)
+    assert excinfo.value.code == "vector_needs_topsis"

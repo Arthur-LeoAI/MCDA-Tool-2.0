@@ -37,7 +37,10 @@ export function renameAlternative(draft: DraftProblem, index: number, name: stri
 }
 
 export function addCriterion(draft: DraftProblem, baseName: string): DraftProblem {
-  const name = uniqueName(baseName, draft.criteria.map((c) => c.name))
+  const name = uniqueName(
+    baseName,
+    draft.criteria.map((c) => c.name),
+  )
   return {
     ...draft,
     criteria: [...draft.criteria, { name, direction: 'benefit', weight: 1 }],

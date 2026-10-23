@@ -1,7 +1,12 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { LoaderCircle } from 'lucide-react'
 
-export function Card({ title, actions, children, className = '' }: {
+export function Card({
+  title,
+  actions,
+  children,
+  className = '',
+}: {
   title?: ReactNode
   actions?: ReactNode
   children: ReactNode
@@ -29,7 +34,13 @@ const VARIANTS: Record<Variant, string> = {
   danger: 'text-red-600 hover:bg-red-50',
 }
 
-export function Button({ variant = 'secondary', icon, children, className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & {
+export function Button({
+  variant = 'secondary',
+  icon,
+  children,
+  className = '',
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant
   icon?: ReactNode
 }) {
@@ -45,7 +56,12 @@ export function Button({ variant = 'secondary', icon, children, className = '', 
   )
 }
 
-export function Segmented<T extends string>({ value, options, onChange, size = 'md' }: {
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  size = 'md',
+}: {
   value: T
   options: { value: T; label: ReactNode; title?: string }[]
   onChange: (value: T) => void
@@ -82,14 +98,24 @@ export function Spinner({ label }: { label?: string }) {
   )
 }
 
-export function Badge({ children, tone = 'slate' }: { children: ReactNode; tone?: 'slate' | 'green' | 'amber' | 'accent' }) {
+export function Badge({
+  children,
+  tone = 'slate',
+}: {
+  children: ReactNode
+  tone?: 'slate' | 'green' | 'amber' | 'accent'
+}) {
   const tones = {
     slate: 'bg-slate-100 text-slate-600',
     green: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
     amber: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
     accent: 'bg-accent-50 text-accent-700 ring-1 ring-accent-100',
   }
-  return <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>{children}</span>
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tones[tone]}`}>
+      {children}
+    </span>
+  )
 }
 
 export function PageHeader({ title, intro, actions }: { title: string; intro?: string; actions?: ReactNode }) {
@@ -104,7 +130,12 @@ export function PageHeader({ title, intro, actions }: { title: string; intro?: s
   )
 }
 
-export function Select<T extends string>({ value, options, onChange, label }: {
+export function Select<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
   value: T
   options: { value: T; label: string }[]
   onChange: (value: T) => void
@@ -116,9 +147,13 @@ export function Select<T extends string>({ value, options, onChange, label }: {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 focus:border-accent-500 focus:outline-none"
+        className="focus:border-accent-500 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 focus:outline-none"
       >
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
       </select>
     </label>
   )

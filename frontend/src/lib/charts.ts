@@ -5,7 +5,12 @@ import { colorAt, formatPercent, formatScore } from './format'
 
 const AXIS_LABEL = { color: '#64748b', fontSize: 11 }
 const SPLIT_LINE = { lineStyle: { color: '#e2e8f0' } }
-const TOOLTIP = { confine: true, backgroundColor: '#fff', borderColor: '#e2e8f0', textStyle: { color: '#334155', fontSize: 12 } }
+const TOOLTIP = {
+  confine: true,
+  backgroundColor: '#fff',
+  borderColor: '#e2e8f0',
+  textStyle: { color: '#334155', fontSize: 12 },
+}
 
 const truncate = (text: string, length = 22) => (text.length > length ? `${text.slice(0, length - 1)}…` : text)
 
@@ -16,13 +21,28 @@ export function scoreChart(result: MethodResult, color = '#4f46e5'): EChartsCore
     grid: { left: 8, right: 56, top: 8, bottom: 8, containLabel: true },
     tooltip: { ...TOOLTIP, trigger: 'axis', axisPointer: { type: 'shadow' } },
     xAxis: { type: 'value', axisLabel: AXIS_LABEL, splitLine: SPLIT_LINE },
-    yAxis: { type: 'category', data: rows.map((r) => r.name), axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v) } },
-    series: [{
-      type: 'bar',
-      data: rows.map((r) => ({ value: r.score, itemStyle: { color: r.rank === 1 ? color : `${color}99`, borderRadius: [0, 4, 4, 0] } })),
-      label: { show: true, position: 'right', fontSize: 11, color: '#475569', formatter: ({ value }: { value: number }) => formatScore(value) },
-      barMaxWidth: 22,
-    }],
+    yAxis: {
+      type: 'category',
+      data: rows.map((r) => r.name),
+      axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v) },
+    },
+    series: [
+      {
+        type: 'bar',
+        data: rows.map((r) => ({
+          value: r.score,
+          itemStyle: { color: r.rank === 1 ? color : `${color}99`, borderRadius: [0, 4, 4, 0] },
+        })),
+        label: {
+          show: true,
+          position: 'right',
+          fontSize: 11,
+          color: '#475569',
+          formatter: ({ value }: { value: number }) => formatScore(value),
+        },
+        barMaxWidth: 22,
+      },
+    ],
   }
 }
 
@@ -41,7 +61,15 @@ export function rankChart(results: MethodResult[]): EChartsCoreOption {
       // Points sit in the middle of their band, so edge labels are not clipped.
       boundaryGap: true,
     },
-    yAxis: { type: 'value', inverse: true, min: 1, max: Math.max(n, 2), interval: 1, axisLabel: AXIS_LABEL, splitLine: SPLIT_LINE },
+    yAxis: {
+      type: 'value',
+      inverse: true,
+      min: 1,
+      max: Math.max(n, 2),
+      interval: 1,
+      axisLabel: AXIS_LABEL,
+      splitLine: SPLIT_LINE,
+    },
     series: names.map((name, i) => ({
       name,
       type: 'line',
@@ -71,7 +99,11 @@ export function breakdownChart(result: MethodResult, criteria: string[]): EChart
       valueFormatter: (v: number) => formatScore(v),
     },
     xAxis: { type: 'value', axisLabel: AXIS_LABEL, splitLine: SPLIT_LINE },
-    yAxis: { type: 'category', data: rows.map((r) => r.name), axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v) } },
+    yAxis: {
+      type: 'category',
+      data: rows.map((r) => r.name),
+      axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v) },
+    },
     series: used.map(({ name, j }, k) => ({
       name,
       type: 'bar',
@@ -120,15 +152,30 @@ export function stabilityChart(rows: IntervalRow[], labels: { current: string; u
       },
     },
     xAxis: {
-      type: 'value', min: 0, max: 1,
+      type: 'value',
+      min: 0,
+      max: 1,
       axisLabel: { ...AXIS_LABEL, formatter: (v: number) => formatPercent(v, 0) },
       splitLine: SPLIT_LINE,
     },
-    yAxis: { type: 'category', data: ordered.map((r) => r.criterion), axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v, 28) } },
+    yAxis: {
+      type: 'category',
+      data: ordered.map((r) => r.criterion),
+      axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v, 28) },
+    },
     series: [
-      { type: 'bar', stack: 'range', silent: true, itemStyle: { color: 'transparent' }, data: ordered.map((r) => r.lower_share), barMaxWidth: 16 },
       {
-        type: 'bar', stack: 'range', barMaxWidth: 16,
+        type: 'bar',
+        stack: 'range',
+        silent: true,
+        itemStyle: { color: 'transparent' },
+        data: ordered.map((r) => r.lower_share),
+        barMaxWidth: 16,
+      },
+      {
+        type: 'bar',
+        stack: 'range',
+        barMaxWidth: 16,
         data: ordered.map((r) => ({
           value: Math.max(r.width, 0.004),
           itemStyle: {
@@ -138,8 +185,12 @@ export function stabilityChart(rows: IntervalRow[], labels: { current: string; u
         })),
       },
       {
-        type: 'scatter', data: ordered.map((r) => r.share), symbol: 'circle', symbolSize: 9,
-        itemStyle: { color: '#0f172a', borderColor: '#fff', borderWidth: 1.5 }, z: 5,
+        type: 'scatter',
+        data: ordered.map((r) => r.share),
+        symbol: 'circle',
+        symbolSize: 9,
+        itemStyle: { color: '#0f172a', borderColor: '#fff', borderWidth: 1.5 },
+        z: 5,
       },
     ],
   }

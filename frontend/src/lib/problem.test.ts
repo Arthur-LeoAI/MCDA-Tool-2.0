@@ -19,7 +19,10 @@ const draft = (): DraftProblem => ({
     { name: 'cost', direction: 'cost', weight: 3 },
     { name: 'quality', direction: 'benefit', weight: 1 },
   ],
-  matrix: [[1, 2], [3, 4]],
+  matrix: [
+    [1, 2],
+    [3, 4],
+  ],
 })
 
 describe('editing', () => {
@@ -27,7 +30,12 @@ describe('editing', () => {
     const d = addCriterion(addAlternative(addAlternative(draft(), 'New'), 'New'), 'quality')
     expect(d.alternatives).toEqual(['A', 'B', 'New', 'New 2'])
     expect(d.criteria.map((c) => c.name)).toEqual(['cost', 'quality', 'quality 2'])
-    expect(d.matrix).toEqual([[1, 2, null], [3, 4, null], [null, null, null], [null, null, null]])
+    expect(d.matrix).toEqual([
+      [1, 2, null],
+      [3, 4, null],
+      [null, null, null],
+      [null, null, null],
+    ])
   })
 
   it('removes rows and columns', () => {

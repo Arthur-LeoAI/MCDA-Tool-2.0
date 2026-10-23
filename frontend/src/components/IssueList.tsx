@@ -6,7 +6,12 @@ import { useT } from '../i18n/useT'
 import { readableLocation } from '../lib/problem'
 
 /** Shows local or API validation issues, with locations users recognise. */
-export function IssueList({ issues, draft, title, max = 12 }: {
+export function IssueList({
+  issues,
+  draft,
+  title,
+  max = 12,
+}: {
   issues: Issue[]
   draft?: DraftProblem | null
   title?: string
@@ -43,7 +48,10 @@ export function ApiErrorBox({ error, draft }: { error: ApiError; draft?: DraftPr
   const t = useT()
   if (error.status === 0) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800" role="alert">
+      <div
+        className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+        role="alert"
+      >
         <WifiOff className="size-4 shrink-0" />
         {t('common.network')}
       </div>
@@ -51,7 +59,10 @@ export function ApiErrorBox({ error, draft }: { error: ApiError; draft?: DraftPr
   }
   if (error.issues.length) return <IssueList issues={error.issues} draft={draft} title={error.message} />
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+    <div
+      className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+      role="alert"
+    >
       <CircleAlert className="size-4 shrink-0" />
       {error.message}
     </div>

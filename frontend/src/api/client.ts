@@ -57,9 +57,10 @@ export async function uploadFile<T>(path: string, file: File | Blob, filename: s
 
 /** Fetch a file (GET, or POST when a body is given) and hand it to the browser as a download. */
 export async function downloadFile(path: string, body?: unknown): Promise<void> {
-  const init: RequestInit = body === undefined
-    ? {}
-    : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  const init: RequestInit =
+    body === undefined
+      ? {}
+      : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   const response = await request(path, init)
   const disposition = response.headers.get('Content-Disposition') ?? ''
   const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? 'download'

@@ -47,8 +47,12 @@ export function DataPage() {
 
   const templateButtons = (
     <>
-      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('xlsx')}>{t('data.templateXlsx')}</Button>
-      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('csv')}>{t('data.templateCsv')}</Button>
+      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('xlsx')}>
+        {t('data.templateXlsx')}
+      </Button>
+      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('csv')}>
+        {t('data.templateCsv')}
+      </Button>
     </>
   )
 
@@ -64,7 +68,11 @@ export function DataPage() {
             </Button>
             <div className="flex flex-wrap gap-1">{templateButtons}</div>
           </div>
-          {error && <div className="mt-4"><ApiErrorBox error={error} /></div>}
+          {error && (
+            <div className="mt-4">
+              <ApiErrorBox error={error} />
+            </div>
+          )}
         </Card>
       </div>
     )
@@ -103,10 +111,14 @@ export function DataPage() {
         }
       />
 
-      {error && <div className="mb-4"><ApiErrorBox error={error} /></div>}
+      {error && (
+        <div className="mb-4">
+          <ApiErrorBox error={error} />
+        </div>
+      )}
 
       {source?.legacy && (
-        <div className="mb-4 flex gap-3 rounded-lg border border-accent-100 bg-accent-50 p-4 text-sm text-accent-700">
+        <div className="border-accent-100 bg-accent-50 text-accent-700 mb-4 flex gap-3 rounded-lg border p-4 text-sm">
           <History className="mt-0.5 size-5 shrink-0" />
           <div>
             <div className="font-semibold">{t('data.legacyTitle')}</div>
@@ -123,18 +135,31 @@ export function DataPage() {
           </span>
         }
         actions={
-          validation.loading ? <Spinner /> : problem && validation.data && (
-            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-              <CircleCheck className="size-4" />
-              {t('data.valid')}
-            </span>
+          validation.loading ? (
+            <Spinner />
+          ) : (
+            problem &&
+            validation.data && (
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                <CircleCheck className="size-4" />
+                {t('data.valid')}
+              </span>
+            )
           )
         }
       >
         <p className="mb-3 text-xs text-slate-500">{t('data.tableHint')}</p>
         <DataGrid draft={draft} update={updateDraft} />
-        {issues.length > 0 && <div className="mt-4"><IssueList issues={issues} /></div>}
-        {validation.error && <div className="mt-4"><ApiErrorBox error={validation.error} draft={draft} /></div>}
+        {issues.length > 0 && (
+          <div className="mt-4">
+            <IssueList issues={issues} />
+          </div>
+        )}
+        {validation.error && (
+          <div className="mt-4">
+            <ApiErrorBox error={validation.error} draft={draft} />
+          </div>
+        )}
       </Card>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2">

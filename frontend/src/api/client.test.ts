@@ -5,7 +5,9 @@ afterEach(() => vi.unstubAllGlobals())
 
 const failure = (promise: Promise<unknown>) =>
   promise.then(
-    () => { throw new Error('expected the request to fail') },
+    () => {
+      throw new Error('expected the request to fail')
+    },
     (error) => error as ApiError,
   )
 

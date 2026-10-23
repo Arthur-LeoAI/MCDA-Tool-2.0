@@ -75,13 +75,15 @@ export default function App() {
                     title={disabled ? t('step.needsData') : undefined}
                     onClick={() => setStep(id)}
                     aria-current={active ? 'step' : undefined}
-                    className={`flex w-full items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm transition ${
+                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition ${
                       active
-                        ? 'bg-accent-50 font-semibold text-accent-700'
+                        ? 'bg-accent-50 text-accent-700 font-semibold'
                         : 'text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent'
                     }`}
                   >
-                    <span className={`flex size-6 items-center justify-center rounded-full text-xs ${active ? 'bg-accent-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                    <span
+                      className={`flex size-6 items-center justify-center rounded-full text-xs ${active ? 'bg-accent-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+                    >
                       {index + 1}
                     </span>
                     <Icon className="size-4" />

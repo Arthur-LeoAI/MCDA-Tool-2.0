@@ -1,0 +1,26 @@
+# Changelog
+
+本文件记录所有值得注意的改动。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## [Unreleased]
+
+### Added
+
+- 计算核心 `mcda_core`：数据模型和校验（效益型/成本型准则）、四种归一化、加权和、TOPSIS、折衷规划、Pareto 分析、权重稳定区间；与 10 个旧版 V7 Excel 工作簿对照验证。
+- 导入导出：标准模板（.xlsx/.csv，支持分号分隔、小数逗号和 Windows 代码页）、旧版 V7 工作簿、Excel 报告。
+- FastAPI 后端：导入、校验、计算、Pareto、敏感性分析、模板和报告导出。
+- React 前端：数据、准则与权重、结果、敏感性分析、导出五个步骤；中英文界面。
+- 工程基础（M0）：
+  - CI（GitHub Actions）：后端在 Python 3.11 和 3.14 上检查和测试、前端检查和构建、API 约定一致性、端到端测试、Docker 镜像冒烟测试。
+  - ruff、pyright、Prettier、oxlint、pre-commit、Dependabot。
+  - Playwright 端到端测试。
+  - Docker 镜像和 `docker compose`。
+  - 请求编号（`X-Request-ID`）和结构化日志（`MCDA_LOG_FORMAT=json`）。
+  - CONTRIBUTING、SECURITY、ADR、Apache-2.0 许可证。
+
+### Changed
+
+- **破坏兼容**：API 路径从 `/api/*` 改为 `/api/v1/*`。
+- **破坏兼容**：错误响应改为 `{code, detail, params, issues, request_id}`。每个问题都有错误代码、参数和结构化的位置，由前端负责翻译。
+- 设置错误（例如归一化方式和数据不匹配）统一抛出带错误代码的 `McdaError`。
+- `DecisionProblem` 接受任意数组形式的矩阵，并按对象身份比较是否相等。

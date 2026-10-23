@@ -13,13 +13,16 @@ npm run dev
 
 打开 http://localhost:5173 。开发服务器会把 `/api` 请求转发到 `http://127.0.0.1:8000`，所以不需要配置跨域。
 
-| 命令              | 作用                                                                   |
-| ----------------- | ---------------------------------------------------------------------- |
-| `npm run dev`     | 开发服务器                                                             |
-| `npm test`        | 单元测试（Vitest）                                                     |
-| `npm run lint`    | 代码检查（oxlint）                                                     |
-| `npm run build`   | 类型检查 + 生产构建，输出到 `dist/`                                    |
-| `npm run gen:api` | 根据正在运行的后端重新生成 `src/api/schema.d.ts`（后端接口改动后运行） |
+| 命令                              | 作用                                                                                                                               |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | 开发服务器                                                                                                                         |
+| `npm test`                        | 单元测试（Vitest）                                                                                                                 |
+| `npm run test:e2e`                | 端到端测试（Playwright）：构建后的前端加真实后端，自动启动所需的服务                                                               |
+| `npm run lint`                    | 代码检查（oxlint）                                                                                                                 |
+| `npm run format` / `format:check` | 格式化 / 检查格式（Prettier）                                                                                                      |
+| `npm run typecheck`               | 类型检查                                                                                                                           |
+| `npm run build`                   | 类型检查加生产构建，输出到 `dist/`                                                                                                 |
+| `npm run gen:api`                 | 从后端代码导出 `backend/openapi.json`，并重新生成 `src/api/schema.d.ts`（不需要启动后端）。后端接口改动后运行；如果忘了，CI 会报错 |
 
 如果前端和 API 不在同一个域名下部署，构建时用 `VITE_API_BASE` 指定 API 地址，并在后端的 `MCDA_CORS_ORIGINS` 里加上前端的地址。
 

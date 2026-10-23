@@ -9,10 +9,12 @@
 ```
 backend/              Python 后端
   src/mcda_api/       FastAPI 服务（HTTP 接口）
-    main.py           应用入口、配置（CORS、上传大小）
-    routes.py         接口实现
+    main.py           应用入口、配置（CORS、上传大小、日志）
+    routes.py         接口实现（/api/v1）
     schemas.py        请求/响应数据结构
-    errors.py         统一的错误格式
+    errors.py         统一的错误格式（错误代码 + 参数 + 位置）
+    observability.py  请求编号和结构化日志
+    export_openapi.py 导出 API 约定 openapi.json
   src/mcda_core/
     model.py          数据模型：方案 × 准则矩阵、权重、方向（效益型/成本型）、校验
     normalization.py  归一化：none / min_max / fixed_range / vector
@@ -24,9 +26,16 @@ backend/              Python 后端
     io/legacy.py      读取旧版 "MCDA ELT V7" 工作簿
     io/report.py      Excel 报告导出
   tests/              单元测试、API 测试，以及与旧版 Excel 结果的对照测试
-data/legacy/          旧版 V7 工作簿，作为对照参考数据
-docs/data-format.md   输入模板格式说明
+  openapi.json        API 约定（自动生成，前端类型由它生成）
 frontend/             前端：React + TypeScript + Vite + ECharts（见 frontend/README.md）
+  e2e/                Playwright 端到端测试
+data/legacy/          旧版 V7 工作簿，作为对照参考数据
+docs/
+  ROADMAP.md          路线图
+  data-format.md      输入模板格式说明
+  adr/                架构决策记录
+.github/              CI 流程和 Dependabot 配置
+docker-compose.yml    用容器在本地运行完整服务
 ```
 
 ## 快速开始
@@ -55,24 +64,21 @@ cd frontend && npm install && npm run dev
 4. **敏感性分析**：权重稳定区间图（完整排序或第一名），以及最敏感的准则。
 5. **导出**：下载 Excel 报告，或把数据导出为模板。
 
-### 运行测试
+### 用 Docker 运行
+
+不需要安装 Python 和 Node.js，只要有 Docker：
 
 ```bash
-cd backend && uv run pytest
+docker compose up --build
 ```
 
-```bash
-cd frontend && npm test
-```
+然后打开 http://localhost:8080 。
 
-### 启动 API
+### 开发
 
-```bash
-cd backend
-uv run uvicorn mcda_api.main:app --reload
-```
+开发流程、代码规范、测试和提交约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-启动后打开 http://127.0.0.1:8000/docs ，可以看到交互式接口文档，并直接在页面上试用每个接口。
+后端启动后，打开 http://127.0.0.1:8000/docs 可以看到交互式接口文档，并直接试用每个接口。
 
 可用环境变量配置：
 
@@ -80,6 +86,8 @@ uv run uvicorn mcda_api.main:app --reload
 |---|---|---|
 | `MCDA_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | 允许跨域访问的前端地址，逗号分隔 |
 | `MCDA_MAX_UPLOAD_MB` | `5` | 上传文件的大小上限 |
+| `MCDA_LOG_LEVEL` | `INFO` | 日志级别 |
+| `MCDA_LOG_FORMAT` | `text` | 日志格式：开发用 `text`，生产环境用 `json` |
 
 ### 接口一览
 
@@ -87,23 +95,28 @@ API 是**无状态**的：前端在每次请求里带上完整的问题数据，
 
 | 接口 | 作用 |
 |---|---|
-| `GET /api/health` | 健康检查 |
-| `GET /api/methods` | 可用方法、可选的归一化方式和默认参数 |
-| `POST /api/problems/import` | 上传 `.xlsx` / `.csv`，自动识别标准模板或旧版 V7 工作簿 |
-| `POST /api/problems/validate` | 校验问题数据 |
-| `POST /api/evaluate` | 用一种或多种方法计算得分和排名 |
-| `POST /api/pareto` | Pareto 支配分析 |
-| `POST /api/sensitivity/stability` | 权重稳定区间（全排序或第一名） |
-| `GET /api/template` | 下载示例模板（xlsx / csv） |
-| `POST /api/export/problem` | 把问题导出为模板文件 |
-| `POST /api/export/report` | 导出 Excel 报告：结果、稳定区间、Pareto，以及可重新导入的原始数据 |
+| `GET /api/v1/health` | 健康检查 |
+| `GET /api/v1/methods` | 可用方法、可选的归一化方式和默认参数 |
+| `POST /api/v1/problems/import` | 上传 `.xlsx` / `.csv`，自动识别标准模板或旧版 V7 工作簿 |
+| `POST /api/v1/problems/validate` | 校验问题数据 |
+| `POST /api/v1/evaluate` | 用一种或多种方法计算得分和排名 |
+| `POST /api/v1/pareto` | Pareto 支配分析 |
+| `POST /api/v1/sensitivity/stability` | 权重稳定区间（全排序或第一名） |
+| `GET /api/v1/template` | 下载示例模板（xlsx / csv） |
+| `POST /api/v1/export/problem` | 把问题导出为模板文件 |
+| `POST /api/v1/export/report` | 导出 Excel 报告：结果、稳定区间、Pareto，以及可重新导入的原始数据 |
 
-所有错误都用同一种格式返回，方便前端直接逐条显示：
+所有错误都用同一种格式返回。`code` 是固定的错误代码，由前端翻译成用户的语言；`detail` 和 `message` 是英文备用文字：
 
 ```json
-{"detail": "Invalid decision problem",
- "issues": [{"location": "C4", "message": "value must be a number"}]}
+{"code": "invalid_problem", "detail": "Invalid decision problem", "params": {},
+ "issues": [{"code": "value_not_number", "params": {"value": "n/a"},
+             "location": {"kind": "cell", "ref": "C4"},
+             "message": "value must be a number, found 'n/a'"}],
+ "request_id": "3f2c…"}
 ```
+
+每个请求都有编号（响应头 `X-Request-ID`），日志里也会记录，方便排查问题。日志不会记录请求里的业务数据。
 
 稳定区间里，上限为 `null` 表示该权重可以无限增大而排名不变。
 
@@ -145,8 +158,8 @@ print(weight_stability_intervals(problem))
 
 ## 路线图
 
-- [x] 阶段 0：新项目骨架、`.gitignore`
-- [x] 阶段 1：计算核心、导入校验、单元测试
-- [x] 阶段 2：FastAPI 后端（上传、计算、敏感性分析、导出）
-- [x] 阶段 3：前端（React + TypeScript + Vite + ECharts）
-- [ ] 阶段 4：情景对比、蒙特卡洛权重模拟、AHP / 熵权法、VIKOR / PROMETHEE、报告导出
+已完成：计算核心、FastAPI 后端、React 前端，以及 M0 工程基础。后续计划见 [docs/ROADMAP.md](docs/ROADMAP.md)。
+
+## 许可证
+
+[Apache License 2.0](LICENSE)

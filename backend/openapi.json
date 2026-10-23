@@ -1048,7 +1048,7 @@
         "type": "object"
       },
       "LocationModel": {
-        "description": "Where an issue is; which fields are set depends on ``kind``.\n\ncell: ``ref`` (\"B4\") · alternative/criterion: ``name`` or 1-based ``index`` ·\nvalue: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·\nfield: request path in ``ref`` (\"problem.matrix.0.1\")",
+        "description": "Where an issue is; which fields are set depends on ``kind``.\n\ncell: ``ref`` (\"B4\") · alternative/criterion/group: ``name`` or 1-based ``index`` ·\nconstraint: id in ``ref`` ·\nvalue: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·\nfield: request path in ``ref`` (\"problem.matrix.0.1\")",
         "properties": {
           "alternative": {
             "anyOf": [
@@ -1088,6 +1088,8 @@
               "cell",
               "alternative",
               "criterion",
+              "group",
+              "constraint",
               "value",
               "row",
               "field"

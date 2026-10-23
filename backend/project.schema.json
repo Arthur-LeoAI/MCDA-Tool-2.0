@@ -1,0 +1,1165 @@
+{
+  "$defs": {
+    "Alternative": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "title": "Name",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "Alternative",
+      "type": "object"
+    },
+    "AnalysisSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "methods": {
+          "default": [
+            {
+              "method": "weighted_sum"
+            }
+          ],
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "compromise_programming": "#/$defs/CompromiseProgrammingMethod",
+                "topsis": "#/$defs/TopsisMethod",
+                "weighted_sum": "#/$defs/WeightedSumMethod"
+              },
+              "propertyName": "method"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/WeightedSumMethod"
+              },
+              {
+                "$ref": "#/$defs/TopsisMethod"
+              },
+              {
+                "$ref": "#/$defs/CompromiseProgrammingMethod"
+              }
+            ]
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Methods",
+          "type": "array"
+        },
+        "robustness": {
+          "$ref": "#/$defs/RobustnessSettings",
+          "default": {
+            "mode": "around",
+            "samples": 5000,
+            "seed": 1,
+            "spread": 0.2
+          }
+        },
+        "stability_scope": {
+          "default": "full_order",
+          "enum": [
+            "full_order",
+            "top1"
+          ],
+          "title": "Stability Scope",
+          "type": "string"
+        }
+      },
+      "title": "AnalysisSettings",
+      "type": "object"
+    },
+    "BetweenConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_missing": {
+          "default": false,
+          "title": "Allow Missing",
+          "type": "boolean"
+        },
+        "criterion_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "high": {
+          "title": "High",
+          "type": "number"
+        },
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "low": {
+          "title": "Low",
+          "type": "number"
+        },
+        "op": {
+          "const": "between",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "criterion_id",
+        "op",
+        "low",
+        "high"
+      ],
+      "title": "BetweenConstraint",
+      "type": "object"
+    },
+    "Category": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 500,
+          "title": "Label",
+          "type": "string"
+        },
+        "score": {
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "label",
+        "score"
+      ],
+      "title": "Category",
+      "type": "object"
+    },
+    "CompareConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_missing": {
+          "default": false,
+          "title": "Allow Missing",
+          "type": "boolean"
+        },
+        "criterion_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            ">=",
+            "<=",
+            ">",
+            "<"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "criterion_id",
+        "op",
+        "value"
+      ],
+      "title": "CompareConstraint",
+      "type": "object"
+    },
+    "CompromiseProgrammingMethod": {
+      "additionalProperties": false,
+      "properties": {
+        "ideal": {
+          "default": "data",
+          "enum": [
+            "data",
+            "fixed"
+          ],
+          "title": "Ideal",
+          "type": "string"
+        },
+        "method": {
+          "const": "compromise_programming",
+          "default": "compromise_programming",
+          "title": "Method",
+          "type": "string"
+        },
+        "p": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "number"
+            },
+            {
+              "const": "inf",
+              "type": "string"
+            }
+          ],
+          "default": 2.0,
+          "title": "P"
+        }
+      },
+      "title": "CompromiseProgrammingMethod",
+      "type": "object"
+    },
+    "Criterion": {
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/Category"
+              },
+              "maxItems": 100,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Categories"
+        },
+        "direction": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Direction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "group_id": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Group Id"
+        },
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "missing": {
+          "default": "worst",
+          "enum": [
+            "worst",
+            "mean",
+            "exclude",
+            "require"
+          ],
+          "title": "Missing",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "title": "Name",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "type": {
+          "default": "numeric",
+          "enum": [
+            "numeric",
+            "ordinal",
+            "categorical",
+            "boolean"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "value_function": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "linear": "#/$defs/LinearValueFunction",
+                  "log": "#/$defs/LogValueFunction",
+                  "piecewise": "#/$defs/PiecewiseValueFunction",
+                  "target": "#/$defs/TargetValueFunction"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/LinearValueFunction"
+                },
+                {
+                  "$ref": "#/$defs/LogValueFunction"
+                },
+                {
+                  "$ref": "#/$defs/TargetValueFunction"
+                },
+                {
+                  "$ref": "#/$defs/PiecewiseValueFunction"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value Function"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "Criterion",
+      "type": "object"
+    },
+    "Direction": {
+      "description": "Whether higher (benefit) or lower (cost) values are preferred.",
+      "enum": [
+        "benefit",
+        "cost"
+      ],
+      "title": "Direction",
+      "type": "string"
+    },
+    "Group": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 200,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "title": "Group",
+      "type": "object"
+    },
+    "InConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_missing": {
+          "default": false,
+          "title": "Allow Missing",
+          "type": "boolean"
+        },
+        "criterion_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "labels": {
+          "items": {
+            "maxLength": 500,
+            "type": "string"
+          },
+          "title": "Labels",
+          "type": "array"
+        },
+        "op": {
+          "const": "in",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "criterion_id",
+        "op",
+        "labels"
+      ],
+      "title": "InConstraint",
+      "type": "object"
+    },
+    "LevelWeighting": {
+      "additionalProperties": false,
+      "description": "Weights for one level (the groups, or the criteria of one group).\n\nInputs of every method are kept, so switching methods never loses work;\n``method`` selects which one is used.",
+      "properties": {
+        "comparisons": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "default": {},
+          "title": "Comparisons",
+          "type": "object"
+        },
+        "formula": {
+          "default": "roc",
+          "enum": [
+            "roc",
+            "rank_sum"
+          ],
+          "title": "Formula",
+          "type": "string"
+        },
+        "method": {
+          "default": "direct",
+          "enum": [
+            "direct",
+            "rank",
+            "ahp"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "order": {
+          "default": [],
+          "items": {
+            "items": {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.-]+$",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "title": "Order",
+          "type": "array"
+        },
+        "weights": {
+          "default": {},
+          "patternProperties": {
+            "^[A-Za-z0-9_.-]+$": {
+              "type": "number"
+            }
+          },
+          "propertyNames": {
+            "maxLength": 64,
+            "minLength": 1
+          },
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "title": "LevelWeighting",
+      "type": "object"
+    },
+    "LinearValueFunction": {
+      "additionalProperties": false,
+      "properties": {
+        "bounds": {
+          "anyOf": [
+            {
+              "const": "data",
+              "type": "string"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "default": "data",
+          "title": "Bounds"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction",
+          "default": "benefit"
+        },
+        "kind": {
+          "const": "linear",
+          "default": "linear",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "title": "LinearValueFunction",
+      "type": "object"
+    },
+    "LogValueFunction": {
+      "additionalProperties": false,
+      "description": "Linear on ln(1 + x): diminishing returns. Needs x >= 0.",
+      "properties": {
+        "bounds": {
+          "anyOf": [
+            {
+              "const": "data",
+              "type": "string"
+            },
+            {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            }
+          ],
+          "default": "data",
+          "title": "Bounds"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction",
+          "default": "benefit"
+        },
+        "kind": {
+          "const": "log",
+          "default": "log",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "title": "LogValueFunction",
+      "type": "object"
+    },
+    "Meta": {
+      "additionalProperties": false,
+      "properties": {
+        "created": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Created"
+        },
+        "description": {
+          "default": "",
+          "maxLength": 5000,
+          "title": "Description",
+          "type": "string"
+        },
+        "language": {
+          "default": "zh",
+          "enum": [
+            "zh",
+            "en"
+          ],
+          "title": "Language",
+          "type": "string"
+        },
+        "modified": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Modified"
+        },
+        "name": {
+          "default": "",
+          "maxLength": 200,
+          "title": "Name",
+          "type": "string"
+        },
+        "template_id": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_.-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Template Id"
+        }
+      },
+      "title": "Meta",
+      "type": "object"
+    },
+    "PiecewiseValueFunction": {
+      "additionalProperties": false,
+      "description": "Straight lines between (x, value) points; constant beyond the first and last point.",
+      "properties": {
+        "kind": {
+          "const": "piecewise",
+          "default": "piecewise",
+          "title": "Kind",
+          "type": "string"
+        },
+        "points": {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "maxItems": 50,
+          "minItems": 2,
+          "title": "Points",
+          "type": "array"
+        }
+      },
+      "required": [
+        "points"
+      ],
+      "title": "PiecewiseValueFunction",
+      "type": "object"
+    },
+    "PresentConstraint": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_missing": {
+          "default": false,
+          "title": "Allow Missing",
+          "type": "boolean"
+        },
+        "criterion_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Criterion Id",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_.-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "op": {
+          "const": "present",
+          "title": "Op",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "criterion_id",
+        "op"
+      ],
+      "title": "PresentConstraint",
+      "type": "object"
+    },
+    "RobustnessSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "default": "around",
+          "enum": [
+            "around",
+            "unknown"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "samples": {
+          "default": 5000,
+          "maximum": 20000,
+          "minimum": 100,
+          "title": "Samples",
+          "type": "integer"
+        },
+        "seed": {
+          "default": 1,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "spread": {
+          "default": 0.2,
+          "exclusiveMinimum": 0,
+          "maximum": 2,
+          "title": "Spread",
+          "type": "number"
+        }
+      },
+      "title": "RobustnessSettings",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "column_map": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Column Map"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filename"
+        },
+        "header_row": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Header Row"
+        },
+        "kind": {
+          "default": "manual",
+          "enum": [
+            "table",
+            "template",
+            "legacy",
+            "project",
+            "manual"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "legacy": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Legacy"
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        }
+      },
+      "title": "Source",
+      "type": "object"
+    },
+    "TargetValueFunction": {
+      "additionalProperties": false,
+      "description": "1 inside [ideal_low, ideal_high], falling linearly to 0 at lower and upper.",
+      "properties": {
+        "ideal_high": {
+          "title": "Ideal High",
+          "type": "number"
+        },
+        "ideal_low": {
+          "title": "Ideal Low",
+          "type": "number"
+        },
+        "kind": {
+          "const": "target",
+          "default": "target",
+          "title": "Kind",
+          "type": "string"
+        },
+        "lower": {
+          "title": "Lower",
+          "type": "number"
+        },
+        "upper": {
+          "title": "Upper",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lower",
+        "ideal_low",
+        "ideal_high",
+        "upper"
+      ],
+      "title": "TargetValueFunction",
+      "type": "object"
+    },
+    "TopsisMethod": {
+      "additionalProperties": false,
+      "properties": {
+        "basis": {
+          "default": "values",
+          "enum": [
+            "values",
+            "raw"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "ideal": {
+          "default": "data",
+          "enum": [
+            "data",
+            "fixed"
+          ],
+          "title": "Ideal",
+          "type": "string"
+        },
+        "method": {
+          "const": "topsis",
+          "default": "topsis",
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "title": "TopsisMethod",
+      "type": "object"
+    },
+    "WeightedSumMethod": {
+      "additionalProperties": false,
+      "properties": {
+        "method": {
+          "const": "weighted_sum",
+          "default": "weighted_sum",
+          "title": "Method",
+          "type": "string"
+        }
+      },
+      "title": "WeightedSumMethod",
+      "type": "object"
+    },
+    "Weighting": {
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LevelWeighting"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "within": {
+          "additionalProperties": {
+            "$ref": "#/$defs/LevelWeighting"
+          },
+          "default": {},
+          "title": "Within",
+          "type": "object"
+        }
+      },
+      "title": "Weighting",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/Arthur-LeoAI/MCDA-Tool-2.0/schemas/mcda-project-v2.json",
+  "additionalProperties": false,
+  "properties": {
+    "alternatives": {
+      "items": {
+        "$ref": "#/$defs/Alternative"
+      },
+      "maxItems": 500,
+      "title": "Alternatives",
+      "type": "array"
+    },
+    "analysis": {
+      "$ref": "#/$defs/AnalysisSettings",
+      "default": {
+        "methods": [
+          {
+            "method": "weighted_sum"
+          }
+        ],
+        "robustness": {
+          "mode": "around",
+          "samples": 5000,
+          "seed": 1,
+          "spread": 0.2
+        },
+        "stability_scope": "full_order"
+      }
+    },
+    "app_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "App Version"
+    },
+    "constraints": {
+      "default": [],
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "<": "#/$defs/CompareConstraint",
+            "<=": "#/$defs/CompareConstraint",
+            ">": "#/$defs/CompareConstraint",
+            ">=": "#/$defs/CompareConstraint",
+            "between": "#/$defs/BetweenConstraint",
+            "in": "#/$defs/InConstraint",
+            "present": "#/$defs/PresentConstraint"
+          },
+          "propertyName": "op"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/CompareConstraint"
+          },
+          {
+            "$ref": "#/$defs/BetweenConstraint"
+          },
+          {
+            "$ref": "#/$defs/InConstraint"
+          },
+          {
+            "$ref": "#/$defs/PresentConstraint"
+          }
+        ]
+      },
+      "maxItems": 200,
+      "title": "Constraints",
+      "type": "array"
+    },
+    "criteria": {
+      "items": {
+        "$ref": "#/$defs/Criterion"
+      },
+      "maxItems": 200,
+      "title": "Criteria",
+      "type": "array"
+    },
+    "data": {
+      "default": {},
+      "patternProperties": {
+        "^[A-Za-z0-9_.-]+$": {
+          "patternProperties": {
+            "^[A-Za-z0-9_.-]+$": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "maxLength": 500,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "propertyNames": {
+            "maxLength": 64,
+            "minLength": 1
+          },
+          "type": "object"
+        }
+      },
+      "propertyNames": {
+        "maxLength": 64,
+        "minLength": 1
+      },
+      "title": "Data",
+      "type": "object"
+    },
+    "format": {
+      "const": "mcda-project",
+      "default": "mcda-project",
+      "title": "Format",
+      "type": "string"
+    },
+    "groups": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/Group"
+      },
+      "maxItems": 200,
+      "title": "Groups",
+      "type": "array"
+    },
+    "meta": {
+      "$ref": "#/$defs/Meta",
+      "default": {
+        "created": null,
+        "description": "",
+        "language": "zh",
+        "modified": null,
+        "name": "",
+        "template_id": null
+      }
+    },
+    "source": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Source"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "ui": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ui"
+    },
+    "version": {
+      "const": 2,
+      "default": 2,
+      "title": "Version",
+      "type": "integer"
+    },
+    "weighting": {
+      "$ref": "#/$defs/Weighting",
+      "default": {
+        "groups": null,
+        "within": {}
+      }
+    }
+  },
+  "required": [
+    "alternatives",
+    "criteria"
+  ],
+  "title": "MCDA project (format version 2)",
+  "type": "object"
+}

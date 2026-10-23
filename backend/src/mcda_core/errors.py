@@ -44,6 +44,25 @@ MESSAGES: dict[str, str] = {
     "cp_p_invalid": "p must be >= 1 (or infinity), got {p}",
     "bounds_shape": "bounds must be (low, high) or one pair per criterion ({criteria})",
     "bounds_order": "each bound needs low <= high",
+    # project model (v2)
+    "duplicate_id": "duplicate id {id!r}",
+    "unknown_reference": "refers to unknown {target} {id!r}",
+    "value_function_missing": "numeric criteria need a value function",
+    "value_function_invalid": "invalid value function: {reason}",
+    "categories_missing": "ordinal and categorical criteria need categories with scores",
+    "categories_invalid": "invalid categories: {reason}",
+    "direction_missing": "yes/no criteria need a direction",
+    "value_not_boolean": "value must be yes/no (true/false), found {value!r}",
+    "unknown_category": "{value!r} is not one of the categories of this criterion",
+    "missing_value": "value missing",
+    "log_negative_value": "a logarithmic value function needs values >= 0, found {value}",
+    "constraint_criterion_type": "this condition does not fit the criterion type",
+    "constraint_invalid": "invalid condition: {reason}",
+    "too_few_eligible": "only {count} alternative(s) remain after exclusions; at least 2 are needed",
+    "raw_basis_needs_linear_numeric": "classic TOPSIS needs numeric criteria with linear value functions",
+    "feature_not_available": "{feature} is not available yet",
+    "project_unreadable": "not a project file or problem data",
+    "project_version_unsupported": "project format version {version} is newer than this app supports ({supported})",
     # HTTP API
     "invalid_problem": "Invalid decision problem",
     "invalid_request": "Invalid request",
@@ -58,7 +77,7 @@ MESSAGES: dict[str, str] = {
     "internal_error": "Internal server error",
 }
 
-LocationKind = Literal["cell", "alternative", "criterion", "value", "row", "field"]
+LocationKind = Literal["cell", "alternative", "criterion", "group", "constraint", "value", "row", "field"]
 
 
 @dataclass(frozen=True)
@@ -66,7 +85,8 @@ class Location:
     """Where a problem is.
 
     - ``cell``: spreadsheet cell, ``ref`` such as ``"B4"``
-    - ``alternative`` / ``criterion``: by ``name``, or by 1-based ``index`` when unnamed
+    - ``alternative`` / ``criterion`` / ``group``: by ``name``, or by 1-based ``index`` when unnamed
+    - ``constraint``: by id in ``ref``
     - ``value``: one matrix entry, by ``alternative`` and ``criterion`` names
     - ``row``: 1-based ``index`` of a matrix row in a request
     - ``field``: request field path in ``ref``, e.g. ``"problem.matrix.0.1"``
@@ -85,6 +105,8 @@ class Location:
     def __str__(self) -> str:
         if self.kind in ("cell", "field"):
             return str(self.ref)
+        if self.kind == "constraint":
+            return f"constraint {self.ref}"
         if self.kind == "value":
             return f"alternative '{self.alternative}', criterion '{self.criterion}'"
         if self.kind == "row":

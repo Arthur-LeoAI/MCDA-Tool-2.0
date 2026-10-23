@@ -1,6 +1,6 @@
 # 技术设计：MVP（v0.1.0）
 
-- 状态：草案，待审阅
+- 状态：已确认（2026-10-23）
 - 日期：2026-10-23
 - 相关文档：[需求文档](prd.md)、ADR [0005](../adr/0005-value-functions-and-additive-model.md)、[0006](../adr/0006-project-file-format.md)、[0007](../adr/0007-deterministic-explanations.md)、[0008](../adr/0008-api-v1-evolves-until-first-release.md)
 

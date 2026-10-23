@@ -1,0 +1,302 @@
+"""Project endpoints (/api/v1/projects/*): the v2 model (docs/design/s1-project-model.md).
+
+The API stays stateless: every request carries the whole project.
+Results identify alternatives and criteria by id and also give names.
+"""
+
+from __future__ import annotations
+
+import io
+from typing import Annotated, Any, Literal
+
+from fastapi import APIRouter, Body, File, Request, UploadFile
+from fastapi.responses import Response
+from pydantic import BaseModel
+
+from mcda_core import McdaError, MethodResult, StabilityScope
+from mcda_core.io import write_report
+from mcda_core.project import PreparedProject, Project, migrate, pareto, prepare, project_from_problem, run_method
+from mcda_core.project import stability as stability_intervals
+from mcda_core.project.model import (
+    CompromiseProgrammingMethod,
+    ProjectMethod,
+    Source,
+    TopsisMethod,
+    WeightedSumMethod,
+)
+
+from . import __version__
+from .routes import ERRORS, XLSX_MEDIA_TYPE, _file_response, compute, read_upload
+from .schemas import ErrorResponse, IntervalModel, IssueModel
+
+router = APIRouter(prefix="/api/v1/projects", tags=["projects"], responses=ERRORS)
+
+
+# --- Response models ------------------------------------------------------------------
+
+
+class ExclusionModel(BaseModel):
+    alternative_id: str
+    reasons: list[IssueModel]
+
+
+class ImputationModel(BaseModel):
+    alternative_id: str
+    criterion_id: str
+    policy: str
+
+
+class ProjectAlternativeResult(BaseModel):
+    id: str
+    name: str
+    score: float
+    rank: int
+    contributions: dict[str, float] | None = None
+    """Weighted sum only: each criterion's part of the score, by criterion id."""
+
+
+class ProjectMethodResult(BaseModel):
+    method: str
+    label: str
+    spec: ProjectMethod
+    higher_is_better: bool
+    alternatives: list[ProjectAlternativeResult]
+    """Eligible alternatives in project order."""
+    order: list[str]
+    """Alternative ids, best first; ties keep project order."""
+
+
+class ProjectDominance(BaseModel):
+    id: str
+    is_pareto_optimal: bool
+    dominates: list[str]
+    dominated_by: list[str]
+
+
+class ProjectPareto(BaseModel):
+    front: list[str]
+    alternatives: list[ProjectDominance]
+
+
+class ProjectEvaluation(BaseModel):
+    eligible: list[str]
+    excluded: list[ExclusionModel]
+    imputed: list[ImputationModel]
+    weights: dict[str, float]
+    """Weight shares by criterion id (sum 1)."""
+    values: dict[str, dict[str, float]]
+    """Value scores in [0, 1]: values[alternative_id][criterion_id], eligible alternatives only."""
+    results: list[ProjectMethodResult]
+    pareto: ProjectPareto
+
+
+class ProjectInterval(IntervalModel):
+    criterion_id: str
+
+
+class ProjectStability(BaseModel):
+    scope: StabilityScope
+    intervals: list[ProjectInterval]
+
+
+class StabilityRequest(BaseModel):
+    project: Project
+    scope: StabilityScope = StabilityScope.FULL_ORDER
+
+
+class ReportRequest(BaseModel):
+    project: Project
+    include_stability: bool = True
+    include_pareto: bool = True
+
+
+class ProjectImport(BaseModel):
+    filename: str
+    source_format: Literal["template", "legacy"]
+    project: Project
+
+
+class Validity(BaseModel):
+    valid: Literal[True] = True
+
+
+# --- Helpers --------------------------------------------------------------------------
+
+
+def method_label(spec: ProjectMethod) -> str:
+    """English column label (reports); the frontend shows its own translated label."""
+    if isinstance(spec, WeightedSumMethod):
+        return "Weighted sum"
+    if isinstance(spec, TopsisMethod):
+        return "TOPSIS (classic)" if spec.basis == "raw" else f"TOPSIS (ideal: {spec.ideal})"
+    assert isinstance(spec, CompromiseProgrammingMethod)
+    p = "∞" if spec.p == "inf" else f"{spec.p:g}"
+    return f"CP p={p} (ideal: {spec.ideal})"
+
+
+def _prepare(project: Project) -> PreparedProject:
+    return compute(lambda: prepare(project))
+
+
+def _ids_by_name(prepared: PreparedProject) -> tuple[dict[str, str], dict[str, str]]:
+    project = prepared.project
+    return {a.name: a.id for a in project.alternatives}, {c.name: c.id for c in project.criteria}
+
+
+def _result(prepared: PreparedProject, spec: ProjectMethod, result: MethodResult) -> ProjectMethodResult:
+    alternative_ids, _ = _ids_by_name(prepared)
+    criterion_ids = [c.id for c in prepared.project.criteria]
+    alternatives = []
+    for i, name in enumerate(result.alternatives):
+        contributions = None
+        if result.contributions is not None:
+            contributions = dict(zip(criterion_ids, map(float, result.contributions[i]), strict=True))
+        alternatives.append(
+            ProjectAlternativeResult(
+                id=alternative_ids[name],
+                name=name,
+                score=float(result.scores[i]),
+                rank=int(result.ranks[i]),
+                contributions=contributions,
+            )
+        )
+    return ProjectMethodResult(
+        method=result.method,
+        label=method_label(spec),
+        spec=spec,
+        higher_is_better=result.higher_is_better,
+        alternatives=alternatives,
+        order=[alternative_ids[name] for name in result.order],
+    )
+
+
+# --- Endpoints ------------------------------------------------------------------------
+
+
+@router.post("/migrate", response_model=Project)
+def migrate_project(document: Annotated[dict[str, Any], Body()]) -> Project:
+    """Read a project file of any supported version (or v1 problem JSON) as a current project."""
+    project = compute(lambda: migrate(document))
+    return project.model_copy(update={"app_version": __version__})
+
+
+@router.post("/validate", response_model=Validity)
+def validate_project(project: Project) -> Validity:
+    """200 if the project can be analysed; otherwise 422 with every issue found."""
+    _prepare(project)
+    return Validity()
+
+
+@router.post("/evaluate", response_model=ProjectEvaluation)
+def evaluate_project(project: Project) -> ProjectEvaluation:
+    prepared = _prepare(project)
+    criterion_ids = [c.id for c in project.criteria]
+    alternative_ids, _ = _ids_by_name(prepared)
+    shares = prepared.weights / prepared.weights.sum()
+    results = [
+        _result(prepared, spec, compute(lambda spec=spec: run_method(prepared, spec)))
+        for spec in project.analysis.methods
+    ]
+    dominance = pareto(prepared)
+    return ProjectEvaluation(
+        eligible=list(prepared.eligible),
+        excluded=[
+            ExclusionModel(alternative_id=e.alternative_id, reasons=[IssueModel(**r.to_dict()) for r in e.reasons])
+            for e in prepared.excluded
+        ],
+        imputed=[ImputationModel(**i.__dict__) for i in prepared.imputed],
+        weights=dict(zip(criterion_ids, map(float, shares), strict=True)),
+        values={
+            alternative_id: dict(zip(criterion_ids, map(float, row), strict=True))
+            for alternative_id, row in zip(prepared.eligible, prepared.values, strict=True)
+        },
+        results=results,
+        pareto=ProjectPareto(
+            front=[alternative_ids[d.alternative] for d in dominance if d.is_pareto_optimal],
+            alternatives=[
+                ProjectDominance(
+                    id=alternative_ids[d.alternative],
+                    is_pareto_optimal=d.is_pareto_optimal,
+                    dominates=[alternative_ids[n] for n in d.dominates],
+                    dominated_by=[alternative_ids[n] for n in d.dominated_by],
+                )
+                for d in dominance
+            ],
+        ),
+    )
+
+
+@router.post("/stability", response_model=ProjectStability)
+def project_stability(request: StabilityRequest) -> ProjectStability:
+    """Weight stability intervals of the weighted sum on value scores."""
+    prepared = _prepare(request.project)
+    _, criterion_ids = _ids_by_name(prepared)
+    intervals = compute(lambda: stability_intervals(prepared, request.scope))
+    return ProjectStability(
+        scope=request.scope,
+        intervals=[
+            ProjectInterval(criterion_id=criterion_ids[i.criterion], **IntervalModel.build(i).model_dump())
+            for i in intervals
+        ],
+    )
+
+
+@router.post(
+    "/import",
+    response_model=ProjectImport,
+    responses={413: {"model": ErrorResponse}, 415: {"model": ErrorResponse}},
+)
+def import_project(http_request: Request, file: Annotated[UploadFile, File()]) -> ProjectImport:
+    """Convert an uploaded template (.xlsx/.csv) or legacy V7 workbook into a project.
+
+    Template data gets linear value functions over the data range; legacy
+    data (already on a 0-100 benefit scale) gets the fixed range [0, 100].
+    """
+    upload = read_upload(http_request, file)
+    legacy = upload.legacy
+    if legacy is None:
+        source = Source(filename=upload.filename, kind="template")
+        project = project_from_problem(upload.problem, source=source)
+    else:
+        ids = {name: f"a{i + 1}" for i, name in enumerate(legacy.problem.alternatives)}
+        source = Source(
+            filename=upload.filename,
+            kind="legacy",
+            legacy={
+                "reference_order": [ids[name] for name in legacy.reference_order],
+                "prescaled": list(legacy.prescaled),
+            },
+        )
+        project = project_from_problem(legacy.problem, bounds=(0.0, 100.0), source=source)
+    return ProjectImport(
+        filename=upload.filename,
+        source_format="legacy" if legacy else "template",
+        project=project.model_copy(update={"app_version": __version__}),
+    )
+
+
+@router.post("/report", response_class=Response, responses={200: {"content": {XLSX_MEDIA_TYPE: {}}}})
+def project_report(request: ReportRequest) -> Response:
+    """Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data."""
+    project = request.project
+    prepared = _prepare(project)
+    problem = prepared.value_problem()
+    results = [(method_label(s), compute(lambda s=s: run_method(prepared, s))) for s in project.analysis.methods]
+    stability_sheets = None
+    if request.include_stability:
+        stability_sheets = {scope: stability_intervals(prepared, scope) for scope in StabilityScope}
+    # The re-importable "Decision" sheet needs raw numeric data without gaps.
+    try:
+        decision = prepared.raw_problem() if not prepared.imputed else None
+    except McdaError:
+        decision = None
+    buffer = io.BytesIO()
+    write_report(
+        buffer,
+        problem,
+        results,
+        stability_sheets,
+        pareto(prepared) if request.include_pareto else None,
+        decision=decision,
+    )
+    return _file_response(buffer.getvalue(), "mcda-report.xlsx", XLSX_MEDIA_TYPE)

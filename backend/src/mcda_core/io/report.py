@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import openpyxl
 from openpyxl.styles import Font
@@ -33,8 +34,14 @@ def write_report(
     results: Sequence[tuple[str, MethodResult]],
     stability: Mapping[StabilityScope, Sequence[WeightInterval]] | None = None,
     pareto: Sequence[DominanceInfo] | None = None,
+    decision: DecisionProblem | Literal["same"] | None = "same",
 ) -> None:
-    """Write an .xlsx report. ``results`` pairs a column label with each result."""
+    """Write an .xlsx report. ``results`` pairs a column label with each result.
+
+    ``decision`` is the data written to the re-importable "Decision" sheet:
+    by default ``problem`` itself; None leaves the sheet out (for example
+    when ``problem`` holds derived value scores rather than raw data).
+    """
     workbook = openpyxl.Workbook()
     workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
 
@@ -78,7 +85,9 @@ def write_report(
                 ]
             )
 
-    add_template_sheet(workbook, problem)
+    decision_data = problem if decision == "same" else decision
+    if decision_data is not None:
+        add_template_sheet(workbook, decision_data)
 
     for sheet in workbook.worksheets:
         for cell in sheet[1]:

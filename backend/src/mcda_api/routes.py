@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import io
 from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import PurePath
 from typing import Annotated, Any, Literal, TypeVar, get_args
 
@@ -26,6 +27,7 @@ from mcda_core import (
 )
 from mcda_core.io import (
     TEMPLATE_SHEET,
+    LegacyWorkbook,
     looks_like_legacy,
     parse_legacy_rows,
     parse_rows,
@@ -162,6 +164,27 @@ def stability(request: StabilityRequest) -> StabilityResponse:
 )
 def import_problem(http_request: Request, file: Annotated[UploadFile, File()]) -> ImportResponse:
     """Read an uploaded template (.xlsx/.csv) or legacy V7 workbook."""
+    upload = read_upload(http_request, file)
+    legacy = upload.legacy
+    return ImportResponse(
+        filename=upload.filename,
+        source_format="legacy" if legacy else "template",
+        problem=ProblemModel.from_domain(legacy.problem if legacy else upload.problem),
+        legacy=LegacyInfo(reference_order=list(legacy.reference_order), prescaled=list(legacy.prescaled))
+        if legacy
+        else None,
+    )
+
+
+@dataclass(frozen=True)
+class Upload:
+    filename: str
+    problem: DecisionProblem
+    legacy: LegacyWorkbook | None
+
+
+def read_upload(http_request: Request, file: UploadFile) -> Upload:
+    """Check type and size of an uploaded spreadsheet and read it as a template or legacy workbook."""
     filename = PurePath(file.filename or "upload").name
     suffix = PurePath(filename).suffix.lower()
     if suffix not in UPLOAD_SUFFIXES:
@@ -174,11 +197,7 @@ def import_problem(http_request: Request, file: Annotated[UploadFile, File()]) -
 
     try:
         if suffix == ".csv":
-            return ImportResponse(
-                filename=filename,
-                source_format="template",
-                problem=ProblemModel.from_domain(read_problem(io.BytesIO(data), suffix)),
-            )
+            return Upload(filename, read_problem(io.BytesIO(data), suffix), None)
         rows = read_xlsx_rows(io.BytesIO(data), prefer_sheet=TEMPLATE_SHEET)
     except ProblemValidationError:
         raise
@@ -188,15 +207,8 @@ def import_problem(http_request: Request, file: Annotated[UploadFile, File()]) -
 
     if looks_like_legacy(rows):
         legacy = parse_legacy_rows(rows)
-        return ImportResponse(
-            filename=filename,
-            source_format="legacy",
-            problem=ProblemModel.from_domain(legacy.problem),
-            legacy=LegacyInfo(reference_order=list(legacy.reference_order), prescaled=list(legacy.prescaled)),
-        )
-    return ImportResponse(
-        filename=filename, source_format="template", problem=ProblemModel.from_domain(parse_rows(rows))
-    )
+        return Upload(filename, legacy.problem, legacy)
+    return Upload(filename, parse_rows(rows), None)
 
 
 # --- Export ------------------------------------------------------------------

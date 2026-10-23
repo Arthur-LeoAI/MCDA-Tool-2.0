@@ -1,6 +1,41 @@
 {
   "components": {
     "schemas": {
+      "Alternative": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Alternative",
+        "type": "object"
+      },
       "AlternativeResult": {
         "properties": {
           "contributions": {
@@ -38,6 +73,109 @@
         "title": "AlternativeResult",
         "type": "object"
       },
+      "AnalysisSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "methods": {
+            "default": [
+              {
+                "method": "weighted_sum"
+              }
+            ],
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "compromise_programming": "#/components/schemas/CompromiseProgrammingMethod",
+                  "topsis": "#/components/schemas/TopsisMethod",
+                  "weighted_sum": "#/components/schemas/WeightedSumMethod"
+                },
+                "propertyName": "method"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/WeightedSumMethod"
+                },
+                {
+                  "$ref": "#/components/schemas/TopsisMethod"
+                },
+                {
+                  "$ref": "#/components/schemas/CompromiseProgrammingMethod"
+                }
+              ]
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Methods",
+            "type": "array"
+          },
+          "robustness": {
+            "$ref": "#/components/schemas/RobustnessSettings",
+            "default": {
+              "mode": "around",
+              "samples": 5000,
+              "seed": 1,
+              "spread": 0.2
+            }
+          },
+          "stability_scope": {
+            "default": "full_order",
+            "enum": [
+              "full_order",
+              "top1"
+            ],
+            "title": "Stability Scope",
+            "type": "string"
+          }
+        },
+        "title": "AnalysisSettings",
+        "type": "object"
+      },
+      "BetweenConstraint": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_missing": {
+            "default": false,
+            "title": "Allow Missing",
+            "type": "boolean"
+          },
+          "criterion_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "high": {
+            "title": "High",
+            "type": "number"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "low": {
+            "title": "Low",
+            "type": "number"
+          },
+          "op": {
+            "const": "between",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "criterion_id",
+          "op",
+          "low",
+          "high"
+        ],
+        "title": "BetweenConstraint",
+        "type": "object"
+      },
       "Body_import_problem_api_v1_problems_import_post": {
         "properties": {
           "file": {
@@ -50,6 +188,122 @@
           "file"
         ],
         "title": "Body_import_problem_api_v1_problems_import_post",
+        "type": "object"
+      },
+      "Body_import_project_api_v1_projects_import_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_import_project_api_v1_projects_import_post",
+        "type": "object"
+      },
+      "Category": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "maxLength": 500,
+            "title": "Label",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "label",
+          "score"
+        ],
+        "title": "Category",
+        "type": "object"
+      },
+      "CompareConstraint": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_missing": {
+            "default": false,
+            "title": "Allow Missing",
+            "type": "boolean"
+          },
+          "criterion_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "op": {
+            "enum": [
+              ">=",
+              "<=",
+              ">",
+              "<"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "criterion_id",
+          "op",
+          "value"
+        ],
+        "title": "CompareConstraint",
+        "type": "object"
+      },
+      "CompromiseProgrammingMethod": {
+        "additionalProperties": false,
+        "properties": {
+          "ideal": {
+            "default": "data",
+            "enum": [
+              "data",
+              "fixed"
+            ],
+            "title": "Ideal",
+            "type": "string"
+          },
+          "method": {
+            "const": "compromise_programming",
+            "default": "compromise_programming",
+            "title": "Method",
+            "type": "string"
+          },
+          "p": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "number"
+              },
+              {
+                "const": "inf",
+                "type": "string"
+              }
+            ],
+            "default": 2.0,
+            "title": "P"
+          }
+        },
+        "title": "CompromiseProgrammingMethod",
         "type": "object"
       },
       "CompromiseProgrammingSpec": {
@@ -124,6 +378,147 @@
           }
         },
         "title": "CompromiseProgrammingSpec",
+        "type": "object"
+      },
+      "Criterion": {
+        "additionalProperties": false,
+        "properties": {
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Category"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Direction"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_.-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "missing": {
+            "default": "worst",
+            "enum": [
+              "worst",
+              "mean",
+              "exclude",
+              "require"
+            ],
+            "title": "Missing",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "type": {
+            "default": "numeric",
+            "enum": [
+              "numeric",
+              "ordinal",
+              "categorical",
+              "boolean"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value_function": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "linear": "#/components/schemas/LinearValueFunction",
+                    "log": "#/components/schemas/LogValueFunction",
+                    "piecewise": "#/components/schemas/PiecewiseValueFunction",
+                    "target": "#/components/schemas/TargetValueFunction"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/LinearValueFunction"
+                  },
+                  {
+                    "$ref": "#/components/schemas/LogValueFunction"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TargetValueFunction"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PiecewiseValueFunction"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value Function"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Criterion",
         "type": "object"
       },
       "CriterionModel": {
@@ -292,6 +687,50 @@
         "title": "EvaluateResponse",
         "type": "object"
       },
+      "ExclusionModel": {
+        "properties": {
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/IssueModel"
+            },
+            "title": "Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "reasons"
+        ],
+        "title": "ExclusionModel",
+        "type": "object"
+      },
+      "Group": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Group",
+        "type": "object"
+      },
       "ImportResponse": {
         "properties": {
           "filename": {
@@ -326,6 +765,74 @@
           "problem"
         ],
         "title": "ImportResponse",
+        "type": "object"
+      },
+      "ImputationModel": {
+        "properties": {
+          "alternative_id": {
+            "title": "Alternative Id",
+            "type": "string"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "policy": {
+            "title": "Policy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alternative_id",
+          "criterion_id",
+          "policy"
+        ],
+        "title": "ImputationModel",
+        "type": "object"
+      },
+      "InConstraint": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_missing": {
+            "default": false,
+            "title": "Allow Missing",
+            "type": "boolean"
+          },
+          "criterion_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "labels": {
+            "items": {
+              "maxLength": 500,
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "op": {
+            "const": "in",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "criterion_id",
+          "op",
+          "labels"
+        ],
+        "title": "InConstraint",
         "type": "object"
       },
       "IntervalModel": {
@@ -437,6 +944,109 @@
         "title": "LegacyInfo",
         "type": "object"
       },
+      "LevelWeighting": {
+        "additionalProperties": false,
+        "description": "Weights for one level (the groups, or the criteria of one group).\n\nInputs of every method are kept, so switching methods never loses work;\n``method`` selects which one is used.",
+        "properties": {
+          "comparisons": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Comparisons",
+            "type": "object"
+          },
+          "formula": {
+            "default": "roc",
+            "enum": [
+              "roc",
+              "rank_sum"
+            ],
+            "title": "Formula",
+            "type": "string"
+          },
+          "method": {
+            "default": "direct",
+            "enum": [
+              "direct",
+              "rank",
+              "ahp"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "order": {
+            "default": [],
+            "items": {
+              "items": {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_.-]+$",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Order",
+            "type": "array"
+          },
+          "weights": {
+            "default": {},
+            "patternProperties": {
+              "^[A-Za-z0-9_.-]+$": {
+                "type": "number"
+              }
+            },
+            "propertyNames": {
+              "maxLength": 64,
+              "minLength": 1
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "title": "LevelWeighting",
+        "type": "object"
+      },
+      "LinearValueFunction": {
+        "additionalProperties": false,
+        "properties": {
+          "bounds": {
+            "anyOf": [
+              {
+                "const": "data",
+                "type": "string"
+              },
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              }
+            ],
+            "default": "data",
+            "title": "Bounds"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/Direction",
+            "default": "benefit"
+          },
+          "kind": {
+            "const": "linear",
+            "default": "linear",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "LinearValueFunction",
+        "type": "object"
+      },
       "LocationModel": {
         "description": "Where an issue is; which fields are set depends on ``kind``.\n\ncell: ``ref`` (\"B4\") · alternative/criterion: ``name`` or 1-based ``index`` ·\nvalue: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·\nfield: request path in ``ref`` (\"problem.matrix.0.1\")",
         "properties": {
@@ -512,6 +1122,111 @@
           "kind"
         ],
         "title": "LocationModel",
+        "type": "object"
+      },
+      "LogValueFunction": {
+        "additionalProperties": false,
+        "description": "Linear on ln(1 + x): diminishing returns. Needs x >= 0.",
+        "properties": {
+          "bounds": {
+            "anyOf": [
+              {
+                "const": "data",
+                "type": "string"
+              },
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              }
+            ],
+            "default": "data",
+            "title": "Bounds"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/Direction",
+            "default": "benefit"
+          },
+          "kind": {
+            "const": "log",
+            "default": "log",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "LogValueFunction",
+        "type": "object"
+      },
+      "Meta": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Description",
+            "type": "string"
+          },
+          "language": {
+            "default": "zh",
+            "enum": [
+              "zh",
+              "en"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "modified": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Modified"
+          },
+          "name": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Name",
+            "type": "string"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_.-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          }
+        },
+        "title": "Meta",
         "type": "object"
       },
       "MethodInfo": {
@@ -663,6 +1378,78 @@
         "title": "ParetoResponse",
         "type": "object"
       },
+      "PiecewiseValueFunction": {
+        "additionalProperties": false,
+        "description": "Straight lines between (x, value) points; constant beyond the first and last point.",
+        "properties": {
+          "kind": {
+            "const": "piecewise",
+            "default": "piecewise",
+            "title": "Kind",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "maxItems": 50,
+            "minItems": 2,
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "title": "PiecewiseValueFunction",
+        "type": "object"
+      },
+      "PresentConstraint": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_missing": {
+            "default": false,
+            "title": "Allow Missing",
+            "type": "boolean"
+          },
+          "criterion_id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "pattern": "^[A-Za-z0-9_.-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "op": {
+            "const": "present",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "criterion_id",
+          "op"
+        ],
+        "title": "PresentConstraint",
+        "type": "object"
+      },
       "ProblemModel": {
         "description": "A decision problem; ``matrix[i][j]`` is alternative i on criterion j.",
         "properties": {
@@ -705,66 +1492,621 @@
         "title": "ProblemModel",
         "type": "object"
       },
-      "ReportRequest": {
+      "Project": {
+        "additionalProperties": false,
         "properties": {
-          "include_pareto": {
-            "default": true,
-            "title": "Include Pareto",
-            "type": "boolean"
-          },
-          "methods": {
+          "alternatives": {
             "items": {
-              "discriminator": {
-                "mapping": {
-                  "compromise_programming": "#/components/schemas/CompromiseProgrammingSpec",
-                  "topsis": "#/components/schemas/TopsisSpec",
-                  "weighted_sum": "#/components/schemas/WeightedSumSpec"
-                },
-                "propertyName": "method"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/WeightedSumSpec"
-                },
-                {
-                  "$ref": "#/components/schemas/TopsisSpec"
-                },
-                {
-                  "$ref": "#/components/schemas/CompromiseProgrammingSpec"
-                }
-              ]
+              "$ref": "#/components/schemas/Alternative"
             },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Methods",
+            "maxItems": 500,
+            "title": "Alternatives",
             "type": "array"
           },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
+          "analysis": {
+            "$ref": "#/components/schemas/AnalysisSettings",
+            "default": {
+              "methods": [
+                {
+                  "method": "weighted_sum"
+                }
+              ],
+              "robustness": {
+                "mode": "around",
+                "samples": 5000,
+                "seed": 1,
+                "spread": 0.2
+              },
+              "stability_scope": "full_order"
+            }
           },
-          "stability": {
+          "app_version": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/StabilityOptions"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
+            "title": "App Version"
+          },
+          "constraints": {
+            "default": [],
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "<": "#/components/schemas/CompareConstraint",
+                  "<=": "#/components/schemas/CompareConstraint",
+                  ">": "#/components/schemas/CompareConstraint",
+                  ">=": "#/components/schemas/CompareConstraint",
+                  "between": "#/components/schemas/BetweenConstraint",
+                  "in": "#/components/schemas/InConstraint",
+                  "present": "#/components/schemas/PresentConstraint"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/CompareConstraint"
+                },
+                {
+                  "$ref": "#/components/schemas/BetweenConstraint"
+                },
+                {
+                  "$ref": "#/components/schemas/InConstraint"
+                },
+                {
+                  "$ref": "#/components/schemas/PresentConstraint"
+                }
+              ]
+            },
+            "maxItems": 200,
+            "title": "Constraints",
+            "type": "array"
+          },
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/Criterion"
+            },
+            "maxItems": 200,
+            "title": "Criteria",
+            "type": "array"
+          },
+          "data": {
+            "default": {},
+            "patternProperties": {
+              "^[A-Za-z0-9_.-]+$": {
+                "patternProperties": {
+                  "^[A-Za-z0-9_.-]+$": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "maxLength": 500,
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "propertyNames": {
+                  "maxLength": 64,
+                  "minLength": 1
+                },
+                "type": "object"
+              }
+            },
+            "propertyNames": {
+              "maxLength": 64,
+              "minLength": 1
+            },
+            "title": "Data",
+            "type": "object"
+          },
+          "format": {
+            "const": "mcda-project",
+            "default": "mcda-project",
+            "title": "Format",
+            "type": "string"
+          },
+          "groups": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            },
+            "maxItems": 200,
+            "title": "Groups",
+            "type": "array"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/Meta",
             "default": {
-              "bounds": [
-                0.0,
-                100.0
-              ],
-              "normalization": "min_max"
+              "description": "",
+              "language": "zh",
+              "name": ""
+            }
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Source"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ui": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ui"
+          },
+          "version": {
+            "const": 2,
+            "default": 2,
+            "title": "Version",
+            "type": "integer"
+          },
+          "weighting": {
+            "$ref": "#/components/schemas/Weighting",
+            "default": {
+              "within": {}
             }
           }
         },
         "required": [
-          "problem",
-          "methods"
+          "alternatives",
+          "criteria"
         ],
-        "title": "ReportRequest",
+        "title": "Project",
+        "type": "object"
+      },
+      "ProjectAlternativeResult": {
+        "properties": {
+          "contributions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contributions"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "score",
+          "rank"
+        ],
+        "title": "ProjectAlternativeResult",
+        "type": "object"
+      },
+      "ProjectDominance": {
+        "properties": {
+          "dominated_by": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dominated By",
+            "type": "array"
+          },
+          "dominates": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Dominates",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_pareto_optimal": {
+            "title": "Is Pareto Optimal",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "is_pareto_optimal",
+          "dominates",
+          "dominated_by"
+        ],
+        "title": "ProjectDominance",
+        "type": "object"
+      },
+      "ProjectEvaluation": {
+        "properties": {
+          "eligible": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Eligible",
+            "type": "array"
+          },
+          "excluded": {
+            "items": {
+              "$ref": "#/components/schemas/ExclusionModel"
+            },
+            "title": "Excluded",
+            "type": "array"
+          },
+          "imputed": {
+            "items": {
+              "$ref": "#/components/schemas/ImputationModel"
+            },
+            "title": "Imputed",
+            "type": "array"
+          },
+          "pareto": {
+            "$ref": "#/components/schemas/ProjectPareto"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectMethodResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "values": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "number"
+              },
+              "type": "object"
+            },
+            "title": "Values",
+            "type": "object"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "eligible",
+          "excluded",
+          "imputed",
+          "weights",
+          "values",
+          "results",
+          "pareto"
+        ],
+        "title": "ProjectEvaluation",
+        "type": "object"
+      },
+      "ProjectImport": {
+        "properties": {
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "source_format": {
+            "enum": [
+              "template",
+              "legacy"
+            ],
+            "title": "Source Format",
+            "type": "string"
+          }
+        },
+        "required": [
+          "filename",
+          "source_format",
+          "project"
+        ],
+        "title": "ProjectImport",
+        "type": "object"
+      },
+      "ProjectInterval": {
+        "properties": {
+          "criterion": {
+            "title": "Criterion",
+            "type": "string"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "lower": {
+            "title": "Lower",
+            "type": "number"
+          },
+          "lower_share": {
+            "title": "Lower Share",
+            "type": "number"
+          },
+          "upper": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Upper"
+          },
+          "upper_share": {
+            "title": "Upper Share",
+            "type": "number"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "criterion",
+          "weight",
+          "lower",
+          "upper",
+          "lower_share",
+          "upper_share",
+          "criterion_id"
+        ],
+        "title": "ProjectInterval",
+        "type": "object"
+      },
+      "ProjectMethodResult": {
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectAlternativeResult"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "higher_is_better": {
+            "title": "Higher Is Better",
+            "type": "boolean"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "order": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Order",
+            "type": "array"
+          },
+          "spec": {
+            "discriminator": {
+              "mapping": {
+                "compromise_programming": "#/components/schemas/CompromiseProgrammingMethod",
+                "topsis": "#/components/schemas/TopsisMethod",
+                "weighted_sum": "#/components/schemas/WeightedSumMethod"
+              },
+              "propertyName": "method"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WeightedSumMethod"
+              },
+              {
+                "$ref": "#/components/schemas/TopsisMethod"
+              },
+              {
+                "$ref": "#/components/schemas/CompromiseProgrammingMethod"
+              }
+            ],
+            "title": "Spec"
+          }
+        },
+        "required": [
+          "method",
+          "label",
+          "spec",
+          "higher_is_better",
+          "alternatives",
+          "order"
+        ],
+        "title": "ProjectMethodResult",
+        "type": "object"
+      },
+      "ProjectPareto": {
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectDominance"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "front": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Front",
+            "type": "array"
+          }
+        },
+        "required": [
+          "front",
+          "alternatives"
+        ],
+        "title": "ProjectPareto",
+        "type": "object"
+      },
+      "ProjectStability": {
+        "properties": {
+          "intervals": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectInterval"
+            },
+            "title": "Intervals",
+            "type": "array"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/StabilityScope"
+          }
+        },
+        "required": [
+          "scope",
+          "intervals"
+        ],
+        "title": "ProjectStability",
+        "type": "object"
+      },
+      "RobustnessSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "default": "around",
+            "enum": [
+              "around",
+              "unknown"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "samples": {
+            "default": 5000,
+            "maximum": 20000.0,
+            "minimum": 100.0,
+            "title": "Samples",
+            "type": "integer"
+          },
+          "seed": {
+            "default": 1,
+            "title": "Seed",
+            "type": "integer"
+          },
+          "spread": {
+            "default": 0.2,
+            "exclusiveMinimum": 0.0,
+            "maximum": 2.0,
+            "title": "Spread",
+            "type": "number"
+          }
+        },
+        "title": "RobustnessSettings",
+        "type": "object"
+      },
+      "Source": {
+        "additionalProperties": false,
+        "properties": {
+          "column_map": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Column Map"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "header_row": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Header Row"
+          },
+          "kind": {
+            "default": "manual",
+            "enum": [
+              "table",
+              "template",
+              "legacy",
+              "project",
+              "manual"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "legacy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Legacy"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          }
+        },
+        "title": "Source",
         "type": "object"
       },
       "StabilityOptions": {
@@ -823,71 +2165,6 @@
         "title": "StabilityOptions",
         "type": "object"
       },
-      "StabilityRequest": {
-        "properties": {
-          "bounds": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "items": {
-                  "maxItems": 2,
-                  "minItems": 2,
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array"
-                },
-                "maxItems": 200,
-                "type": "array"
-              }
-            ],
-            "default": [
-              0.0,
-              100.0
-            ],
-            "title": "Bounds"
-          },
-          "normalization": {
-            "default": "min_max",
-            "enum": [
-              "min_max",
-              "fixed_range",
-              "none"
-            ],
-            "title": "Normalization",
-            "type": "string"
-          },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/StabilityScope",
-            "default": "full_order"
-          }
-        },
-        "required": [
-          "problem"
-        ],
-        "title": "StabilityRequest",
-        "type": "object"
-      },
       "StabilityResponse": {
         "properties": {
           "intervals": {
@@ -920,6 +2197,73 @@
         ],
         "title": "StabilityScope",
         "type": "string"
+      },
+      "TargetValueFunction": {
+        "additionalProperties": false,
+        "description": "1 inside [ideal_low, ideal_high], falling linearly to 0 at lower and upper.",
+        "properties": {
+          "ideal_high": {
+            "title": "Ideal High",
+            "type": "number"
+          },
+          "ideal_low": {
+            "title": "Ideal Low",
+            "type": "number"
+          },
+          "kind": {
+            "const": "target",
+            "default": "target",
+            "title": "Kind",
+            "type": "string"
+          },
+          "lower": {
+            "title": "Lower",
+            "type": "number"
+          },
+          "upper": {
+            "title": "Upper",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lower",
+          "ideal_low",
+          "ideal_high",
+          "upper"
+        ],
+        "title": "TargetValueFunction",
+        "type": "object"
+      },
+      "TopsisMethod": {
+        "additionalProperties": false,
+        "properties": {
+          "basis": {
+            "default": "values",
+            "enum": [
+              "values",
+              "raw"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "ideal": {
+            "default": "data",
+            "enum": [
+              "data",
+              "fixed"
+            ],
+            "title": "Ideal",
+            "type": "string"
+          },
+          "method": {
+            "const": "topsis",
+            "default": "topsis",
+            "title": "Method",
+            "type": "string"
+          }
+        },
+        "title": "TopsisMethod",
+        "type": "object"
       },
       "TopsisSpec": {
         "properties": {
@@ -983,6 +2327,31 @@
         "title": "TopsisSpec",
         "type": "object"
       },
+      "Validity": {
+        "properties": {
+          "valid": {
+            "const": true,
+            "default": true,
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "title": "Validity",
+        "type": "object"
+      },
+      "WeightedSumMethod": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "const": "weighted_sum",
+            "default": "weighted_sum",
+            "title": "Method",
+            "type": "string"
+          }
+        },
+        "title": "WeightedSumMethod",
+        "type": "object"
+      },
       "WeightedSumSpec": {
         "properties": {
           "bounds": {
@@ -1042,6 +2411,196 @@
           }
         },
         "title": "WeightedSumSpec",
+        "type": "object"
+      },
+      "Weighting": {
+        "additionalProperties": false,
+        "properties": {
+          "groups": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LevelWeighting"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "within": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LevelWeighting"
+            },
+            "default": {},
+            "title": "Within",
+            "type": "object"
+          }
+        },
+        "title": "Weighting",
+        "type": "object"
+      },
+      "mcda_api__projects__ReportRequest": {
+        "properties": {
+          "include_pareto": {
+            "default": true,
+            "title": "Include Pareto",
+            "type": "boolean"
+          },
+          "include_stability": {
+            "default": true,
+            "title": "Include Stability",
+            "type": "boolean"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "required": [
+          "project"
+        ],
+        "title": "ReportRequest",
+        "type": "object"
+      },
+      "mcda_api__projects__StabilityRequest": {
+        "properties": {
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/StabilityScope",
+            "default": "full_order"
+          }
+        },
+        "required": [
+          "project"
+        ],
+        "title": "StabilityRequest",
+        "type": "object"
+      },
+      "mcda_api__schemas__ReportRequest": {
+        "properties": {
+          "include_pareto": {
+            "default": true,
+            "title": "Include Pareto",
+            "type": "boolean"
+          },
+          "methods": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "compromise_programming": "#/components/schemas/CompromiseProgrammingSpec",
+                  "topsis": "#/components/schemas/TopsisSpec",
+                  "weighted_sum": "#/components/schemas/WeightedSumSpec"
+                },
+                "propertyName": "method"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/WeightedSumSpec"
+                },
+                {
+                  "$ref": "#/components/schemas/TopsisSpec"
+                },
+                {
+                  "$ref": "#/components/schemas/CompromiseProgrammingSpec"
+                }
+              ]
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Methods",
+            "type": "array"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/ProblemModel"
+          },
+          "stability": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StabilityOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": {
+              "bounds": [
+                0.0,
+                100.0
+              ],
+              "normalization": "min_max"
+            }
+          }
+        },
+        "required": [
+          "problem",
+          "methods"
+        ],
+        "title": "ReportRequest",
+        "type": "object"
+      },
+      "mcda_api__schemas__StabilityRequest": {
+        "properties": {
+          "bounds": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "items": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "maxItems": 200,
+                "type": "array"
+              }
+            ],
+            "default": [
+              0.0,
+              100.0
+            ],
+            "title": "Bounds"
+          },
+          "normalization": {
+            "default": "min_max",
+            "enum": [
+              "min_max",
+              "fixed_range",
+              "none"
+            ],
+            "title": "Normalization",
+            "type": "string"
+          },
+          "problem": {
+            "$ref": "#/components/schemas/ProblemModel"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/StabilityScope",
+            "default": "full_order"
+          }
+        },
+        "required": [
+          "problem"
+        ],
+        "title": "StabilityRequest",
         "type": "object"
       }
     }
@@ -1156,7 +2715,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ReportRequest"
+                "$ref": "#/components/schemas/mcda_api__schemas__ReportRequest"
               }
             }
           },
@@ -1402,6 +2961,275 @@
         ]
       }
     },
+    "/api/v1/projects/evaluate": {
+      "post": {
+        "operationId": "evaluate_project_api_v1_projects_evaluate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectEvaluation"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Evaluate Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/import": {
+      "post": {
+        "description": "Convert an uploaded template (.xlsx/.csv) or legacy V7 workbook into a project.\n\nTemplate data gets linear value functions over the data range; legacy\ndata (already on a 0-100 benefit scale) gets the fixed range [0, 100].",
+        "operationId": "import_project_api_v1_projects_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_project_api_v1_projects_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectImport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Import Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/migrate": {
+      "post": {
+        "description": "Read a project file of any supported version (or v1 problem JSON) as a current project.",
+        "operationId": "migrate_project_api_v1_projects_migrate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "additionalProperties": true,
+                "title": "Document",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Migrate Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/report": {
+      "post": {
+        "description": "Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data.",
+        "operationId": "project_report_api_v1_projects_report_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/mcda_api__projects__ReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project Report",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/stability": {
+      "post": {
+        "description": "Weight stability intervals of the weighted sum on value scores.",
+        "operationId": "project_stability_api_v1_projects_stability_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/mcda_api__projects__StabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectStability"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project Stability",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/validate": {
+      "post": {
+        "description": "200 if the project can be analysed; otherwise 422 with every issue found.",
+        "operationId": "validate_project_api_v1_projects_validate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Validity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Validate Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
     "/api/v1/sensitivity/stability": {
       "post": {
         "operationId": "stability_api_v1_sensitivity_stability_post",
@@ -1409,7 +3237,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/StabilityRequest"
+                "$ref": "#/components/schemas/mcda_api__schemas__StabilityRequest"
               }
             }
           },

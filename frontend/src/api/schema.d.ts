@@ -152,6 +152,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/evaluate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Evaluate Project */
+        post: operations["evaluate_project_api_v1_projects_evaluate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Project
+         * @description Convert an uploaded template (.xlsx/.csv) or legacy V7 workbook into a project.
+         *
+         *     Template data gets linear value functions over the data range; legacy
+         *     data (already on a 0-100 benefit scale) gets the fixed range [0, 100].
+         */
+        post: operations["import_project_api_v1_projects_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/migrate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Migrate Project
+         * @description Read a project file of any supported version (or v1 problem JSON) as a current project.
+         */
+        post: operations["migrate_project_api_v1_projects_migrate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Project Report
+         * @description Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data.
+         */
+        post: operations["project_report_api_v1_projects_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/stability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Project Stability
+         * @description Weight stability intervals of the weighted sum on value scores.
+         */
+        post: operations["project_stability_api_v1_projects_stability_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Project
+         * @description 200 if the project can be analysed; otherwise 422 with every issue found.
+         */
+        post: operations["validate_project_api_v1_projects_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sensitivity/stability": {
         parameters: {
             query?: never;
@@ -193,6 +313,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Alternative */
+        Alternative: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
+        };
         /** AlternativeResult */
         AlternativeResult: {
             /** Contributions */
@@ -204,10 +333,108 @@ export interface components {
             /** Score */
             score: number;
         };
+        /** AnalysisSettings */
+        AnalysisSettings: {
+            /**
+             * Methods
+             * @default [
+             *       {
+             *         "method": "weighted_sum"
+             *       }
+             *     ]
+             */
+            methods: (components["schemas"]["WeightedSumMethod"] | components["schemas"]["TopsisMethod"] | components["schemas"]["CompromiseProgrammingMethod"])[];
+            /**
+             * @default {
+             *       "mode": "around",
+             *       "samples": 5000,
+             *       "seed": 1,
+             *       "spread": 0.2
+             *     }
+             */
+            robustness: components["schemas"]["RobustnessSettings"];
+            /**
+             * Stability Scope
+             * @default full_order
+             * @enum {string}
+             */
+            stability_scope: "full_order" | "top1";
+        };
+        /** BetweenConstraint */
+        BetweenConstraint: {
+            /**
+             * Allow Missing
+             * @default false
+             */
+            allow_missing: boolean;
+            /** Criterion Id */
+            criterion_id: string;
+            /** High */
+            high: number;
+            /** Id */
+            id: string;
+            /** Low */
+            low: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "between";
+        };
         /** Body_import_problem_api_v1_problems_import_post */
         Body_import_problem_api_v1_problems_import_post: {
             /** File */
             file: string;
+        };
+        /** Body_import_project_api_v1_projects_import_post */
+        Body_import_project_api_v1_projects_import_post: {
+            /** File */
+            file: string;
+        };
+        /** Category */
+        Category: {
+            /** Label */
+            label: string;
+            /** Score */
+            score: number;
+        };
+        /** CompareConstraint */
+        CompareConstraint: {
+            /**
+             * Allow Missing
+             * @default false
+             */
+            allow_missing: boolean;
+            /** Criterion Id */
+            criterion_id: string;
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "<" | "<=" | ">" | ">=";
+            /** Value */
+            value: number;
+        };
+        /** CompromiseProgrammingMethod */
+        CompromiseProgrammingMethod: {
+            /**
+             * Ideal
+             * @default data
+             * @enum {string}
+             */
+            ideal: "data" | "fixed";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            method: "compromise_programming";
+            /**
+             * P
+             * @default 2
+             */
+            p: number | "inf";
         };
         /** CompromiseProgrammingSpec */
         CompromiseProgrammingSpec: {
@@ -241,6 +468,36 @@ export interface components {
              * @default 2
              */
             p: number | "inf";
+        };
+        /** Criterion */
+        Criterion: {
+            /** Categories */
+            categories?: components["schemas"]["Category"][] | null;
+            direction?: components["schemas"]["Direction"] | null;
+            /** Group Id */
+            group_id?: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Missing
+             * @default worst
+             * @enum {string}
+             */
+            missing: "worst" | "mean" | "exclude" | "require";
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
+            /**
+             * Type
+             * @default numeric
+             * @enum {string}
+             */
+            type: "numeric" | "ordinal" | "categorical" | "boolean";
+            /** Unit */
+            unit?: string | null;
+            /** Value Function */
+            value_function?: (components["schemas"]["LinearValueFunction"] | components["schemas"]["LogValueFunction"] | components["schemas"]["TargetValueFunction"] | components["schemas"]["PiecewiseValueFunction"]) | null;
         };
         /** CriterionModel */
         CriterionModel: {
@@ -300,6 +557,20 @@ export interface components {
             /** Results */
             results: components["schemas"]["MethodResultModel"][];
         };
+        /** ExclusionModel */
+        ExclusionModel: {
+            /** Alternative Id */
+            alternative_id: string;
+            /** Reasons */
+            reasons: components["schemas"]["IssueModel"][];
+        };
+        /** Group */
+        Group: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** ImportResponse */
         ImportResponse: {
             /** Filename */
@@ -311,6 +582,34 @@ export interface components {
              * @enum {string}
              */
             source_format: "template" | "legacy";
+        };
+        /** ImputationModel */
+        ImputationModel: {
+            /** Alternative Id */
+            alternative_id: string;
+            /** Criterion Id */
+            criterion_id: string;
+            /** Policy */
+            policy: string;
+        };
+        /** InConstraint */
+        InConstraint: {
+            /**
+             * Allow Missing
+             * @default false
+             */
+            allow_missing: boolean;
+            /** Criterion Id */
+            criterion_id: string;
+            /** Id */
+            id: string;
+            /** Labels */
+            labels: string[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "in";
         };
         /** IntervalModel */
         IntervalModel: {
@@ -355,6 +654,64 @@ export interface components {
             reference_order: string[];
         };
         /**
+         * LevelWeighting
+         * @description Weights for one level (the groups, or the criteria of one group).
+         *
+         *     Inputs of every method are kept, so switching methods never loses work;
+         *     ``method`` selects which one is used.
+         */
+        LevelWeighting: {
+            /**
+             * Comparisons
+             * @default {}
+             */
+            comparisons: {
+                [key: string]: number;
+            };
+            /**
+             * Formula
+             * @default roc
+             * @enum {string}
+             */
+            formula: "roc" | "rank_sum";
+            /**
+             * Method
+             * @default direct
+             * @enum {string}
+             */
+            method: "direct" | "rank" | "ahp";
+            /**
+             * Order
+             * @default []
+             */
+            order: string[][];
+            /**
+             * Weights
+             * @default {}
+             */
+            weights: {
+                [key: string]: number;
+            };
+        };
+        /** LinearValueFunction */
+        LinearValueFunction: {
+            /**
+             * Bounds
+             * @default data
+             */
+            bounds: "data" | [
+                number,
+                number
+            ];
+            /** @default benefit */
+            direction: components["schemas"]["Direction"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "linear";
+        };
+        /**
          * LocationModel
          * @description Where an issue is; which fields are set depends on ``kind``.
          *
@@ -378,6 +735,52 @@ export interface components {
             name?: string | null;
             /** Ref */
             ref?: string | null;
+        };
+        /**
+         * LogValueFunction
+         * @description Linear on ln(1 + x): diminishing returns. Needs x >= 0.
+         */
+        LogValueFunction: {
+            /**
+             * Bounds
+             * @default data
+             */
+            bounds: "data" | [
+                number,
+                number
+            ];
+            /** @default benefit */
+            direction: components["schemas"]["Direction"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "log";
+        };
+        /** Meta */
+        Meta: {
+            /** Created */
+            created?: string | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Language
+             * @default zh
+             * @enum {string}
+             */
+            language: "zh" | "en";
+            /** Modified */
+            modified?: string | null;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
+            /** Template Id */
+            template_id?: string | null;
         };
         /** MethodInfo */
         MethodInfo: {
@@ -423,6 +826,39 @@ export interface components {
             front: string[];
         };
         /**
+         * PiecewiseValueFunction
+         * @description Straight lines between (x, value) points; constant beyond the first and last point.
+         */
+        PiecewiseValueFunction: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "piecewise";
+            /** Points */
+            points: [
+                number,
+                number
+            ][];
+        };
+        /** PresentConstraint */
+        PresentConstraint: {
+            /**
+             * Allow Missing
+             * @default false
+             */
+            allow_missing: boolean;
+            /** Criterion Id */
+            criterion_id: string;
+            /** Id */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "present";
+        };
+        /**
          * ProblemModel
          * @description A decision problem; ``matrix[i][j]`` is alternative i on criterion j.
          */
@@ -434,26 +870,232 @@ export interface components {
             /** Matrix */
             matrix: number[][];
         };
-        /** ReportRequest */
-        ReportRequest: {
-            /**
-             * Include Pareto
-             * @default true
-             */
-            include_pareto: boolean;
-            /** Methods */
-            methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
-            problem: components["schemas"]["ProblemModel"];
+        /** Project */
+        Project: {
+            /** Alternatives */
+            alternatives: components["schemas"]["Alternative"][];
             /**
              * @default {
-             *       "bounds": [
-             *         0,
-             *         100
+             *       "methods": [
+             *         {
+             *           "method": "weighted_sum"
+             *         }
              *       ],
-             *       "normalization": "min_max"
+             *       "robustness": {
+             *         "mode": "around",
+             *         "samples": 5000,
+             *         "seed": 1,
+             *         "spread": 0.2
+             *       },
+             *       "stability_scope": "full_order"
              *     }
              */
-            stability: components["schemas"]["StabilityOptions"] | null;
+            analysis: components["schemas"]["AnalysisSettings"];
+            /** App Version */
+            app_version?: string | null;
+            /**
+             * Constraints
+             * @default []
+             */
+            constraints: (components["schemas"]["CompareConstraint"] | components["schemas"]["BetweenConstraint"] | components["schemas"]["InConstraint"] | components["schemas"]["PresentConstraint"])[];
+            /** Criteria */
+            criteria: components["schemas"]["Criterion"][];
+            /**
+             * Data
+             * @default {}
+             */
+            data: {
+                [key: string]: {
+                    [key: string]: boolean | number | string | null;
+                };
+            };
+            /**
+             * Format
+             * @default mcda-project
+             * @constant
+             */
+            format: "mcda-project";
+            /**
+             * Groups
+             * @default []
+             */
+            groups: components["schemas"]["Group"][];
+            /**
+             * @default {
+             *       "description": "",
+             *       "language": "zh",
+             *       "name": ""
+             *     }
+             */
+            meta: components["schemas"]["Meta"];
+            source?: components["schemas"]["Source"] | null;
+            /** Ui */
+            ui?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Version
+             * @default 2
+             * @constant
+             */
+            version: 2;
+            /**
+             * @default {
+             *       "within": {}
+             *     }
+             */
+            weighting: components["schemas"]["Weighting"];
+        };
+        /** ProjectAlternativeResult */
+        ProjectAlternativeResult: {
+            /** Contributions */
+            contributions?: {
+                [key: string]: number;
+            } | null;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Rank */
+            rank: number;
+            /** Score */
+            score: number;
+        };
+        /** ProjectDominance */
+        ProjectDominance: {
+            /** Dominated By */
+            dominated_by: string[];
+            /** Dominates */
+            dominates: string[];
+            /** Id */
+            id: string;
+            /** Is Pareto Optimal */
+            is_pareto_optimal: boolean;
+        };
+        /** ProjectEvaluation */
+        ProjectEvaluation: {
+            /** Eligible */
+            eligible: string[];
+            /** Excluded */
+            excluded: components["schemas"]["ExclusionModel"][];
+            /** Imputed */
+            imputed: components["schemas"]["ImputationModel"][];
+            pareto: components["schemas"]["ProjectPareto"];
+            /** Results */
+            results: components["schemas"]["ProjectMethodResult"][];
+            /** Values */
+            values: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
+        };
+        /** ProjectImport */
+        ProjectImport: {
+            /** Filename */
+            filename: string;
+            project: components["schemas"]["Project"];
+            /**
+             * Source Format
+             * @enum {string}
+             */
+            source_format: "template" | "legacy";
+        };
+        /** ProjectInterval */
+        ProjectInterval: {
+            /** Criterion */
+            criterion: string;
+            /** Criterion Id */
+            criterion_id: string;
+            /** Lower */
+            lower: number;
+            /** Lower Share */
+            lower_share: number;
+            /** Upper */
+            upper: number | null;
+            /** Upper Share */
+            upper_share: number;
+            /** Weight */
+            weight: number;
+        };
+        /** ProjectMethodResult */
+        ProjectMethodResult: {
+            /** Alternatives */
+            alternatives: components["schemas"]["ProjectAlternativeResult"][];
+            /** Higher Is Better */
+            higher_is_better: boolean;
+            /** Label */
+            label: string;
+            /** Method */
+            method: string;
+            /** Order */
+            order: string[];
+            /** Spec */
+            spec: components["schemas"]["WeightedSumMethod"] | components["schemas"]["TopsisMethod"] | components["schemas"]["CompromiseProgrammingMethod"];
+        };
+        /** ProjectPareto */
+        ProjectPareto: {
+            /** Alternatives */
+            alternatives: components["schemas"]["ProjectDominance"][];
+            /** Front */
+            front: string[];
+        };
+        /** ProjectStability */
+        ProjectStability: {
+            /** Intervals */
+            intervals: components["schemas"]["ProjectInterval"][];
+            scope: components["schemas"]["StabilityScope"];
+        };
+        /** RobustnessSettings */
+        RobustnessSettings: {
+            /**
+             * Mode
+             * @default around
+             * @enum {string}
+             */
+            mode: "around" | "unknown";
+            /**
+             * Samples
+             * @default 5000
+             */
+            samples: number;
+            /**
+             * Seed
+             * @default 1
+             */
+            seed: number;
+            /**
+             * Spread
+             * @default 0.2
+             */
+            spread: number;
+        };
+        /** Source */
+        Source: {
+            /** Column Map */
+            column_map?: {
+                [key: string]: unknown;
+            } | null;
+            /** Filename */
+            filename?: string | null;
+            /** Header Row */
+            header_row?: number | null;
+            /**
+             * Kind
+             * @default manual
+             * @enum {string}
+             */
+            kind: "table" | "template" | "legacy" | "project" | "manual";
+            /** Legacy */
+            legacy?: {
+                [key: string]: unknown;
+            } | null;
+            /** Sheet */
+            sheet?: string | null;
         };
         /**
          * StabilityOptions
@@ -481,32 +1123,6 @@ export interface components {
              */
             normalization: "min_max" | "fixed_range" | "none";
         };
-        /** StabilityRequest */
-        StabilityRequest: {
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
-            /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range" | "none";
-            problem: components["schemas"]["ProblemModel"];
-            /** @default full_order */
-            scope: components["schemas"]["StabilityScope"];
-        };
         /** StabilityResponse */
         StabilityResponse: {
             /** Intervals */
@@ -520,6 +1136,45 @@ export interface components {
          * @enum {string}
          */
         StabilityScope: "full_order" | "top1";
+        /**
+         * TargetValueFunction
+         * @description 1 inside [ideal_low, ideal_high], falling linearly to 0 at lower and upper.
+         */
+        TargetValueFunction: {
+            /** Ideal High */
+            ideal_high: number;
+            /** Ideal Low */
+            ideal_low: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "target";
+            /** Lower */
+            lower: number;
+            /** Upper */
+            upper: number;
+        };
+        /** TopsisMethod */
+        TopsisMethod: {
+            /**
+             * Basis
+             * @default values
+             * @enum {string}
+             */
+            basis: "values" | "raw";
+            /**
+             * Ideal
+             * @default data
+             * @enum {string}
+             */
+            ideal: "data" | "fixed";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            method: "topsis";
+        };
         /** TopsisSpec */
         TopsisSpec: {
             /**
@@ -548,6 +1203,23 @@ export interface components {
              */
             normalization: "vector" | "min_max" | "fixed_range" | "none";
         };
+        /** Validity */
+        Validity: {
+            /**
+             * Valid
+             * @default true
+             * @constant
+             */
+            valid: true;
+        };
+        /** WeightedSumMethod */
+        WeightedSumMethod: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            method: "weighted_sum";
+        };
         /** WeightedSumSpec */
         WeightedSumSpec: {
             /**
@@ -575,6 +1247,84 @@ export interface components {
              * @enum {string}
              */
             normalization: "min_max" | "fixed_range" | "none";
+        };
+        /** Weighting */
+        Weighting: {
+            groups?: components["schemas"]["LevelWeighting"] | null;
+            /**
+             * Within
+             * @default {}
+             */
+            within: {
+                [key: string]: components["schemas"]["LevelWeighting"];
+            };
+        };
+        /** ReportRequest */
+        mcda_api__projects__ReportRequest: {
+            /**
+             * Include Pareto
+             * @default true
+             */
+            include_pareto: boolean;
+            /**
+             * Include Stability
+             * @default true
+             */
+            include_stability: boolean;
+            project: components["schemas"]["Project"];
+        };
+        /** StabilityRequest */
+        mcda_api__projects__StabilityRequest: {
+            project: components["schemas"]["Project"];
+            /** @default full_order */
+            scope: components["schemas"]["StabilityScope"];
+        };
+        /** ReportRequest */
+        mcda_api__schemas__ReportRequest: {
+            /**
+             * Include Pareto
+             * @default true
+             */
+            include_pareto: boolean;
+            /** Methods */
+            methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
+            problem: components["schemas"]["ProblemModel"];
+            /**
+             * @default {
+             *       "bounds": [
+             *         0,
+             *         100
+             *       ],
+             *       "normalization": "min_max"
+             *     }
+             */
+            stability: components["schemas"]["StabilityOptions"] | null;
+        };
+        /** StabilityRequest */
+        mcda_api__schemas__StabilityRequest: {
+            /**
+             * Bounds
+             * @default [
+             *       0,
+             *       100
+             *     ]
+             */
+            bounds: [
+                number,
+                number
+            ] | [
+                number,
+                number
+            ][];
+            /**
+             * Normalization
+             * @default min_max
+             * @enum {string}
+             */
+            normalization: "min_max" | "fixed_range" | "none";
+            problem: components["schemas"]["ProblemModel"];
+            /** @default full_order */
+            scope: components["schemas"]["StabilityScope"];
         };
     };
     responses: never;
@@ -663,7 +1413,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReportRequest"];
+                "application/json": components["schemas"]["mcda_api__schemas__ReportRequest"];
             };
         };
         responses: {
@@ -864,6 +1614,224 @@ export interface operations {
             };
         };
     };
+    evaluate_project_api_v1_projects_evaluate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Project"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectEvaluation"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    import_project_api_v1_projects_import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import_project_api_v1_projects_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectImport"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    migrate_project_api_v1_projects_migrate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    project_report_api_v1_projects_report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["mcda_api__projects__ReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    project_stability_api_v1_projects_stability_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["mcda_api__projects__StabilityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectStability"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    validate_project_api_v1_projects_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Project"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Validity"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     stability_api_v1_sensitivity_stability_post: {
         parameters: {
             query?: never;
@@ -873,7 +1841,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StabilityRequest"];
+                "application/json": components["schemas"]["mcda_api__schemas__StabilityRequest"];
             };
         };
         responses: {

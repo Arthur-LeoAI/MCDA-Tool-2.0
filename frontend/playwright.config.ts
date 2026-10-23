@@ -1,0 +1,35 @@
+import { defineConfig, devices } from '@playwright/test'
+
+const CI = Boolean(process.env.CI)
+
+// End-to-end tests drive the production build of the frontend against the
+// real API. Locally they reuse a running API and use the installed Microsoft
+// Edge; CI starts everything fresh with a downloaded Chromium.
+export default defineConfig({
+  testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: CI,
+  retries: CI ? 1 : 0,
+  reporter: CI ? [['list'], ['html', { open: 'never' }]] : 'list',
+  use: {
+    baseURL: 'http://localhost:4319',
+    locale: 'zh-CN',
+    trace: 'retain-on-failure',
+  },
+  projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'], channel: CI ? undefined : 'msedge' } }],
+  webServer: [
+    {
+      command: 'uv run --directory ../backend uvicorn mcda_api.main:app --port 8000',
+      url: 'http://127.0.0.1:8000/api/v1/health',
+      reuseExistingServer: !CI,
+      timeout: 120_000,
+    },
+    {
+      // `vite preview` serves the build and proxies /api like the dev server.
+      command: 'npm run build && npm run preview -- --port 4319 --strictPort',
+      url: 'http://localhost:4319',
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+  ],
+})

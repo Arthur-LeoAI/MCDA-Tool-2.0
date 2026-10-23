@@ -19,7 +19,7 @@ from mcda_core import (
 )
 from mcda_core.io import read_legacy_workbook
 from mcda_core.project import migrate, pareto, parse_project, prepare, project_from_problem, run_method, stability
-from mcda_core.project.model import CompromiseProgrammingMethod, TopsisMethod, WeightedSumMethod
+from mcda_core.project.model import CompromiseProgrammingMethod, LinearValueFunction, TopsisMethod, WeightedSumMethod
 
 
 def v1_document(cars, normalization="min_max", bounds=None, methods=None) -> dict:
@@ -36,6 +36,12 @@ def v1_document(cars, normalization="min_max", bounds=None, methods=None) -> dic
     return document
 
 
+def linear_bounds(project, index: int):
+    vf = project.criteria[index].value_function
+    assert isinstance(vf, LinearValueFunction)
+    return vf.bounds
+
+
 # --- Migration: same results as the old model ---------------------------------------
 
 
@@ -48,7 +54,7 @@ def test_v1_min_max_gives_identical_scores(cars):
 
 def test_v1_fixed_range_gives_identical_scores(cars):
     project = migrate(v1_document(cars, "fixed_range", [0, 200]))
-    assert project.criteria[0].value_function.bounds == (0.0, 200.0)
+    assert linear_bounds(project, 0) == (0.0, 200.0)
     old = weighted_sum(cars, Normalization.FIXED_RANGE, (0, 200))
     np.testing.assert_allclose(run_method(prepare(project), WeightedSumMethod()).scores, old.scores, atol=1e-12)
 
@@ -61,7 +67,7 @@ def test_v1_none_keeps_the_ranking():
         "normalization": "none",
     }
     project = migrate(document)
-    assert project.criteria[0].value_function.bounds == (0.0, 95.0)  # one range for all criteria
+    assert linear_bounds(project, 0) == (0.0, 95.0)  # one range for all criteria
     raw_scores = np.array(document["matrix"], dtype=float) @ np.array([0.7, 0.3])  # old "none": raw values
     new = run_method(prepare(project), WeightedSumMethod())
     assert new.ranks.tolist() == rank_scores(raw_scores).tolist()
@@ -126,7 +132,7 @@ def test_pareto_and_stability_on_value_scores(cars):
     prepared = prepare(project_from_problem(cars))
     assert {i.alternative for i in pareto(prepared) if i.is_pareto_optimal} == {"B", "C"}
     for new, old in zip(
-        stability(prepared, StabilityScope.TOP1), weight_stability_intervals(cars, "top1"), strict=True
+        stability(prepared, StabilityScope.TOP1), weight_stability_intervals(cars, StabilityScope.TOP1), strict=True
     ):
         assert (new.lower, new.upper) == pytest.approx((old.lower, old.upper))
 

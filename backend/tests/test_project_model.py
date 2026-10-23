@@ -5,7 +5,7 @@ import math
 import numpy as np
 import pytest
 
-from mcda_core import Location, ProblemValidationError
+from mcda_core import Direction, Location, ProblemValidationError
 from mcda_core.project import Project, parse_project, project_issues
 from mcda_core.project.model import (
     LinearValueFunction,
@@ -166,7 +166,7 @@ def scores(vf, values, data_range=None):
 
 def test_linear_data_and_fixed_bounds():
     assert scores(LinearValueFunction(), [10, 15, 20], (10, 20)) == [0, 0.5, 1]
-    assert scores(LinearValueFunction(direction="cost"), [10, 15, 20], (10, 20)) == [1, 0.5, 0]
+    assert scores(LinearValueFunction(direction=Direction.COST), [10, 15, 20], (10, 20)) == [1, 0.5, 0]
     assert scores(LinearValueFunction(bounds=(0, 100)), [-5, 50, 120]) == [0, 0.5, 1]  # clipped
 
 

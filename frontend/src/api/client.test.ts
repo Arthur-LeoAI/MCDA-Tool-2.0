@@ -5,32 +5,41 @@ afterEach(() => vi.unstubAllGlobals())
 
 const failure = (promise: Promise<unknown>) =>
   promise.then(
-    () => { throw new Error('expected the request to fail') },
+    () => {
+      throw new Error('expected the request to fail')
+    },
     (error) => error as ApiError,
   )
 
 const stubFetch = (impl: () => Promise<Response>) => vi.stubGlobal('fetch', vi.fn(impl))
 
 describe('postJson', () => {
-  it('returns parsed JSON on success', async () => {
+  it('returns parsed JSON on success and calls the versioned root', async () => {
     stubFetch(async () => new Response(JSON.stringify({ ok: 1 }), { status: 200 }))
-    await expect(postJson('/api/x', {})).resolves.toEqual({ ok: 1 })
+    await expect(postJson('/x', {})).resolves.toEqual({ ok: 1 })
+    expect(vi.mocked(fetch).mock.calls[0][0]).toBe('/api/v1/x')
   })
 
   it('turns API errors into ApiError with issues', async () => {
-    const body = { detail: 'Invalid decision problem', issues: [{ location: 'C4', message: 'value must be a number' }] }
+    const issues = [
+      { code: 'value_not_number', params: { value: 'x' }, location: { kind: 'cell', ref: 'C4' }, message: '…' },
+    ]
+    const body = { code: 'invalid_problem', detail: 'Invalid decision problem', params: {}, issues, request_id: 'r1' }
     stubFetch(async () => new Response(JSON.stringify(body), { status: 422 }))
-    const error = await failure(postJson('/api/x', {}))
+    const error = await failure(postJson('/x', {}))
     expect(error).toBeInstanceOf(ApiError)
     expect(error.status).toBe(422)
+    expect(error.code).toBe('invalid_problem')
     expect(error.message).toBe('Invalid decision problem')
-    expect(error.issues).toEqual(body.issues)
+    expect(error.issues).toEqual(issues)
+    expect(error.requestId).toBe('r1')
   })
 
   it('handles non-JSON error bodies', async () => {
     stubFetch(async () => new Response('Bad gateway', { status: 502, statusText: 'Bad Gateway' }))
-    const error = await failure(postJson('/api/x', {}))
+    const error = await failure(postJson('/x', {}))
     expect(error.status).toBe(502)
+    expect(error.code).toBe('unknown')
     expect(error.issues).toEqual([])
   })
 
@@ -38,8 +47,8 @@ describe('postJson', () => {
     stubFetch(async () => {
       throw new TypeError('Failed to fetch')
     })
-    const error = await failure(postJson('/api/x', {}))
+    const error = await failure(postJson('/x', {}))
     expect(error).toBeInstanceOf(ApiError)
-    expect(error.status).toBe(0)
+    expect(error.code).toBe('network')
   })
 })

@@ -2,8 +2,20 @@ import { describe, expect, it } from 'vitest'
 import type { Interval, MethodResult } from '../api/types'
 import { breakdownChart, intervalRows, rankChart, scoreChart } from './charts'
 
-const interval = (criterion: string, weight: number, lower: number, upper: number | null, lowerShare: number, upperShare: number): Interval => ({
-  criterion, weight, lower, upper, lower_share: lowerShare, upper_share: upperShare,
+const interval = (
+  criterion: string,
+  weight: number,
+  lower: number,
+  upper: number | null,
+  lowerShare: number,
+  upperShare: number,
+): Interval => ({
+  criterion,
+  weight,
+  lower,
+  upper,
+  lower_share: lowerShare,
+  upper_share: upperShare,
 })
 
 describe('intervalRows', () => {
@@ -33,7 +45,10 @@ const result = (method: string, ranks: number[], contributions?: number[][]): Me
   spec: { method: 'weighted_sum', normalization: 'min_max', bounds: [0, 100] },
   higher_is_better: true,
   alternatives: ranks.map((rank, i) => ({
-    name: `A${i}`, score: 1 / rank, rank, contributions: contributions?.[i] ?? null,
+    name: `A${i}`,
+    score: 1 / rank,
+    rank,
+    contributions: contributions?.[i] ?? null,
   })),
   order: ranks.map((_, i) => `A${i}`).sort((a, b) => ranks[Number(a.slice(1))] - ranks[Number(b.slice(1))]),
 })
@@ -46,11 +61,24 @@ describe('chart options', () => {
 
   it('draws one rank line per alternative', () => {
     const option = rankChart([result('ws', [2, 1]), result('topsis', [1, 2])]) as { series: { data: number[] }[] }
-    expect(option.series.map((s) => s.data)).toEqual([[2, 1], [1, 2]])
+    expect(option.series.map((s) => s.data)).toEqual([
+      [2, 1],
+      [1, 2],
+    ])
   })
 
   it('skips criteria that contribute nothing', () => {
-    const option = breakdownChart(result('ws', [1, 2], [[0.5, 0, 0.1], [0.2, 0, 0.3]]), ['c0', 'c1', 'c2']) as { series: { name: string }[] }
+    const option = breakdownChart(
+      result(
+        'ws',
+        [1, 2],
+        [
+          [0.5, 0, 0.1],
+          [0.2, 0, 0.3],
+        ],
+      ),
+      ['c0', 'c1', 'c2'],
+    ) as { series: { name: string }[] }
     expect(option.series.map((s) => s.name)).toEqual(['c0', 'c2'])
   })
 })

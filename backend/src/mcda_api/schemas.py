@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -12,6 +12,7 @@ from mcda_core import (
     DecisionProblem,
     Direction,
     DominanceInfo,
+    Location,
     MethodResult,
     Normalization,
     ProblemValidationError,
@@ -30,7 +31,9 @@ MAX_METHODS = 10
 FiniteFloat = Annotated[float, Field(allow_inf_nan=False)]
 Name = Annotated[str, Field(min_length=1, max_length=200)]
 Row = Annotated[list[FiniteFloat], Field(max_length=MAX_CRITERIA)]
-BoundsIn = tuple[FiniteFloat, FiniteFloat] | Annotated[list[tuple[FiniteFloat, FiniteFloat]], Field(max_length=MAX_CRITERIA)]
+BoundsIn = (
+    tuple[FiniteFloat, FiniteFloat] | Annotated[list[tuple[FiniteFloat, FiniteFloat]], Field(max_length=MAX_CRITERIA)]
+)
 
 
 # --- Problem -----------------------------------------------------------------
@@ -51,7 +54,9 @@ class ProblemModel(BaseModel):
 
     def to_domain(self) -> DecisionProblem:
         ragged = [
-            ValidationIssue(f"row has {len(row)} values, expected {len(self.criteria)}", f"matrix row {i + 1}")
+            ValidationIssue(
+                "ragged_row", {"count": len(row), "expected": len(self.criteria)}, Location("row", index=i + 1)
+            )
             for i, row in enumerate(self.matrix)
             if len(row) != len(self.criteria)
         ]
@@ -150,7 +155,9 @@ class MethodResultModel(BaseModel):
     """Best first; tied alternatives keep their input order."""
 
     @classmethod
-    def build(cls, spec: WeightedSumSpec | TopsisSpec | CompromiseProgrammingSpec, result: MethodResult) -> MethodResultModel:
+    def build(
+        cls, spec: WeightedSumSpec | TopsisSpec | CompromiseProgrammingSpec, result: MethodResult
+    ) -> MethodResultModel:
         return cls(
             method=result.method,
             label=spec.label(),
@@ -278,11 +285,34 @@ class ReportRequest(BaseModel):
 # --- Errors ------------------------------------------------------------------
 
 
+class LocationModel(BaseModel):
+    """Where an issue is; which fields are set depends on ``kind``.
+
+    cell: ``ref`` ("B4") · alternative/criterion: ``name`` or 1-based ``index`` ·
+    value: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·
+    field: request path in ``ref`` ("problem.matrix.0.1")
+    """
+
+    kind: Literal["cell", "alternative", "criterion", "value", "row", "field"]
+    ref: str | None = None
+    name: str | None = None
+    index: int | None = None
+    alternative: str | None = None
+    criterion: str | None = None
+
+
 class IssueModel(BaseModel):
-    location: str | None
+    code: str
+    params: dict[str, Any] = {}
+    location: LocationModel | None
     message: str
+    """English fallback; clients should translate ``code`` with ``params``."""
 
 
 class ErrorResponse(BaseModel):
+    code: str
     detail: str
+    """English fallback; clients should translate ``code`` with ``params``."""
+    params: dict[str, Any] = {}
     issues: list[IssueModel] = []
+    request_id: str | None = None

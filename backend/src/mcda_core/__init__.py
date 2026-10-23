@@ -1,6 +1,6 @@
 """Calculation core for the MCDA decision-support tool."""
 
-from .errors import ProblemValidationError, ValidationIssue
+from .errors import Location, McdaError, ProblemValidationError, ValidationIssue
 from .methods import MethodResult, compromise_programming, topsis, weighted_sum
 from .model import Criterion, DecisionProblem, Direction
 from .normalization import Normalization, normalize
@@ -13,6 +13,8 @@ __all__ = [
     "DecisionProblem",
     "Direction",
     "DominanceInfo",
+    "Location",
+    "McdaError",
     "MethodResult",
     "Normalization",
     "ProblemValidationError",

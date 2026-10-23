@@ -1,0 +1,17 @@
+# Production-like local run:  docker compose up --build   →  http://localhost:8080
+# For development with hot reload, run backend and frontend natively (see README).
+services:
+  api:
+    build: ./backend
+    environment:
+      MCDA_CORS_ORIGINS: '' # same origin through the web container; no CORS needed
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    ports:
+      - '8080:80'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped

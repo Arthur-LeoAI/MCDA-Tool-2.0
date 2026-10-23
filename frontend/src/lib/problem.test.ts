@@ -6,7 +6,6 @@ import {
   checkDraft,
   equalWeights,
   normalizedWeights,
-  readableLocation,
   removeAlternative,
   removeCriterion,
   setCell,
@@ -19,7 +18,10 @@ const draft = (): DraftProblem => ({
     { name: 'cost', direction: 'cost', weight: 3 },
     { name: 'quality', direction: 'benefit', weight: 1 },
   ],
-  matrix: [[1, 2], [3, 4]],
+  matrix: [
+    [1, 2],
+    [3, 4],
+  ],
 })
 
 describe('editing', () => {
@@ -27,7 +29,12 @@ describe('editing', () => {
     const d = addCriterion(addAlternative(addAlternative(draft(), 'New'), 'New'), 'quality')
     expect(d.alternatives).toEqual(['A', 'B', 'New', 'New 2'])
     expect(d.criteria.map((c) => c.name)).toEqual(['cost', 'quality', 'quality 2'])
-    expect(d.matrix).toEqual([[1, 2, null], [3, 4, null], [null, null, null], [null, null, null]])
+    expect(d.matrix).toEqual([
+      [1, 2, null],
+      [3, 4, null],
+      [null, null, null],
+      [null, null, null],
+    ])
   })
 
   it('removes rows and columns', () => {
@@ -59,20 +66,9 @@ describe('checkDraft', () => {
     const d = setCell({ ...draft(), alternatives: ['A', ' '] }, 0, 1, null)
     const { problem, issues } = checkDraft(d)
     expect(problem).toBeNull()
-    expect(issues).toEqual([
-      { location: 'alternative #2', message: 'empty_name' },
-      { location: 'A / quality', message: 'missing_value' },
+    expect(issues.map((i) => [i.code, i.location])).toEqual([
+      ['empty_name', { kind: 'alternative', index: 2 }],
+      ['missing_value', { kind: 'value', alternative: 'A', criterion: 'quality' }],
     ])
-  })
-})
-
-describe('readableLocation', () => {
-  it('maps request paths to names', () => {
-    const d = draft()
-    expect(readableLocation('body.problem.matrix.1.0', d)).toBe('B / cost')
-    expect(readableLocation('body.criteria.1.weight', d)).toBe('quality')
-    expect(readableLocation('body.problem.alternatives.0', d)).toBe('A')
-    expect(readableLocation("criterion 'cost'", d)).toBe("criterion 'cost'")
-    expect(readableLocation(null, d)).toBeNull()
   })
 })

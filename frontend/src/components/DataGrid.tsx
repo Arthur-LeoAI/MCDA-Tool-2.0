@@ -13,21 +13,39 @@ import {
 import { NumberInput } from './NumberInput'
 import { Button } from './ui'
 
-function NameInput({ value, onChange, label, className = '' }: { value: string; onChange: (v: string) => void; label: string; className?: string }) {
+function NameInput({
+  value,
+  onChange,
+  label,
+  className = '',
+}: {
+  value: string
+  onChange: (v: string) => void
+  label: string
+  className?: string
+}) {
   return (
     <input
       type="text"
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={`min-w-0 rounded-md border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500/40 ${
-        value.trim() ? 'border-transparent bg-transparent hover:border-slate-200 focus:border-accent-500 focus:bg-white' : 'border-red-300 bg-red-50'
+      className={`focus:ring-accent-500/40 min-w-0 rounded-md border px-2 py-1 text-sm focus:ring-2 focus:outline-none ${
+        value.trim()
+          ? 'focus:border-accent-500 border-transparent bg-transparent hover:border-slate-200 focus:bg-white'
+          : 'border-red-300 bg-red-50'
       } ${className}`}
     />
   )
 }
 
-export function DataGrid({ draft, update }: { draft: DraftProblem; update: (change: (draft: DraftProblem) => DraftProblem) => void }) {
+export function DataGrid({
+  draft,
+  update,
+}: {
+  draft: DraftProblem
+  update: (change: (draft: DraftProblem) => DraftProblem) => void
+}) {
   const t = useT()
 
   return (
@@ -40,7 +58,10 @@ export function DataGrid({ draft, update }: { draft: DraftProblem; update: (chan
                 {t('common.alternative')} \ {t('common.criterion')}
               </th>
               {draft.criteria.map((criterion, j) => (
-                <th key={j} className="sticky top-0 z-10 border-b border-l border-slate-200 bg-slate-50 px-1 py-1.5 align-top font-normal">
+                <th
+                  key={j}
+                  className="sticky top-0 z-10 border-b border-l border-slate-200 bg-slate-50 px-1 py-1.5 align-top font-normal"
+                >
                   <div className="flex items-start gap-0.5">
                     <NameInput
                       value={criterion.name}
@@ -57,7 +78,9 @@ export function DataGrid({ draft, update }: { draft: DraftProblem; update: (chan
                       <X className="size-3.5" />
                     </button>
                   </div>
-                  <div className={`px-2 text-left text-[11px] ${criterion.direction === 'cost' ? 'text-amber-600' : 'text-emerald-600'}`}>
+                  <div
+                    className={`px-2 text-left text-[11px] ${criterion.direction === 'cost' ? 'text-amber-600' : 'text-emerald-600'}`}
+                  >
                     {criterion.direction === 'cost' ? t('common.cost') : t('common.benefit')}
                   </div>
                 </th>
@@ -102,10 +125,16 @@ export function DataGrid({ draft, update }: { draft: DraftProblem; update: (chan
         </table>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button icon={<Plus className="size-4" />} onClick={() => update((d) => addAlternative(d, t('data.newAlternative')))}>
+        <Button
+          icon={<Plus className="size-4" />}
+          onClick={() => update((d) => addAlternative(d, t('data.newAlternative')))}
+        >
           {t('data.addAlternative')}
         </Button>
-        <Button icon={<Plus className="size-4" />} onClick={() => update((d) => addCriterion(d, t('data.newCriterion')))}>
+        <Button
+          icon={<Plus className="size-4" />}
+          onClick={() => update((d) => addCriterion(d, t('data.newCriterion')))}
+        >
           {t('data.addCriterion')}
         </Button>
       </div>

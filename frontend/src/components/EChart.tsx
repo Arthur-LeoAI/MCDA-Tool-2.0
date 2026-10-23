@@ -8,7 +8,11 @@ import { useEffect, useRef } from 'react'
 echarts.use([BarChart, LineChart, ScatterChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
 
 /** Thin ECharts wrapper: one chart instance per element, resized with its container. */
-export function EChart({ option, height = 320, onClick }: {
+export function EChart({
+  option,
+  height = 320,
+  onClick,
+}: {
   option: echarts.EChartsCoreOption
   height?: number
   onClick?: (params: echarts.ECElementEvent) => void

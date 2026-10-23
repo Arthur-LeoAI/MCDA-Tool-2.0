@@ -37,7 +37,10 @@ export function renameAlternative(draft: DraftProblem, index: number, name: stri
 }
 
 export function addCriterion(draft: DraftProblem, baseName: string): DraftProblem {
-  const name = uniqueName(baseName, draft.criteria.map((c) => c.name))
+  const name = uniqueName(
+    baseName,
+    draft.criteria.map((c) => c.name),
+  )
   return {
     ...draft,
     criteria: [...draft.criteria, { name, direction: 'benefit', weight: 1 }],
@@ -82,18 +85,22 @@ export const equalWeights = (criteria: Criterion[]) => criteria.map(() => 1 / cr
  * Checks the browser can do itself before asking the server: empty cells
  * and names. Returns a complete Problem when there is nothing to report.
  */
+const issue = (code: string, location: Issue['location']): Issue => ({ code, params: {}, location, message: code })
+
 export function checkDraft(draft: DraftProblem): { problem: Problem | null; issues: Issue[] } {
   const issues: Issue[] = []
   draft.alternatives.forEach((name, i) => {
-    if (!name.trim()) issues.push({ location: `alternative #${i + 1}`, message: 'empty_name' })
+    if (!name.trim()) issues.push(issue('empty_name', { kind: 'alternative', index: i + 1 }))
   })
   draft.criteria.forEach((c, j) => {
-    if (!c.name.trim()) issues.push({ location: `criterion #${j + 1}`, message: 'empty_name' })
+    if (!c.name.trim()) issues.push(issue('empty_name', { kind: 'criterion', index: j + 1 }))
   })
   draft.matrix.forEach((row, i) =>
     row.forEach((value, j) => {
       if (value === null || !Number.isFinite(value)) {
-        issues.push({ location: cellLabel(draft, i, j), message: 'missing_value' })
+        const alternative = draft.alternatives[i] || `#${i + 1}`
+        const criterion = draft.criteria[j]?.name || `#${j + 1}`
+        issues.push(issue('missing_value', { kind: 'value', alternative, criterion }))
       }
     }),
   )
@@ -106,22 +113,4 @@ export function checkDraft(draft: DraftProblem): { problem: Problem | null; issu
     },
     issues,
   }
-}
-
-const cellLabel = (draft: DraftProblem, i: number, j: number) =>
-  `${draft.alternatives[i] || `#${i + 1}`} / ${draft.criteria[j]?.name || `#${j + 1}`}`
-
-/**
- * Turn request-validation locations such as "body.problem.matrix.0.1" into
- * labels users recognise ("Option A / Cost"). Other locations pass through.
- */
-export function readableLocation(location: string | null, draft: DraftProblem): string | null {
-  if (!location) return location
-  const parts = location.replace(/^body\.(problem\.)?/, '').split('.')
-  const [field, a, b] = parts
-  const i = Number(a)
-  if (field === 'matrix' && parts.length >= 3) return cellLabel(draft, i, Number(b))
-  if (field === 'criteria' && Number.isInteger(i)) return draft.criteria[i]?.name || `#${i + 1}`
-  if (field === 'alternatives' && Number.isInteger(i)) return draft.alternatives[i] || `#${i + 1}`
-  return location
 }

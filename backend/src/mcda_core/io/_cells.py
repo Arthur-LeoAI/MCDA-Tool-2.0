@@ -9,12 +9,23 @@ from typing import BinaryIO
 import openpyxl
 from openpyxl.utils import get_column_letter
 
+from ..errors import Location
+
 Rows = list[list[object]]
 
 
 def cell_ref(row: int, col: int) -> str:
     """Excel-style reference for 0-based indices, e.g. (2, 1) -> 'B3'."""
     return f"{get_column_letter(col + 1)}{row + 1}"
+
+
+def cell_location(row: int, col: int) -> Location:
+    return Location("cell", ref=cell_ref(row, col))
+
+
+def as_text(value: object) -> str | None:
+    """Cell content as JSON-safe text for error parameters."""
+    return None if value is None else str(value)
 
 
 def is_blank(value: object) -> bool:
@@ -44,7 +55,7 @@ def read_xlsx_rows(source: Source, prefer_sheet: str | None = None) -> Rows:
     try:
         sheets = workbook.sheetnames
         worksheet = workbook[prefer_sheet] if prefer_sheet in sheets else workbook.worksheets[0]
-        rows = [list(row) for row in worksheet.iter_rows(values_only=True)]
+        rows: Rows = [list(row) for row in worksheet.iter_rows(values_only=True)]
     finally:
         workbook.close()
     width = max((len(row) for row in rows), default=0)

@@ -1,6 +1,6 @@
 import { ArrowRight, CircleCheck, FileDown, History, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { ApiError, downloadFile, uploadFile } from '../api/client'
+import { ApiError, asApiError, downloadFile, getBlob, uploadFile } from '../api/client'
 import type { ImportResponse, Problem } from '../api/types'
 import { DataGrid } from '../components/DataGrid'
 import { FileDrop } from '../components/FileDrop'
@@ -18,15 +18,15 @@ export function DataPage() {
   const [error, setError] = useState<ApiError | null>(null)
   const replaceInput = useRef<HTMLInputElement>(null)
   // Rules only the server checks (duplicate names, weights, ...).
-  const validation = useApiPost<Problem>('/api/problems/validate', checked?.problem ?? null, 400)
+  const validation = useApiPost<Problem>('/problems/validate', checked?.problem ?? null, 400)
 
   const importBlob = async (blob: Blob, filename: string) => {
     setBusy(true)
     setError(null)
     try {
-      loadImport(await uploadFile<ImportResponse>('/api/problems/import', blob, filename))
+      loadImport(await uploadFile<ImportResponse>('/problems/import', blob, filename))
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, String(err)))
+      setError(asApiError(err))
     } finally {
       setBusy(false)
     }
@@ -34,21 +34,23 @@ export function DataPage() {
 
   const loadExample = async () => {
     try {
-      const response = await fetch('/api/template?format=csv')
-      if (!response.ok) throw new ApiError(response.status, response.statusText)
-      await importBlob(await response.blob(), 'example.csv')
+      await importBlob(await getBlob('/template?format=csv'), 'example.csv')
     } catch (err) {
-      setError(err instanceof ApiError ? err : new ApiError(0, String(err)))
+      setError(asApiError(err))
     }
   }
 
   const download = (format: 'xlsx' | 'csv') =>
-    downloadFile(`/api/template?format=${format}`).catch((err) => setError(err))
+    downloadFile(`/template?format=${format}`).catch((err) => setError(asApiError(err)))
 
   const templateButtons = (
     <>
-      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('xlsx')}>{t('data.templateXlsx')}</Button>
-      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('csv')}>{t('data.templateCsv')}</Button>
+      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('xlsx')}>
+        {t('data.templateXlsx')}
+      </Button>
+      <Button variant="ghost" icon={<FileDown className="size-4" />} onClick={() => download('csv')}>
+        {t('data.templateCsv')}
+      </Button>
     </>
   )
 
@@ -64,7 +66,11 @@ export function DataPage() {
             </Button>
             <div className="flex flex-wrap gap-1">{templateButtons}</div>
           </div>
-          {error && <div className="mt-4"><ApiErrorBox error={error} /></div>}
+          {error && (
+            <div className="mt-4">
+              <ApiErrorBox error={error} />
+            </div>
+          )}
         </Card>
       </div>
     )
@@ -103,10 +109,14 @@ export function DataPage() {
         }
       />
 
-      {error && <div className="mb-4"><ApiErrorBox error={error} /></div>}
+      {error && (
+        <div className="mb-4">
+          <ApiErrorBox error={error} />
+        </div>
+      )}
 
       {source?.legacy && (
-        <div className="mb-4 flex gap-3 rounded-lg border border-accent-100 bg-accent-50 p-4 text-sm text-accent-700">
+        <div className="border-accent-100 bg-accent-50 text-accent-700 mb-4 flex gap-3 rounded-lg border p-4 text-sm">
           <History className="mt-0.5 size-5 shrink-0" />
           <div>
             <div className="font-semibold">{t('data.legacyTitle')}</div>
@@ -123,18 +133,31 @@ export function DataPage() {
           </span>
         }
         actions={
-          validation.loading ? <Spinner /> : problem && validation.data && (
-            <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
-              <CircleCheck className="size-4" />
-              {t('data.valid')}
-            </span>
+          validation.loading ? (
+            <Spinner />
+          ) : (
+            problem &&
+            validation.data && (
+              <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                <CircleCheck className="size-4" />
+                {t('data.valid')}
+              </span>
+            )
           )
         }
       >
         <p className="mb-3 text-xs text-slate-500">{t('data.tableHint')}</p>
         <DataGrid draft={draft} update={updateDraft} />
-        {issues.length > 0 && <div className="mt-4"><IssueList issues={issues} /></div>}
-        {validation.error && <div className="mt-4"><ApiErrorBox error={validation.error} draft={draft} /></div>}
+        {issues.length > 0 && (
+          <div className="mt-4">
+            <IssueList issues={issues} />
+          </div>
+        )}
+        {validation.error && (
+          <div className="mt-4">
+            <ApiErrorBox error={validation.error} draft={draft} />
+          </div>
+        )}
       </Card>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2">

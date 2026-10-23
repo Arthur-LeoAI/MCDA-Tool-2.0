@@ -1,35 +1,60 @@
 import type { Issue } from './types'
 
-const BASE = import.meta.env.VITE_API_BASE ?? ''
+/** All endpoints live under one versioned root; callers pass paths like "/evaluate". */
+const API_ROOT = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 
-/** Error returned by the API: {detail, issues: [{location, message}]}. */
+/**
+ * A failed API call. `code` and each issue's `code` are stable identifiers
+ * to translate; `message` is the server's English fallback. Network
+ * failures have status 0 and code "network".
+ */
 export class ApiError extends Error {
   readonly status: number
+  readonly code: string
+  readonly params: Record<string, unknown>
   readonly issues: Issue[]
+  readonly requestId: string | null
 
-  constructor(status: number, message: string, issues: Issue[] = []) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    options: { params?: Record<string, unknown>; issues?: Issue[]; requestId?: string | null } = {},
+  ) {
     super(message)
     this.status = status
-    this.issues = issues
+    this.code = code
+    this.params = options.params ?? {}
+    this.issues = options.issues ?? []
+    this.requestId = options.requestId ?? null
   }
 }
 
+/** Any thrown value as an ApiError (unexpected errors become code "unknown"). */
+export const asApiError = (error: unknown): ApiError =>
+  error instanceof ApiError ? error : new ApiError(0, 'unknown', String(error))
+
 async function toApiError(response: Response): Promise<ApiError> {
+  const requestId = response.headers.get('X-Request-ID')
   try {
     const body = await response.json()
-    return new ApiError(response.status, String(body.detail ?? response.statusText), body.issues ?? [])
+    return new ApiError(response.status, String(body.code ?? 'unknown'), String(body.detail ?? response.statusText), {
+      params: body.params,
+      issues: body.issues,
+      requestId: body.request_id ?? requestId,
+    })
   } catch {
-    return new ApiError(response.status, response.statusText || `HTTP ${response.status}`)
+    return new ApiError(response.status, 'unknown', response.statusText || `HTTP ${response.status}`, { requestId })
   }
 }
 
 async function request(path: string, init: RequestInit): Promise<Response> {
   let response: Response
   try {
-    response = await fetch(`${BASE}${path}`, init)
+    response = await fetch(`${API_ROOT}${path}`, init)
   } catch (error) {
     if ((error as Error).name === 'AbortError') throw error
-    throw new ApiError(0, 'network')
+    throw new ApiError(0, 'network', (error as Error).message)
   }
   if (!response.ok) throw await toApiError(response)
   return response
@@ -37,6 +62,10 @@ async function request(path: string, init: RequestInit): Promise<Response> {
 
 export async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   return (await request(path, { signal })).json()
+}
+
+export async function getBlob(path: string): Promise<Blob> {
+  return (await request(path, {})).blob()
 }
 
 export async function postJson<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
@@ -57,9 +86,10 @@ export async function uploadFile<T>(path: string, file: File | Blob, filename: s
 
 /** Fetch a file (GET, or POST when a body is given) and hand it to the browser as a download. */
 export async function downloadFile(path: string, body?: unknown): Promise<void> {
-  const init: RequestInit = body === undefined
-    ? {}
-    : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  const init: RequestInit =
+    body === undefined
+      ? {}
+      : { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   const response = await request(path, init)
   const disposition = response.headers.get('Content-Disposition') ?? ''
   const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? 'download'

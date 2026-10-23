@@ -26,11 +26,13 @@ export function FileDrop({ onFile, busy }: { onFile: (file: File) => void; busy:
         if (file) onFile(file)
       }}
       className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-12 text-center transition ${
-        over ? 'border-accent-500 bg-accent-50' : 'border-slate-300 bg-slate-50 hover:border-accent-500 hover:bg-white'
+        over ? 'border-accent-500 bg-accent-50' : 'hover:border-accent-500 border-slate-300 bg-slate-50 hover:bg-white'
       }`}
     >
-      <FileSpreadsheet className="size-10 text-accent-500" />
-      {busy ? <Spinner label={t('data.uploading')} /> : (
+      <FileSpreadsheet className="text-accent-500 size-10" />
+      {busy ? (
+        <Spinner label={t('data.uploading')} />
+      ) : (
         <>
           <div className="font-medium text-slate-700">{t('data.drop')}</div>
           <div className="text-xs text-slate-500">{t('data.dropHint')}</div>

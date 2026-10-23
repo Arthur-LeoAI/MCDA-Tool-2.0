@@ -4,64 +4,7 @@
  */
 
 export interface paths {
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_api_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/methods": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Methods
-         * @description Available methods with their normalisation options and defaults.
-         */
-        get: operations["methods_api_methods_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/problems/validate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate Problem
-         * @description Check a problem; returns it unchanged if valid, else 422 with all issues.
-         */
-        post: operations["validate_problem_api_problems_validate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/evaluate": {
+    "/api/v1/evaluate": {
         parameters: {
             query?: never;
             header?: never;
@@ -71,88 +14,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Evaluate */
-        post: operations["evaluate_api_evaluate_post"];
+        post: operations["evaluate_api_v1_evaluate_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/pareto": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pareto */
-        post: operations["pareto_api_pareto_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/sensitivity/stability": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Stability */
-        post: operations["stability_api_sensitivity_stability_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/problems/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import Problem
-         * @description Read an uploaded template (.xlsx/.csv) or legacy V7 workbook.
-         */
-        post: operations["import_problem_api_problems_import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/template": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Template
-         * @description An example input file in the standard template layout.
-         */
-        get: operations["template_api_template_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/export/problem": {
+    "/api/v1/export/problem": {
         parameters: {
             query?: never;
             header?: never;
@@ -162,14 +31,14 @@ export interface paths {
         get?: never;
         put?: never;
         /** Export Problem */
-        post: operations["export_problem_api_export_problem_post"];
+        post: operations["export_problem_api_v1_export_problem_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/export/report": {
+    "/api/v1/export/report": {
         parameters: {
             query?: never;
             header?: never;
@@ -182,7 +51,138 @@ export interface paths {
          * Export Report
          * @description Excel report: results of every method, stability intervals, Pareto analysis and the input.
          */
-        post: operations["export_report_api_export_report_post"];
+        post: operations["export_report_api_v1_export_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_api_v1_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Methods
+         * @description Available methods with their normalisation options and defaults.
+         */
+        get: operations["methods_api_v1_methods_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pareto": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pareto */
+        post: operations["pareto_api_v1_pareto_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/problems/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Problem
+         * @description Read an uploaded template (.xlsx/.csv) or legacy V7 workbook.
+         */
+        post: operations["import_problem_api_v1_problems_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/problems/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate Problem
+         * @description Check a problem; returns it unchanged if valid, else 422 with all issues.
+         */
+        post: operations["validate_problem_api_v1_problems_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sensitivity/stability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stability */
+        post: operations["stability_api_v1_sensitivity_stability_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Template
+         * @description An example input file in the standard template layout.
+         */
+        get: operations["template_api_v1_template_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -195,38 +195,22 @@ export interface components {
     schemas: {
         /** AlternativeResult */
         AlternativeResult: {
-            /** Name */
-            name: string;
-            /** Score */
-            score: number;
-            /** Rank */
-            rank: number;
             /** Contributions */
             contributions?: number[] | null;
+            /** Name */
+            name: string;
+            /** Rank */
+            rank: number;
+            /** Score */
+            score: number;
         };
-        /** Body_import_problem_api_problems_import_post */
-        Body_import_problem_api_problems_import_post: {
+        /** Body_import_problem_api_v1_problems_import_post */
+        Body_import_problem_api_v1_problems_import_post: {
             /** File */
             file: string;
         };
         /** CompromiseProgrammingSpec */
         CompromiseProgrammingSpec: {
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            method: "compromise_programming";
-            /**
-             * P
-             * @default 2
-             */
-            p: number | "inf";
-            /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range";
             /**
              * Bounds
              * @default [
@@ -241,13 +225,29 @@ export interface components {
                 number,
                 number
             ][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            method: "compromise_programming";
+            /**
+             * Normalization
+             * @default min_max
+             * @enum {string}
+             */
+            normalization: "min_max" | "fixed_range";
+            /**
+             * P
+             * @default 2
+             */
+            p: number | "inf";
         };
         /** CriterionModel */
         CriterionModel: {
-            /** Name */
-            name: string;
             /** @default benefit */
             direction: components["schemas"]["Direction"];
+            /** Name */
+            name: string;
             /** Weight */
             weight: number;
         };
@@ -261,15 +261,17 @@ export interface components {
         DominanceModel: {
             /** Alternative */
             alternative: string;
-            /** Is Pareto Optimal */
-            is_pareto_optimal: boolean;
-            /** Dominates */
-            dominates: string[];
             /** Dominated By */
             dominated_by: string[];
+            /** Dominates */
+            dominates: string[];
+            /** Is Pareto Optimal */
+            is_pareto_optimal: boolean;
         };
         /** ErrorResponse */
         ErrorResponse: {
+            /** Code */
+            code: string;
             /** Detail */
             detail: string;
             /**
@@ -277,12 +279,21 @@ export interface components {
              * @default []
              */
             issues: components["schemas"]["IssueModel"][];
+            /**
+             * Params
+             * @default {}
+             */
+            params: {
+                [key: string]: unknown;
+            };
+            /** Request Id */
+            request_id?: string | null;
         };
         /** EvaluateRequest */
         EvaluateRequest: {
-            problem: components["schemas"]["ProblemModel"];
             /** Methods */
             methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
+            problem: components["schemas"]["ProblemModel"];
         };
         /** EvaluateResponse */
         EvaluateResponse: {
@@ -293,58 +304,91 @@ export interface components {
         ImportResponse: {
             /** Filename */
             filename: string;
+            legacy?: components["schemas"]["LegacyInfo"] | null;
+            problem: components["schemas"]["ProblemModel"];
             /**
              * Source Format
              * @enum {string}
              */
             source_format: "template" | "legacy";
-            problem: components["schemas"]["ProblemModel"];
-            legacy?: components["schemas"]["LegacyInfo"] | null;
         };
         /** IntervalModel */
         IntervalModel: {
             /** Criterion */
             criterion: string;
-            /** Weight */
-            weight: number;
             /** Lower */
             lower: number;
-            /** Upper */
-            upper: number | null;
             /** Lower Share */
             lower_share: number;
+            /** Upper */
+            upper: number | null;
             /** Upper Share */
             upper_share: number;
+            /** Weight */
+            weight: number;
         };
         /** IssueModel */
         IssueModel: {
-            /** Location */
-            location: string | null;
+            /** Code */
+            code: string;
+            location: components["schemas"]["LocationModel"] | null;
             /** Message */
             message: string;
+            /**
+             * Params
+             * @default {}
+             */
+            params: {
+                [key: string]: unknown;
+            };
         };
         /** LegacyInfo */
         LegacyInfo: {
-            /** Reference Order */
-            reference_order: string[];
-            /** Prescaled */
-            prescaled: boolean[];
             /**
              * Note
              * @default Legacy workbooks store values already on a 0-100 benefit scale; use weighted_sum with normalization 'none' to reproduce the workbook's ranking.
              */
             note: string;
+            /** Prescaled */
+            prescaled: boolean[];
+            /** Reference Order */
+            reference_order: string[];
+        };
+        /**
+         * LocationModel
+         * @description Where an issue is; which fields are set depends on ``kind``.
+         *
+         *     cell: ``ref`` ("B4") · alternative/criterion: ``name`` or 1-based ``index`` ·
+         *     value: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·
+         *     field: request path in ``ref`` ("problem.matrix.0.1")
+         */
+        LocationModel: {
+            /** Alternative */
+            alternative?: string | null;
+            /** Criterion */
+            criterion?: string | null;
+            /** Index */
+            index?: number | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "cell" | "alternative" | "criterion" | "value" | "row" | "field";
+            /** Name */
+            name?: string | null;
+            /** Ref */
+            ref?: string | null;
         };
         /** MethodInfo */
         MethodInfo: {
-            /** Method */
-            method: string;
-            /** Higher Is Better */
-            higher_is_better: boolean;
-            /** Normalizations */
-            normalizations: string[];
             /** Default Normalization */
             default_normalization: string;
+            /** Higher Is Better */
+            higher_is_better: boolean;
+            /** Method */
+            method: string;
+            /** Normalizations */
+            normalizations: string[];
             /** Parameters */
             parameters: {
                 [key: string]: unknown;
@@ -352,31 +396,31 @@ export interface components {
         };
         /** MethodResultModel */
         MethodResultModel: {
-            /** Method */
-            method: string;
-            /** Label */
-            label: string;
-            /** Spec */
-            spec: components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"];
-            /** Higher Is Better */
-            higher_is_better: boolean;
             /** Alternatives */
             alternatives: components["schemas"]["AlternativeResult"][];
+            /** Higher Is Better */
+            higher_is_better: boolean;
+            /** Label */
+            label: string;
+            /** Method */
+            method: string;
             /** Order */
             order: string[];
+            /** Spec */
+            spec: components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"];
         };
         /** ParetoRequest */
         ParetoRequest: {
-            problem: components["schemas"]["ProblemModel"];
             /** Criteria */
             criteria?: string[] | null;
+            problem: components["schemas"]["ProblemModel"];
         };
         /** ParetoResponse */
         ParetoResponse: {
-            /** Front */
-            front: string[];
             /** Alternatives */
             alternatives: components["schemas"]["DominanceModel"][];
+            /** Front */
+            front: string[];
         };
         /**
          * ProblemModel
@@ -392,24 +436,24 @@ export interface components {
         };
         /** ReportRequest */
         ReportRequest: {
-            problem: components["schemas"]["ProblemModel"];
-            /** Methods */
-            methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
-            /**
-             * @default {
-             *       "normalization": "min_max",
-             *       "bounds": [
-             *         0,
-             *         100
-             *       ]
-             *     }
-             */
-            stability: components["schemas"]["StabilityOptions"] | null;
             /**
              * Include Pareto
              * @default true
              */
             include_pareto: boolean;
+            /** Methods */
+            methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
+            problem: components["schemas"]["ProblemModel"];
+            /**
+             * @default {
+             *       "bounds": [
+             *         0,
+             *         100
+             *       ],
+             *       "normalization": "min_max"
+             *     }
+             */
+            stability: components["schemas"]["StabilityOptions"] | null;
         };
         /**
          * StabilityOptions
@@ -417,12 +461,6 @@ export interface components {
          */
         StabilityOptions: {
             /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range" | "none";
-            /**
              * Bounds
              * @default [
              *       0,
@@ -436,16 +474,16 @@ export interface components {
                 number,
                 number
             ][];
+            /**
+             * Normalization
+             * @default min_max
+             * @enum {string}
+             */
+            normalization: "min_max" | "fixed_range" | "none";
         };
         /** StabilityRequest */
         StabilityRequest: {
             /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range" | "none";
-            /**
              * Bounds
              * @default [
              *       0,
@@ -459,17 +497,23 @@ export interface components {
                 number,
                 number
             ][];
+            /**
+             * Normalization
+             * @default min_max
+             * @enum {string}
+             */
+            normalization: "min_max" | "fixed_range" | "none";
             problem: components["schemas"]["ProblemModel"];
             /** @default full_order */
             scope: components["schemas"]["StabilityScope"];
         };
         /** StabilityResponse */
         StabilityResponse: {
-            scope: components["schemas"]["StabilityScope"];
-            /** Normalization */
-            normalization: string;
             /** Intervals */
             intervals: components["schemas"]["IntervalModel"][];
+            /** Normalization */
+            normalization: string;
+            scope: components["schemas"]["StabilityScope"];
         };
         /**
          * StabilityScope
@@ -478,6 +522,20 @@ export interface components {
         StabilityScope: "full_order" | "top1";
         /** TopsisSpec */
         TopsisSpec: {
+            /**
+             * Bounds
+             * @default [
+             *       0,
+             *       100
+             *     ]
+             */
+            bounds: [
+                number,
+                number
+            ] | [
+                number,
+                number
+            ][];
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -489,6 +547,9 @@ export interface components {
              * @enum {string}
              */
             normalization: "vector" | "min_max" | "fixed_range" | "none";
+        };
+        /** WeightedSumSpec */
+        WeightedSumSpec: {
             /**
              * Bounds
              * @default [
@@ -503,9 +564,6 @@ export interface components {
                 number,
                 number
             ][];
-        };
-        /** WeightedSumSpec */
-        WeightedSumSpec: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -517,20 +575,6 @@ export interface components {
              * @enum {string}
              */
             normalization: "min_max" | "fixed_range" | "none";
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
         };
     };
     responses: never;
@@ -541,100 +585,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    health_api_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: string;
-                    };
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    methods_api_methods_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MethodInfo"][];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    validate_problem_api_problems_validate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProblemModel"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemModel"];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    evaluate_api_evaluate_post: {
+    evaluate_api_v1_evaluate_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -667,7 +618,136 @@ export interface operations {
             };
         };
     };
-    pareto_api_pareto_post: {
+    export_problem_api_v1_export_problem_post: {
+        parameters: {
+            query?: {
+                format?: "xlsx" | "csv";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProblemModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    export_report_api_v1_export_report_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    health_api_v1_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    methods_api_v1_methods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MethodInfo"][];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    pareto_api_v1_pareto_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -700,7 +780,7 @@ export interface operations {
             };
         };
     };
-    stability_api_sensitivity_stability_post: {
+    import_problem_api_v1_problems_import_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -709,40 +789,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["StabilityRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StabilityResponse"];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    import_problem_api_problems_import_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_import_problem_api_problems_import_post"];
+                "multipart/form-data": components["schemas"]["Body_import_problem_api_v1_problems_import_post"];
             };
         };
         responses: {
@@ -784,7 +831,73 @@ export interface operations {
             };
         };
     };
-    template_api_template_get: {
+    validate_problem_api_v1_problems_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProblemModel"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemModel"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    stability_api_v1_sensitivity_stability_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StabilityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StabilityResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    template_api_v1_template_get: {
         parameters: {
             query?: {
                 format?: "xlsx" | "csv";
@@ -803,75 +916,6 @@ export interface operations {
                 content: {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
                     "text/csv": unknown;
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    export_problem_api_export_problem_post: {
-        parameters: {
-            query?: {
-                format?: "xlsx" | "csv";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProblemModel"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
-                    "text/csv": unknown;
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    export_report_api_export_report_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
                 };
             };
             /** @description Unprocessable Content */

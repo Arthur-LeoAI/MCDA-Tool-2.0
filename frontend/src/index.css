@@ -1,7 +1,7 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+  --font-sans: 'Inter', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
   --color-accent-50: var(--color-indigo-50);
   --color-accent-100: var(--color-indigo-100);
   --color-accent-500: var(--color-indigo-500);
@@ -11,14 +11,4 @@
 
 body {
   @apply bg-slate-50 text-slate-800 antialiased;
-}
-
-/* Number inputs in the data grid: no spinner arrows. */
-input[type="number"].no-spin::-webkit-inner-spin-button,
-input[type="number"].no-spin::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type="number"].no-spin {
-  -moz-appearance: textfield;
 }

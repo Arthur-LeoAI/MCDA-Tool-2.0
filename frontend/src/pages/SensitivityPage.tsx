@@ -19,7 +19,7 @@ export function SensitivityPage() {
   const problem = checked.problem
 
   const stability = useApiPost<StabilityResponse>(
-    '/api/sensitivity/stability',
+    '/sensitivity/stability',
     problem && { problem, scope: stabilityScope, normalization: spec.normalization, bounds: spec.bounds },
   )
   const rows = useMemo(() => intervalRows(stability.data?.intervals ?? [], includeZero), [stability.data, includeZero])
@@ -31,7 +31,11 @@ export function SensitivityPage() {
   return (
     <div>
       <PageHeader title={t('sens.title')} intro={t('sens.intro')} />
-      {checked.issues.length > 0 && <div className="mb-4"><IssueList issues={checked.issues} /></div>}
+      {checked.issues.length > 0 && (
+        <div className="mb-4">
+          <IssueList issues={checked.issues} />
+        </div>
+      )}
 
       <div className="mb-4 flex flex-wrap items-center gap-4 text-sm text-slate-600">
         <span className="inline-flex items-center gap-2">
@@ -39,18 +43,30 @@ export function SensitivityPage() {
           <Segmented<StabilityScope>
             value={stabilityScope}
             onChange={setStabilityScope}
-            options={[{ value: 'full_order', label: t('sens.full_order') }, { value: 'top1', label: t('sens.top1') }]}
+            options={[
+              { value: 'full_order', label: t('sens.full_order') },
+              { value: 'top1', label: t('sens.top1') },
+            ]}
           />
         </span>
         <label className="inline-flex items-center gap-2">
-          <input type="checkbox" checked={includeZero} onChange={(e) => setIncludeZero(e.target.checked)} className="accent-accent-600" />
+          <input
+            type="checkbox"
+            checked={includeZero}
+            onChange={(e) => setIncludeZero(e.target.checked)}
+            className="accent-accent-600"
+          />
           {t('sens.showZero')}
         </label>
         <span className="text-xs text-slate-500">{t('sens.basedOn', { norm: t(`norm.${spec.normalization}`) })}</span>
         {stability.loading && <Spinner />}
       </div>
 
-      {stability.error && <div className="mb-4"><ApiErrorBox error={stability.error} draft={checked.draft} /></div>}
+      {stability.error && (
+        <div className="mb-4">
+          <ApiErrorBox error={stability.error} draft={checked.draft} />
+        </div>
+      )}
 
       {rows.length > 0 && (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -96,16 +112,25 @@ function IntervalList({ rows }: { rows: IntervalRow[] }) {
       {rows.map((row) => (
         <li key={row.criterion}>
           <div className="flex justify-between gap-2">
-            <span className="truncate font-medium text-slate-800" title={row.criterion}>{row.criterion}</span>
-            <span className="shrink-0 text-xs text-slate-500 tabular-nums">{t('sens.current')} {formatPercent(row.share)}</span>
+            <span className="truncate font-medium text-slate-800" title={row.criterion}>
+              {row.criterion}
+            </span>
+            <span className="shrink-0 text-xs text-slate-500 tabular-nums">
+              {t('sens.current')} {formatPercent(row.share)}
+            </span>
           </div>
           <div className="text-xs text-slate-500 tabular-nums">
-            {row.collapsed
-              ? <span className="text-red-600">{t('sens.collapsed')}</span>
-              : <>
-                  {formatPercent(row.lower_share)} – {row.upper === null ? t('common.unbounded') : formatPercent(row.upper_share)}
-                  <span className="ml-2 text-slate-400">({t('common.weight')} {formatScore(row.lower)} – {row.upper === null ? '∞' : formatScore(row.upper)})</span>
-                </>}
+            {row.collapsed ? (
+              <span className="text-red-600">{t('sens.collapsed')}</span>
+            ) : (
+              <>
+                {formatPercent(row.lower_share)} –{' '}
+                {row.upper === null ? t('common.unbounded') : formatPercent(row.upper_share)}
+                <span className="ml-2 text-slate-400">
+                  ({t('common.weight')} {formatScore(row.lower)} – {row.upper === null ? '∞' : formatScore(row.upper)})
+                </span>
+              </>
+            )}
           </div>
         </li>
       ))}

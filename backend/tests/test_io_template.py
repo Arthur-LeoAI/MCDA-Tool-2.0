@@ -61,15 +61,21 @@ def test_errors_point_to_cells():
     ]
     with pytest.raises(ProblemValidationError) as excinfo:
         parse_rows(rows)
-    locations = {issue.location for issue in excinfo.value.issues}
-    assert {"C2", "B3", "C4", "A5"} <= locations
+    found = {(issue.code, issue.location.ref) for issue in excinfo.value.issues if issue.location}
+    assert found == {
+        ("invalid_direction", "C2"),
+        ("weight_not_number", "B3"),
+        ("value_not_number", "C4"),
+        ("empty_name", "A5"),
+    }
 
 
 def test_wrong_labels_are_reported():
     rows = [["Name", "c1"], ["Direction", "benefit"], ["Weights", 1], ["A", 1], ["B", 2]]
     with pytest.raises(ProblemValidationError) as excinfo:
         parse_rows(rows)
-    assert {issue.location for issue in excinfo.value.issues} == {"A1", "A3"}
+    found = {(issue.code, issue.location.ref) for issue in excinfo.value.issues if issue.location}
+    assert found == {("label_expected", "A1"), ("label_expected", "A3")}
 
 
 def test_unsupported_file_type(tmp_path):

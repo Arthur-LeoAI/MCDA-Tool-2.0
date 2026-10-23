@@ -18,9 +18,9 @@ from pathlib import Path
 
 import openpyxl
 
-from ..errors import ProblemValidationError, ValidationIssue
+from ..errors import McdaError, ProblemValidationError, ValidationIssue
 from ..model import Criterion, DecisionProblem, Direction
-from ._cells import Rows, Source, cell_ref, is_blank, parse_number, read_xlsx_rows
+from ._cells import Rows, Source, as_text, cell_location, is_blank, parse_number, read_xlsx_rows
 
 TEMPLATE_SHEET = "Decision"
 HEADER_LABELS = ("Criterion", "Direction", "Weight")
@@ -34,7 +34,7 @@ def read_problem(source: Source, suffix: str | None = None) -> DecisionProblem:
     """
     if suffix is None:
         if not isinstance(source, (str, Path)):
-            raise ValueError("suffix is required when reading from a stream")
+            raise McdaError("suffix_required")
         suffix = Path(source).suffix
     suffix = suffix.lower()
     if suffix == ".csv":
@@ -43,7 +43,7 @@ def read_problem(source: Source, suffix: str | None = None) -> DecisionProblem:
     elif suffix in (".xlsx", ".xlsm"):
         rows = read_xlsx_rows(source, prefer_sheet=TEMPLATE_SHEET)
     else:
-        raise ValueError(f"unsupported file type {suffix!r} (use .xlsx or .csv)")
+        raise McdaError("unsupported_file_type", suffix=suffix)
     return parse_rows(rows)
 
 
@@ -71,8 +71,7 @@ def _parse_csv(text: str) -> Rows:
     rows: Rows = [list(row) for row in csv.reader(io.StringIO(text), delimiter=delimiter)]
     if delimiter == ";":
         rows = [
-            [v.replace(",", ".") if isinstance(v, str) and _DECIMAL_COMMA.match(v) else v for v in row]
-            for row in rows
+            [v.replace(",", ".") if isinstance(v, str) and _DECIMAL_COMMA.match(v) else v for v in row] for row in rows
         ]
     return rows
 
@@ -81,14 +80,13 @@ def parse_rows(rows: Rows) -> DecisionProblem:
     """Build a problem from raw cell rows, collecting every issue found."""
     issues: list[ValidationIssue] = []
     if len(rows) < len(HEADER_LABELS):
-        raise ProblemValidationError([ValidationIssue(
-            f"expected the rows {', '.join(HEADER_LABELS)} followed by alternatives"
-        )])
+        raise ProblemValidationError([ValidationIssue("template_too_short")])
 
     for row_index, label in enumerate(HEADER_LABELS):
         found = rows[row_index][0] if rows[row_index] else None
         if str(found or "").strip().lower() != label.lower():
-            issues.append(ValidationIssue(f"expected label '{label}', found {found!r}", cell_ref(row_index, 0)))
+            params = {"expected": label, "found": as_text(found)}
+            issues.append(ValidationIssue("label_expected", params, cell_location(row_index, 0)))
 
     header = rows[0]
     n_criteria = len(header) - 1
@@ -105,14 +103,17 @@ def parse_rows(rows: Rows) -> DecisionProblem:
         direction_raw = cell(rows[1], col)
         weight = parse_number(cell(rows[2], col))
         if is_blank(name):
-            issues.append(ValidationIssue("criterion name is empty", cell_ref(0, col)))
+            issues.append(ValidationIssue("empty_name", location=cell_location(0, col)))
         try:
             direction = Direction.parse(direction_raw)
         except ValueError:
-            issues.append(ValidationIssue(f"direction must be 'benefit' or 'cost', found {direction_raw!r}", cell_ref(1, col)))
+            issues.append(
+                ValidationIssue("invalid_direction", {"value": as_text(direction_raw)}, cell_location(1, col))
+            )
             direction = Direction.BENEFIT
         if weight is None:
-            issues.append(ValidationIssue(f"weight must be a number, found {cell(rows[2], col)!r}", cell_ref(2, col)))
+            params = {"value": as_text(cell(rows[2], col))}
+            issues.append(ValidationIssue("weight_not_number", params, cell_location(2, col)))
             weight = 0.0
         criteria.append(Criterion(str(name).strip() if not is_blank(name) else "", direction, weight))
 
@@ -124,12 +125,13 @@ def parse_rows(rows: Rows) -> DecisionProblem:
             continue
         name = cell(row, 0)
         if is_blank(name):
-            issues.append(ValidationIssue("alternative name is empty", cell_ref(row_index, 0)))
+            issues.append(ValidationIssue("empty_name", location=cell_location(row_index, 0)))
         values: list[float] = []
         for col in columns:
             value = parse_number(cell(row, col))
             if value is None:
-                issues.append(ValidationIssue(f"value must be a number, found {cell(row, col)!r}", cell_ref(row_index, col)))
+                params = {"value": as_text(cell(row, col))}
+                issues.append(ValidationIssue("value_not_number", params, cell_location(row_index, col)))
                 value = 0.0
             values.append(value)
         alternatives.append(str(name).strip() if not is_blank(name) else "")
@@ -145,7 +147,7 @@ def template_rows(problem: DecisionProblem) -> Rows:
         ["Criterion", *problem.criterion_names],
         ["Direction", *(d.value for d in problem.directions)],
         ["Weight", *(c.weight for c in problem.criteria)],
-        *([name, *map(float, values)] for name, values in zip(problem.alternatives, problem.matrix)),
+        *([name, *map(float, values)] for name, values in zip(problem.alternatives, problem.matrix, strict=True)),
     ]
 
 
@@ -160,7 +162,7 @@ def write_problem(problem: DecisionProblem, target: Source, suffix: str | None =
     """Write a problem in the template layout (.xlsx or .csv) to a path or binary stream."""
     if suffix is None:
         if not isinstance(target, (str, Path)):
-            raise ValueError("suffix is required when writing to a stream")
+            raise McdaError("suffix_required")
         suffix = Path(target).suffix
     suffix = suffix.lower()
     if suffix == ".csv":
@@ -173,8 +175,8 @@ def write_problem(problem: DecisionProblem, target: Source, suffix: str | None =
             target.write(data)
     elif suffix == ".xlsx":
         workbook = openpyxl.Workbook()
-        workbook.remove(workbook.active)
+        workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
         add_template_sheet(workbook, problem)
         workbook.save(target)
     else:
-        raise ValueError(f"unsupported file type {suffix!r} (use .xlsx or .csv)")
+        raise McdaError("unsupported_file_type", suffix=suffix)

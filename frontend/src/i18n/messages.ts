@@ -24,10 +24,12 @@ const zh = {
   'common.rank': '名次',
   'common.score': '得分',
   'common.unbounded': '无上限',
-  'common.network': '无法连接后端服务，请确认 API 已启动（端口 8000）。',
+  'common.requestId': '请求编号',
+  'loc.cell': '单元格 {ref}',
+  'loc.row': '第 {index} 行',
+  'loc.alternativeIndex': '第 {index} 个方案',
+  'loc.criterionIndex': '第 {index} 个准则',
 
-  'issue.missing_value': '缺少数值',
-  'issue.empty_name': '名称不能为空',
   'issue.title': '数据有 {n} 个问题需要处理',
 
   'data.title': '导入数据',
@@ -47,7 +49,8 @@ const zh = {
   'data.newAlternative': '新方案',
   'data.newCriterion': '新准则',
   'data.legacyTitle': '已识别为旧版 V7 工作簿',
-  'data.legacyText': '旧版数据已经统一缩放到 0–100 的效益型量纲，所以加权和已自动设为"不归一化"，以复现原工作簿的排序。',
+  'data.legacyText':
+    '旧版数据已经统一缩放到 0–100 的效益型量纲，所以加权和已自动设为"不归一化"，以复现原工作簿的排序。',
   'data.tableHint': '可以直接修改单元格、方案名和准则名。准则方向和权重在下一步设置。',
   'data.valid': '数据有效',
 
@@ -74,7 +77,8 @@ const zh = {
   'results.pareto': 'Pareto 分析',
   'results.paretoOptimal': 'Pareto 最优',
   'results.dominatedBy': '被 {names} 支配',
-  'results.paretoHint': '一个方案如果在所有准则上都不差于另一个方案，且至少在一个准则上更好，就"支配"后者。不被任何方案支配的方案就是 Pareto 最优。',
+  'results.paretoHint':
+    '一个方案如果在所有准则上都不差于另一个方案，且至少在一个准则上更好，就"支配"后者。不被任何方案支配的方案就是 Pareto 最优。',
   'results.higherBetter': '越高越好',
   'results.lowerBetter': '越低越好',
   'results.noMethod': '请至少选择一种方法',
@@ -94,7 +98,8 @@ const zh = {
   'norm.none': '不归一化',
 
   'sens.title': '敏感性分析',
-  'sens.intro': '每次只改变一个准则的权重（其他权重不变）。条形表示排名保持不变时，该准则权重占比的可变范围；圆点是当前占比。条越窄，结果对这个准则越敏感。',
+  'sens.intro':
+    '每次只改变一个准则的权重（其他权重不变）。条形表示排名保持不变时，该准则权重占比的可变范围；圆点是当前占比。条越窄，结果对这个准则越敏感。',
   'sens.scope': '保持不变的对象',
   'sens.full_order': '完整排序',
   'sens.top1': '第一名',
@@ -146,14 +151,17 @@ const en: Record<MessageKey, string> = {
   'common.rank': 'Rank',
   'common.score': 'Score',
   'common.unbounded': 'unbounded',
-  'common.network': 'Cannot reach the backend. Is the API running (port 8000)?',
+  'common.requestId': 'Request ID',
+  'loc.cell': 'cell {ref}',
+  'loc.row': 'row {index}',
+  'loc.alternativeIndex': 'alternative #{index}',
+  'loc.criterionIndex': 'criterion #{index}',
 
-  'issue.missing_value': 'value missing',
-  'issue.empty_name': 'name must not be empty',
   'issue.title': '{n} issue(s) to fix in the data',
 
   'data.title': 'Import data',
-  'data.intro': 'Upload the standard template (.xlsx / .csv) or a legacy MCDA ELT V7 workbook, or try the example data.',
+  'data.intro':
+    'Upload the standard template (.xlsx / .csv) or a legacy MCDA ELT V7 workbook, or try the example data.',
   'data.drop': 'Drop a file here or click to choose',
   'data.dropHint': '.xlsx or .csv, up to 5 MB',
   'data.uploading': 'Reading file…',
@@ -169,12 +177,13 @@ const en: Record<MessageKey, string> = {
   'data.newAlternative': 'New alternative',
   'data.newCriterion': 'New criterion',
   'data.legacyTitle': 'Legacy V7 workbook detected',
-  'data.legacyText': 'Its values are already on a 0–100 benefit scale, so the weighted sum was set to "no normalization" to reproduce the workbook\'s ranking.',
+  'data.legacyText':
+    'Its values are already on a 0–100 benefit scale, so the weighted sum was set to "no normalization" to reproduce the workbook\'s ranking.',
   'data.tableHint': 'Edit cells and names directly. Directions and weights come in the next step.',
   'data.valid': 'Data is valid',
 
   'weights.title': 'Criteria & weights',
-  'weights.intro': 'Set each criterion\'s direction and weight; the weighted-sum ranking updates live on the right.',
+  'weights.intro': "Set each criterion's direction and weight; the weighted-sum ranking updates live on the right.",
   'weights.equal': 'Equal weights',
   'weights.normalize': 'Normalize to 100%',
   'weights.resetImported': 'Restore imported weights',
@@ -196,7 +205,8 @@ const en: Record<MessageKey, string> = {
   'results.pareto': 'Pareto analysis',
   'results.paretoOptimal': 'Pareto optimal',
   'results.dominatedBy': 'dominated by {names}',
-  'results.paretoHint': 'An alternative dominates another if it is at least as good on every criterion and better on at least one. Alternatives no one dominates are Pareto optimal.',
+  'results.paretoHint':
+    'An alternative dominates another if it is at least as good on every criterion and better on at least one. Alternatives no one dominates are Pareto optimal.',
   'results.higherBetter': 'higher is better',
   'results.lowerBetter': 'lower is better',
   'results.noMethod': 'Select at least one method',
@@ -216,7 +226,8 @@ const en: Record<MessageKey, string> = {
   'norm.none': 'None',
 
   'sens.title': 'Sensitivity analysis',
-  'sens.intro': 'One weight changes at a time while the others stay fixed. Each bar is the range of that criterion\'s weight share over which the ranking stays the same; the dot is the current share. Narrow bars mean the result is sensitive to that criterion.',
+  'sens.intro':
+    "One weight changes at a time while the others stay fixed. Each bar is the range of that criterion's weight share over which the ranking stays the same; the dot is the current share. Narrow bars mean the result is sensitive to that criterion.",
   'sens.scope': 'Keep unchanged',
   'sens.full_order': 'Full order',
   'sens.top1': 'Top choice',
@@ -231,7 +242,8 @@ const en: Record<MessageKey, string> = {
 
   'export.title': 'Export',
   'export.report': 'Excel report',
-  'export.reportDesc': 'Scores and ranks for the selected methods, stability intervals, Pareto analysis, and the input data (re-importable).',
+  'export.reportDesc':
+    'Scores and ranks for the selected methods, stability intervals, Pareto analysis, and the input data (re-importable).',
   'export.includeStability': 'Include weight stability intervals',
   'export.includePareto': 'Include Pareto analysis',
   'export.download': 'Download report',

@@ -45,7 +45,7 @@ export function NumberInput({
         const next = parseNumber(e.target.value)
         onCommit(next === 'invalid' ? null : next)
       }}
-      className={`rounded-md border px-2 py-1 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-accent-500/40 ${
+      className={`focus:ring-accent-500/40 rounded-md border px-2 py-1 text-right text-sm tabular-nums focus:ring-2 focus:outline-none ${
         invalid ? invalidClassName : validClassName
       } ${className}`}
     />

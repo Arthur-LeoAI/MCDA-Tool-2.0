@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .errors import install_error_handlers
+from .observability import REQUEST_ID_HEADER, configure_logging, install_request_context
 from .routes import router
 
 
@@ -31,22 +32,29 @@ class Settings:
     max_upload_bytes: int = field(
         default_factory=lambda: int(float(os.environ.get("MCDA_MAX_UPLOAD_MB", "5")) * 1024 * 1024)
     )
+    log_level: str = field(default_factory=lambda: os.environ.get("MCDA_LOG_LEVEL", "INFO"))
+    log_format: str = field(default_factory=lambda: os.environ.get("MCDA_LOG_FORMAT", "text"))
+    """'text' for development, 'json' for log collectors in production."""
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
+    configure_logging(settings.log_level, settings.log_format)
     app = FastAPI(
         title="MCDA API",
         version=__version__,
         description="Multi-criteria decision analysis: ranking methods, Pareto analysis and weight sensitivity.",
     )
     app.state.settings = settings
+    # Middleware added last runs outermost: CORS must wrap the request context
+    # so that even 500 responses carry CORS headers.
+    install_request_context(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["GET", "POST"],
         allow_headers=["*"],
-        expose_headers=["Content-Disposition"],
+        expose_headers=["Content-Disposition", REQUEST_ID_HEADER],
     )
     install_error_handlers(app)
     app.include_router(router)

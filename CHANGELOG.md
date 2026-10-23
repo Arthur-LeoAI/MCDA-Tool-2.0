@@ -6,6 +6,13 @@
 
 ### Added
 
+- **项目模型 v2（M2 S1）**：
+  - `.mcda.json` 项目文件格式及其 JSON Schema（`backend/project.schema.json`）；
+  - 版本迁移：版本 3 的"问题"格式和浏览器里的旧草稿都会自动升级；
+  - 分析流水线：缺失值的四种处理方式、四种价值函数、等级/分类/是否的分数换算；
+  - `/api/v1/projects/*` 接口：migrate、validate、evaluate、stability、import、report。
+- 前端改为基于项目模型：可以保存和打开项目文件；空单元格允许保留，按"最差"处理；数据表格支持是/否、等级、分类类型的值；加权和按 0–100 分显示。
+
 - 计算核心 `mcda_core`：数据模型和校验（效益型/成本型准则）、四种归一化、加权和、TOPSIS、折衷规划、Pareto 分析、权重稳定区间；与 10 个旧版 V7 Excel 工作簿对照验证。
 - 导入导出：标准模板（.xlsx/.csv，支持分号分隔、小数逗号和 Windows 代码页）、旧版 V7 工作簿、Excel 报告。
 - FastAPI 后端：导入、校验、计算、Pareto、敏感性分析、模板和报告导出。
@@ -19,6 +26,9 @@
   - CONTRIBUTING、SECURITY、ADR、Apache-2.0 许可证。
 
 ### Changed
+
+- 新项目默认只启用加权和（ADR 0005），TOPSIS 和 CP 可以在"结果"页打开。
+- TOPSIS 和 CP 默认在价值分上计算；经典 TOPSIS（原始数据 + 向量归一化）作为可选的计算方式保留。
 
 - **破坏兼容**：API 路径从 `/api/*` 改为 `/api/v1/*`。
 - **破坏兼容**：错误响应改为 `{code, detail, params, issues, request_id}`。每个问题都有错误代码、参数和结构化的位置，由前端负责翻译。

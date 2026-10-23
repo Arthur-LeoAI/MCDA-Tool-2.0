@@ -1,6 +1,8 @@
-import { Activity, Download, Languages, SlidersHorizontal, Table2, Trophy } from 'lucide-react'
+import { Activity, CircleAlert, Download, Languages, Save, SlidersHorizontal, Table2, Trophy } from 'lucide-react'
 import { lazy, Suspense, useEffect } from 'react'
 import { Spinner } from './components/ui'
+import { useMigratePendingDraft } from './hooks'
+import { saveProjectFile } from './lib/projectFile'
 import type { MessageKey } from './i18n/messages'
 import { useT } from './i18n/useT'
 import { DataPage } from './pages/DataPage'
@@ -30,8 +32,9 @@ const PAGES: Record<StepId, React.ComponentType> = {
 
 export default function App() {
   const t = useT()
-  const { step, setStep, draft, language, setLanguage } = useStore()
-  const current = draft ? step : 'data'
+  const { step, setStep, project, language, setLanguage, storageFull } = useStore()
+  const migration = useMigratePendingDraft()
+  const current = project ? step : 'data'
   const Page = PAGES[current]
 
   useEffect(() => {
@@ -50,14 +53,26 @@ export default function App() {
               <div className="text-xs text-slate-500">{t('app.subtitle')}</div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
-          >
-            <Languages className="size-4" />
-            {t('lang.switch')}
-          </button>
+          <div className="flex items-center gap-1">
+            {project && (
+              <button
+                type="button"
+                onClick={() => saveProjectFile(project)}
+                className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+              >
+                <Save className="size-4" />
+                {t('project.save')}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setLanguage(language === 'zh' ? 'en' : 'zh')}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+            >
+              <Languages className="size-4" />
+              {t('lang.switch')}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -65,7 +80,7 @@ export default function App() {
         <nav className="border-b border-slate-200 bg-white md:w-56 md:shrink-0 md:border-r md:border-b-0 md:bg-transparent">
           <ol className="flex gap-1 overflow-x-auto p-2 md:sticky md:top-14 md:flex-col md:p-4">
             {STEPS.map(({ id, label, icon: Icon }, index) => {
-              const disabled = !draft && id !== 'data'
+              const disabled = !project && id !== 'data'
               const active = current === id
               return (
                 <li key={id}>
@@ -96,6 +111,16 @@ export default function App() {
         </nav>
 
         <main className="min-w-0 flex-1 p-4 md:p-8">
+          {(migration.migrating || migration.error || storageFull) && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              {migration.migrating ? <Spinner /> : <CircleAlert className="size-4 shrink-0" />}
+              {migration.migrating
+                ? t('project.migrating')
+                : migration.error
+                  ? t('project.migrateFailed')
+                  : t('project.storageFull')}
+            </div>
+          )}
           <Suspense fallback={<Spinner />}>
             <Page />
           </Suspense>

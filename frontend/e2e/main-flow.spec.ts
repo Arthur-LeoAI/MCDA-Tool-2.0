@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
 const LEGACY_WORKBOOK = fileURLToPath(new URL('../../data/legacy/MCDA ELT V7_Enviro_G_Top1.xlsx', import.meta.url))
@@ -25,10 +26,13 @@ test('example data: from import to report', async ({ page }) => {
 
   // Results: all three methods and the Pareto analysis.
   await nav(page, '结果').click()
+  // Projects start with the weighted sum; switch on the other two methods.
+  await page.getByRole('checkbox', { name: /^TOPSIS/ }).check()
+  await page.getByRole('checkbox', { name: /^折衷规划/ }).check()
   const table = page.locator('section', { hasText: '排名对比' })
-  await expect(table.getByText('Weighted sum (min_max)')).toBeVisible()
-  await expect(table.getByText('TOPSIS (vector)')).toBeVisible()
-  await expect(table.getByText('CP p=2 (min_max)')).toBeVisible()
+  await expect(table.getByText('加权和', { exact: true })).toBeVisible()
+  await expect(table.getByText('TOPSIS · 取自数据')).toBeVisible()
+  await expect(table.getByText('CP p=2 · 取自数据')).toBeVisible()
   await expect(page.locator('section', { hasText: 'Pareto 分析' }).last()).toBeVisible()
 
   // Sensitivity: the chart renders.
@@ -44,7 +48,7 @@ test('example data: from import to report', async ({ page }) => {
 
 test('legacy workbook reproduces the Excel ranking', async ({ page }) => {
   await page.goto('/')
-  await page.locator('input[type=file]').setInputFiles(LEGACY_WORKBOOK)
+  await page.locator('input[type=file]').first().setInputFiles(LEGACY_WORKBOOK)
   await expect(page.getByText('已识别为旧版 V7 工作簿')).toBeVisible()
   await expect(page.getByText('7 个方案 × 34 个准则')).toBeVisible()
 
@@ -61,14 +65,20 @@ test('legacy workbook reproduces the Excel ranking', async ({ page }) => {
   ])
 })
 
-test('validation errors are shown in the user language', async ({ page }) => {
+test('missing values and validation errors', async ({ page }) => {
   await loadExample(page)
 
-  // Local check: an empty cell.
+  // An empty cell is allowed: it counts as the worst value, and the page says so.
   await page.getByRole('textbox', { name: 'Option B / Quality' }).fill('')
-  await expect(page.getByRole('alert')).toContainText('Option B / Quality: 缺少数值')
-  await expect(page.getByRole('button', { name: '准则与权重' }).last()).toBeDisabled()
+  await expect(page.getByText('有 1 个空单元格')).toBeVisible()
+  await expect(page.getByRole('button', { name: '准则与权重' }).last()).toBeEnabled()
   await page.getByRole('textbox', { name: 'Option B / Quality' }).fill('6,5')
+  await expect(page.getByText('有 1 个空单元格')).toBeHidden()
+
+  // Local check: an empty name blocks the next step.
+  await page.getByRole('textbox', { name: '方案 3' }).fill('')
+  await expect(page.getByRole('alert')).toContainText('第 3 个方案: 名称不能为空')
+  await expect(page.getByRole('button', { name: '准则与权重' }).last()).toBeDisabled()
 
   // Server check: a duplicate name, translated from its error code.
   await page.getByRole('textbox', { name: '方案 3' }).fill('Option A')
@@ -80,4 +90,32 @@ test('language switch', async ({ page }) => {
   await page.getByRole('button', { name: 'English' }).click()
   await expect(page.getByRole('heading', { name: 'Import data' })).toBeVisible()
   await expect(page.getByText('Data is valid')).toBeVisible()
+})
+
+test('save a project file, clear, open it again: same result', async ({ page }) => {
+  await loadExample(page)
+  await page.getByRole('textbox', { name: 'Option B / Quality' }).fill('9')
+  await nav(page, '结果').click()
+  const ranking = page.locator('section', { hasText: '排名对比' }).locator('tbody tr')
+  await expect(ranking).toHaveCount(3)
+  const before = await ranking.allInnerTexts()
+
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: '保存项目' }).first().click()
+  const file = await (await download).path()
+  expect((await download).suggestedFilename()).toMatch(/.mcda.json$/)
+
+  await nav(page, '数据').click()
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: '清空' }).click()
+  await expect(page.getByRole('button', { name: '使用示例数据' })).toBeVisible()
+
+  await page
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles({ name: 'saved.mcda.json', mimeType: 'application/json', buffer: await readFile(file) })
+  await expect(page.getByRole('textbox', { name: 'Option B / Quality' })).toHaveValue('9')
+  await nav(page, '结果').click()
+  await expect(ranking).toHaveCount(3)
+  expect(await ranking.allInnerTexts()).toEqual(before)
 })

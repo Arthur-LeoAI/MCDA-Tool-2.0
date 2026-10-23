@@ -1,6 +1,6 @@
 import { CircleAlert, WifiOff } from 'lucide-react'
 import type { ApiError } from '../api/client'
-import type { DraftProblem, Issue } from '../api/types'
+import type { Issue, Project } from '../api/types'
 import { describeIssue, errorText } from '../i18n/describe'
 import { useT } from '../i18n/useT'
 import { useStore } from '../store'
@@ -8,12 +8,12 @@ import { useStore } from '../store'
 /** Shows local or API validation issues in the user's language, with recognisable locations. */
 export function IssueList({
   issues,
-  draft,
+  project,
   title,
   max = 12,
 }: {
   issues: Issue[]
-  draft?: DraftProblem | null
+  project?: Project | null
   title?: string
   max?: number
 }) {
@@ -28,7 +28,7 @@ export function IssueList({
       </div>
       <ul className="ml-6 list-disc space-y-0.5">
         {issues.slice(0, max).map((issue, index) => {
-          const { location, text } = describeIssue(language, issue, draft)
+          const { location, text } = describeIssue(language, issue, project)
           return (
             <li key={index}>
               {location && <span className="font-medium">{location}: </span>}
@@ -43,7 +43,7 @@ export function IssueList({
 }
 
 /** Error box for a failed API call. */
-export function ApiErrorBox({ error, draft }: { error: ApiError; draft?: DraftProblem | null }) {
+export function ApiErrorBox({ error, project }: { error: ApiError; project?: Project | null }) {
   const t = useT()
   const language = useStore((s) => s.language)
   if (error.code === 'network') {
@@ -57,8 +57,8 @@ export function ApiErrorBox({ error, draft }: { error: ApiError; draft?: DraftPr
       </div>
     )
   }
-  const title = errorText(language, error.code, error.params, error.message, draft)
-  if (error.issues.length) return <IssueList issues={error.issues} draft={draft} title={title} />
+  const title = errorText(language, error.code, error.params, error.message, project)
+  if (error.issues.length) return <IssueList issues={error.issues} project={project} title={title} />
   return (
     <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
       <div className="flex items-center gap-2">

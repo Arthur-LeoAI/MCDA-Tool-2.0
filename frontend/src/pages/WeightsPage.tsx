@@ -1,40 +1,47 @@
 import { ArrowDown, ArrowRight, ArrowUp, Equal, Percent, RotateCcw, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import type { Criterion, Direction, EvaluateResponse, Problem } from '../api/types'
+import type { Criterion, Direction, Project, ProjectEvaluation } from '../api/types'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { NumberInput } from '../components/NumberInput'
 import { Button, Card, PageHeader, Segmented, Spinner } from '../components/ui'
-import { useApiPost, useCheckedDraft } from '../hooks'
+import { useApiPost, useCheckedProject } from '../hooks'
 import { useT } from '../i18n/useT'
 import { formatPercent, formatScore } from '../lib/format'
-import { equalWeights, normalizedWeights, setWeights, totalWeight, updateCriterion } from '../lib/problem'
+import { formatResultScore } from '../lib/methods'
+import {
+  directionOf,
+  equalWeights,
+  normalizedWeights,
+  setDirection,
+  setWeight,
+  setWeights,
+  totalWeight,
+  weightsOf,
+} from '../lib/project'
 import { useStore } from '../store'
 
 export function WeightsPage() {
   const t = useT()
-  const checked = useCheckedDraft()!
-  const { updateDraft, importedWeights, setStep } = useStore()
+  const checked = useCheckedProject()!
+  const { updateProject, importedWeights, setStep } = useStore()
   const [query, setQuery] = useState('')
   const [hideZero, setHideZero] = useState(false)
 
-  const { draft } = checked
-  const total = totalWeight(draft.criteria)
-  const sliderMax = Math.max(
-    1,
-    importedWeights ? importedWeights.reduce((a, b) => a + b, 0) : 0,
-    ...draft.criteria.map((c) => c.weight),
-  )
-  const visible = draft.criteria
-    .map((criterion, index) => ({ criterion, index }))
-    .filter(({ criterion }) => criterion.name.toLowerCase().includes(query.trim().toLowerCase()))
-    .filter(({ criterion }) => !hideZero || criterion.weight > 0)
+  const { project } = checked
+  const weights = weightsOf(project)
+  const total = totalWeight(project)
+  const importedTotal = importedWeights ? Object.values(importedWeights).reduce((a, b) => a + b, 0) : 0
+  const sliderMax = Math.max(1, importedTotal, ...project.criteria.map((c) => weights[c.id] ?? 0))
+  const visible = project.criteria
+    .filter((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
+    .filter((c) => !hideZero || (weights[c.id] ?? 0) > 0)
 
   return (
     <div>
       <PageHeader title={t('weights.title')} intro={t('weights.intro')} />
       {checked.issues.length > 0 && (
         <div className="mb-4">
-          <IssueList issues={checked.issues} />
+          <IssueList issues={checked.issues} project={project} />
         </div>
       )}
 
@@ -50,22 +57,22 @@ export function WeightsPage() {
               <Button
                 variant="ghost"
                 icon={<Equal className="size-4" />}
-                onClick={() => updateDraft((d) => setWeights(d, equalWeights(d.criteria)))}
+                onClick={() => updateProject((p) => setWeights(p, equalWeights(p)))}
               >
                 {t('weights.equal')}
               </Button>
               <Button
                 variant="ghost"
                 icon={<Percent className="size-4" />}
-                onClick={() => updateDraft((d) => setWeights(d, normalizedWeights(d.criteria)))}
+                onClick={() => updateProject((p) => setWeights(p, normalizedWeights(p)))}
               >
                 {t('weights.normalize')}
               </Button>
-              {importedWeights && importedWeights.length === draft.criteria.length && (
+              {importedWeights && (
                 <Button
                   variant="ghost"
                   icon={<RotateCcw className="size-4" />}
-                  onClick={() => updateDraft((d) => setWeights(d, importedWeights))}
+                  onClick={() => updateProject((p) => setWeights(p, { ...importedWeights }))}
                 >
                   {t('weights.resetImported')}
                 </Button>
@@ -96,22 +103,24 @@ export function WeightsPage() {
           </div>
 
           <ul className="divide-y divide-slate-100">
-            {visible.map(({ criterion, index }) => (
+            {visible.map((criterion) => (
               <CriterionRow
-                key={index}
+                key={criterion.id}
                 criterion={criterion}
-                share={total > 0 ? criterion.weight / total : 0}
+                weight={weights[criterion.id] ?? 0}
+                share={total > 0 ? (weights[criterion.id] ?? 0) / total : 0}
                 sliderMax={sliderMax}
-                onChange={(patch) => updateDraft((d) => updateCriterion(d, index, patch))}
+                onWeight={(weight) => updateProject((p) => setWeight(p, criterion.id, weight))}
+                onDirection={(direction) => updateProject((p) => setDirection(p, criterion.id, direction))}
               />
             ))}
           </ul>
         </Card>
 
         <div className="xl:sticky xl:top-20 xl:self-start">
-          <LiveRanking problem={checked.problem} />
+          <LiveRanking project={checked.apiProject} />
           <div className="mt-4 flex justify-end">
-            <Button variant="primary" onClick={() => setStep('results')} disabled={!checked.problem}>
+            <Button variant="primary" onClick={() => setStep('results')} disabled={!checked.apiProject}>
               {t('step.results')} <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -123,45 +132,54 @@ export function WeightsPage() {
 
 function CriterionRow({
   criterion,
+  weight,
   share,
   sliderMax,
-  onChange,
+  onWeight,
+  onDirection,
 }: {
   criterion: Criterion
+  weight: number
   share: number
   sliderMax: number
-  onChange: (patch: Partial<Criterion>) => void
+  onWeight: (weight: number) => void
+  onDirection: (direction: Direction) => void
 }) {
   const t = useT()
+  const direction = directionOf(criterion)
   return (
-    <li className="grid grid-cols-1 items-center gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,14rem)_auto_minmax(0,1fr)]">
+    <li className="grid grid-cols-1 items-center gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,14rem)_8.5rem_minmax(0,1fr)]">
       <div className="truncate text-sm font-medium text-slate-800" title={criterion.name}>
         {criterion.name}
       </div>
-      <Segmented<Direction>
-        size="sm"
-        value={criterion.direction}
-        onChange={(direction) => onChange({ direction })}
-        options={[
-          { value: 'benefit', label: t('common.benefit'), title: t('common.benefitHint') },
-          { value: 'cost', label: t('common.cost'), title: t('common.costHint') },
-        ]}
-      />
+      {direction ? (
+        <Segmented<Direction>
+          size="sm"
+          value={direction}
+          onChange={onDirection}
+          options={[
+            { value: 'benefit', label: t('common.benefit'), title: t('common.benefitHint') },
+            { value: 'cost', label: t('common.cost'), title: t('common.costHint') },
+          ]}
+        />
+      ) : (
+        <span className="text-xs text-slate-400">—</span>
+      )}
       <div className="flex items-center gap-3">
         <input
           type="range"
           min={0}
           max={sliderMax}
           step={sliderMax / 1000}
-          value={criterion.weight}
+          value={weight}
           aria-label={`${t('common.weight')} ${criterion.name}`}
-          onChange={(e) => onChange({ weight: Number(e.target.value) })}
+          onChange={(e) => onWeight(Number(e.target.value))}
           className="accent-accent-600 min-w-0 flex-1"
         />
         <NumberInput
-          value={criterion.weight}
+          value={weight}
           label={`${t('common.weight')} ${criterion.name}`}
-          onCommit={(weight) => weight !== null && weight >= 0 && onChange({ weight })}
+          onCommit={(value) => value !== null && value >= 0 && onWeight(value)}
           className="w-20"
         />
         <div className="w-14 text-right text-xs text-slate-500 tabular-nums">{formatPercent(share)}</div>
@@ -170,40 +188,37 @@ function CriterionRow({
   )
 }
 
-function LiveRanking({ problem }: { problem: Problem | null }) {
+const weightedSumOnly = (project: Project): Project => ({
+  ...project,
+  analysis: { ...project.analysis, methods: [{ method: 'weighted_sum' }] },
+})
+
+function LiveRanking({ project }: { project: Project | null }) {
   const t = useT()
-  const spec = useStore((s) => s.settings.weighted_sum)
   const importedWeights = useStore((s) => s.importedWeights)
 
-  const current = useApiPost<EvaluateResponse>('/evaluate', problem && { problem, methods: [spec] }, 150)
-  const baselineProblem = useMemo(
-    () =>
-      problem && importedWeights?.length === problem.criteria.length
-        ? { ...problem, criteria: problem.criteria.map((c, j) => ({ ...c, weight: importedWeights[j] })) }
-        : null,
-    [problem, importedWeights],
+  const current = useApiPost<ProjectEvaluation>('/projects/evaluate', project && weightedSumOnly(project), 150)
+  const baselineProject = useMemo(
+    () => (project && importedWeights ? weightedSumOnly(setWeights(project, importedWeights)) : null),
+    [project, importedWeights],
   )
-  const baseline = useApiPost<EvaluateResponse>(
-    '/evaluate',
-    baselineProblem && { problem: baselineProblem, methods: [spec] },
-    150,
-  )
+  const baseline = useApiPost<ProjectEvaluation>('/projects/evaluate', baselineProject, 150)
 
   const result = current.data?.results[0]
-  const baselineRanks = new Map(baseline.data?.results[0].alternatives.map((a) => [a.name, a.rank]))
+  const baselineRanks = new Map(baseline.data?.results[0].alternatives.map((a) => [a.id, a.rank]))
   const rows = result ? [...result.alternatives].sort((a, b) => a.rank - b.rank) : []
   const maxScore = Math.max(...rows.map((r) => Math.abs(r.score)), 1e-12)
 
   return (
     <Card title={t('weights.liveRanking')} actions={current.loading && <Spinner />}>
-      <p className="mb-3 text-xs text-slate-500">{t('weights.liveHint', { norm: t(`norm.${spec.normalization}`) })}</p>
-      {current.error && <ApiErrorBox error={current.error} />}
+      <p className="mb-3 text-xs text-slate-500">{t('weights.liveHint')}</p>
+      {current.error && <ApiErrorBox error={current.error} project={project} />}
       <ol className="space-y-2">
         {rows.map((row) => {
-          const before = baselineRanks.get(row.name)
+          const before = baselineRanks.get(row.id)
           const delta = before === undefined ? 0 : before - row.rank
           return (
-            <li key={row.name} className="flex items-center gap-2 text-sm">
+            <li key={row.id} className="flex items-center gap-2 text-sm">
               <span
                 className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${row.rank === 1 ? 'bg-accent-600 text-white' : 'bg-slate-100 text-slate-600'}`}
               >
@@ -214,7 +229,9 @@ function LiveRanking({ problem }: { problem: Problem | null }) {
                   <span className="truncate" title={row.name}>
                     {row.name}
                   </span>
-                  <span className="text-xs text-slate-500 tabular-nums">{formatScore(row.score)}</span>
+                  <span className="text-xs text-slate-500 tabular-nums">
+                    {formatResultScore({ method: 'weighted_sum' }, row.score)}
+                  </span>
                 </div>
                 <div className="mt-1 h-1.5 rounded-full bg-slate-100">
                   <div

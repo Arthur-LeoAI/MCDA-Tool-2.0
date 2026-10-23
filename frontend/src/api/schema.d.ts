@@ -715,7 +715,8 @@ export interface components {
          * LocationModel
          * @description Where an issue is; which fields are set depends on ``kind``.
          *
-         *     cell: ``ref`` ("B4") · alternative/criterion: ``name`` or 1-based ``index`` ·
+         *     cell: ``ref`` ("B4") · alternative/criterion/group: ``name`` or 1-based ``index`` ·
+         *     constraint: id in ``ref`` ·
          *     value: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·
          *     field: request path in ``ref`` ("problem.matrix.0.1")
          */
@@ -730,7 +731,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "cell" | "alternative" | "criterion" | "value" | "row" | "field";
+            kind: "cell" | "alternative" | "criterion" | "group" | "constraint" | "value" | "row" | "field";
             /** Name */
             name?: string | null;
             /** Ref */

@@ -26,17 +26,43 @@ backend/              Python 后端
   tests/              单元测试、API 测试，以及与旧版 Excel 结果的对照测试
 data/legacy/          旧版 V7 工作簿，作为对照参考数据
 docs/data-format.md   输入模板格式说明
-frontend/             前端（阶段 3）
+frontend/             前端：React + TypeScript + Vite + ECharts（见 frontend/README.md）
 ```
 
 ## 快速开始
 
-需要先安装 [uv](https://docs.astral.sh/uv/)。
+需要先安装 [uv](https://docs.astral.sh/uv/) 和 [Node.js](https://nodejs.org/)（24 或更新版本）。
+
+开两个终端，分别启动后端和前端：
 
 ```bash
-cd backend
-uv sync
-uv run pytest
+cd backend && uv sync && uv run uvicorn mcda_api.main:app --reload
+```
+
+```bash
+cd frontend && npm install && npm run dev
+```
+
+然后打开 http://localhost:5173 。
+
+在 Claude 桌面应用里，`.claude/launch.json` 已经配置好了 `api` 和 `web` 两个启动项。
+
+### 界面流程
+
+1. **数据**：上传标准模板或旧版 V7 工作簿（也可以用示例数据），然后直接在表格里修改。缺值、重名等问题会实时提示，并标出具体位置。
+2. **准则与权重**：设置每个准则的方向和权重（滑块或输入框），右侧实时显示加权和排名，并标出与导入时相比的名次变化。
+3. **结果**：选择方法和归一化方式，对比各方法的排名，并查看得分图、名次变化图、加权和得分构成和 Pareto 分析。
+4. **敏感性分析**：权重稳定区间图（完整排序或第一名），以及最敏感的准则。
+5. **导出**：下载 Excel 报告，或把数据导出为模板。
+
+### 运行测试
+
+```bash
+cd backend && uv run pytest
+```
+
+```bash
+cd frontend && npm test
 ```
 
 ### 启动 API
@@ -122,5 +148,5 @@ print(weight_stability_intervals(problem))
 - [x] 阶段 0：新项目骨架、`.gitignore`
 - [x] 阶段 1：计算核心、导入校验、单元测试
 - [x] 阶段 2：FastAPI 后端（上传、计算、敏感性分析、导出）
-- [ ] 阶段 3：前端（React + TypeScript + Vite + ECharts）
+- [x] 阶段 3：前端（React + TypeScript + Vite + ECharts）
 - [ ] 阶段 4：情景对比、蒙特卡洛权重模拟、AHP / 熵权法、VIKOR / PROMETHEE、报告导出

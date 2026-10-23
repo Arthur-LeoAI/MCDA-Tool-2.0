@@ -108,3 +108,11 @@ def test_cost_direction_mirrors_benefit_under_min_max():
     cost = problem([[-1.0, 0.0], [-3.0, 0.0], [-2.0, 0.0]], [C, B])
     for method in (weighted_sum, compromise_programming):
         np.testing.assert_allclose(method(benefit).scores, method(cost).scores)
+
+
+def test_weighted_sum_contributions_add_up(cars):
+    result = weighted_sum(cars)
+    # weight share 0.5 x normalised values: power (0, 1, 0.4), price (1, 0, 1)
+    np.testing.assert_allclose(result.contributions, [[0.0, 0.5], [0.5, 0.0], [0.2, 0.5]])
+    np.testing.assert_allclose(result.contributions.sum(axis=1), result.scores)
+    assert topsis(cars).contributions is None

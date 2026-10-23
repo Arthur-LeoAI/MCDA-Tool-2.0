@@ -135,6 +135,8 @@ class AlternativeResult(BaseModel):
     name: str
     score: float
     rank: int
+    contributions: list[float] | None = None
+    """Weighted sum only: each criterion's part of the score, in criteria order."""
 
 
 class MethodResultModel(BaseModel):
@@ -155,8 +157,13 @@ class MethodResultModel(BaseModel):
             spec=spec,
             higher_is_better=result.higher_is_better,
             alternatives=[
-                AlternativeResult(name=name, score=float(score), rank=int(rank))
-                for name, score, rank in zip(result.alternatives, result.scores, result.ranks)
+                AlternativeResult(
+                    name=name,
+                    score=float(result.scores[i]),
+                    rank=int(result.ranks[i]),
+                    contributions=None if result.contributions is None else result.contributions[i].tolist(),
+                )
+                for i, name in enumerate(result.alternatives)
             ],
             order=list(result.order),
         )

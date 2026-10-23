@@ -140,3 +140,12 @@ def test_cors_allows_configured_origin(client):
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
     other = client.get("/api/health", headers={"Origin": "https://example.org"})
     assert "access-control-allow-origin" not in other.headers
+
+
+def test_weighted_sum_returns_contributions(client, cars_json):
+    results = client.post("/api/evaluate", json={
+        "problem": cars_json, "methods": [{"method": "weighted_sum"}, {"method": "topsis"}],
+    }).json()["results"]
+    c = next(a for a in results[0]["alternatives"] if a["name"] == "C")
+    assert c["contributions"] == pytest.approx([0.2, 0.5])
+    assert all(a["contributions"] is None for a in results[1]["alternatives"])

@@ -19,12 +19,20 @@ class MethodResult:
     scores: np.ndarray
     higher_is_better: bool
     ranks: np.ndarray
+    contributions: np.ndarray | None = None
+    """Additive methods only: [i, j] is criterion j's share of alternative i's score."""
 
     @classmethod
     def from_scores(
-        cls, method: str, problem: DecisionProblem, scores: np.ndarray, higher_is_better: bool
+        cls,
+        method: str,
+        problem: DecisionProblem,
+        scores: np.ndarray,
+        higher_is_better: bool,
+        contributions: np.ndarray | None = None,
     ) -> MethodResult:
-        return cls(method, problem.alternatives, scores, higher_is_better, rank_scores(scores, higher_is_better))
+        ranks = rank_scores(scores, higher_is_better)
+        return cls(method, problem.alternatives, scores, higher_is_better, ranks, contributions)
 
     @property
     def order(self) -> tuple[str, ...]:
@@ -45,8 +53,9 @@ def weighted_sum(
 ) -> MethodResult:
     """Simple additive weighting: sum of weight x normalised value. Higher is better."""
     normalized = normalize(problem.matrix, problem.directions, normalization, bounds)
-    scores = normalized @ problem.normalized_weights
-    return MethodResult.from_scores("weighted_sum", problem, scores, higher_is_better=True)
+    contributions = normalized * problem.normalized_weights
+    scores = contributions.sum(axis=1)
+    return MethodResult.from_scores("weighted_sum", problem, scores, higher_is_better=True, contributions=contributions)
 
 
 def topsis(

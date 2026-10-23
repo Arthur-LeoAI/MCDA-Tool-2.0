@@ -11,6 +11,7 @@ from collections.abc import Mapping, Sequence
 
 import openpyxl
 from openpyxl.styles import Font
+from openpyxl.utils import get_column_letter
 
 from ..methods import MethodResult
 from ..model import DecisionProblem
@@ -35,7 +36,7 @@ def write_report(
 ) -> None:
     """Write an .xlsx report. ``results`` pairs a column label with each result."""
     workbook = openpyxl.Workbook()
-    workbook.remove(workbook.active)
+    workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
 
     sheet = workbook.create_sheet("Results")
     header = ["Alternative"]
@@ -53,34 +54,38 @@ def write_report(
         sheet = workbook.create_sheet(_STABILITY_SHEETS[StabilityScope(scope)])
         sheet.append(["Criterion", "Weight", "Lower", "Upper", "Lower (share)", "Upper (share)"])
         for interval in intervals:
-            sheet.append([
-                interval.criterion,
-                interval.weight,
-                interval.lower,
-                UNBOUNDED if math.isinf(interval.upper) else interval.upper,
-                interval.lower_normalized,
-                interval.upper_normalized,
-            ])
+            sheet.append(
+                [
+                    interval.criterion,
+                    interval.weight,
+                    interval.lower,
+                    UNBOUNDED if math.isinf(interval.upper) else interval.upper,
+                    interval.lower_normalized,
+                    interval.upper_normalized,
+                ]
+            )
 
     if pareto is not None:
         sheet = workbook.create_sheet("Pareto")
         sheet.append(["Alternative", "Pareto optimal", "Dominates", "Dominated by"])
         for info in pareto:
-            sheet.append([
-                info.alternative,
-                "yes" if info.is_pareto_optimal else "no",
-                ", ".join(info.dominates),
-                ", ".join(info.dominated_by),
-            ])
+            sheet.append(
+                [
+                    info.alternative,
+                    "yes" if info.is_pareto_optimal else "no",
+                    ", ".join(info.dominates),
+                    ", ".join(info.dominated_by),
+                ]
+            )
 
     add_template_sheet(workbook, problem)
 
     for sheet in workbook.worksheets:
         for cell in sheet[1]:
             cell.font = Font(bold=True)
-        for column in sheet.columns:
+        for col_index, column in enumerate(sheet.columns, start=1):
             width = max(len(str(cell.value)) for cell in column if cell.value is not None)
-            sheet.column_dimensions[column[0].column_letter].width = min(max(width + 2, 10), 50)
+            sheet.column_dimensions[get_column_letter(col_index)].width = min(max(width + 2, 10), 50)
         sheet.freeze_panes = "B2"
 
     workbook.save(target)

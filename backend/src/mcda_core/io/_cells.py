@@ -44,7 +44,7 @@ def read_xlsx_rows(source: Source, prefer_sheet: str | None = None) -> Rows:
     try:
         sheets = workbook.sheetnames
         worksheet = workbook[prefer_sheet] if prefer_sheet in sheets else workbook.worksheets[0]
-        rows = [list(row) for row in worksheet.iter_rows(values_only=True)]
+        rows: Rows = [list(row) for row in worksheet.iter_rows(values_only=True)]
     finally:
         workbook.close()
     width = max((len(row) for row in rows), default=0)

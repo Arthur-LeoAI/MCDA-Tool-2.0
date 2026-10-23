@@ -15,8 +15,14 @@ def make(alternatives=("A", "B"), criteria=None, matrix=None):
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("benefit", Direction.BENEFIT), ("MAX", Direction.BENEFIT), (1, Direction.BENEFIT), (1.0, Direction.BENEFIT),
-        ("cost", Direction.COST), (" min ", Direction.COST), (0, Direction.COST), ("0", Direction.COST),
+        ("benefit", Direction.BENEFIT),
+        ("MAX", Direction.BENEFIT),
+        (1, Direction.BENEFIT),
+        (1.0, Direction.BENEFIT),
+        ("cost", Direction.COST),
+        (" min ", Direction.COST),
+        (0, Direction.COST),
+        ("0", Direction.COST),
     ],
 )
 def test_direction_parse_accepts_aliases(raw, expected):

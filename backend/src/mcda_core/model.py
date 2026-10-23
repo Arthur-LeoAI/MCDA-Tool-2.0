@@ -5,14 +5,15 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
+import numpy.typing as npt
 
 from .errors import ProblemValidationError, ValidationIssue
 
 
-class Direction(str, Enum):
+class Direction(StrEnum):
     """Whether higher (benefit) or lower (cost) values are preferred."""
 
     BENEFIT = "benefit"
@@ -40,28 +41,31 @@ class Criterion:
     weight: float = 1.0
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False, eq=False)
 class DecisionProblem:
     """An immutable, validated MCDA problem.
 
     ``matrix[i, j]`` is the performance of alternative ``i`` on criterion
     ``j``. Weights are stored as given; methods use them normalised to sum
     to 1, which does not change any ranking.
+
+    Equality is identity: comparing matrices element-wise has no single
+    truth value, so compare the fields explicitly where needed.
     """
 
     alternatives: tuple[str, ...]
     criteria: tuple[Criterion, ...]
     matrix: np.ndarray
 
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "alternatives", tuple(self.alternatives))
-        object.__setattr__(self, "criteria", tuple(self.criteria))
+    def __init__(self, alternatives: Sequence[str], criteria: Sequence[Criterion], matrix: npt.ArrayLike) -> None:
+        object.__setattr__(self, "alternatives", tuple(alternatives))
+        object.__setattr__(self, "criteria", tuple(criteria))
         try:
-            matrix = np.array(self.matrix, dtype=float)
+            array = np.array(matrix, dtype=float)
         except (TypeError, ValueError) as exc:
             raise ProblemValidationError([ValidationIssue(f"matrix is not numeric: {exc}")]) from exc
-        matrix.setflags(write=False)
-        object.__setattr__(self, "matrix", matrix)
+        array.setflags(write=False)
+        object.__setattr__(self, "matrix", array)
 
         issues = _validate(self)
         if issues:
@@ -98,9 +102,7 @@ class DecisionProblem:
             new = list(weights)
             if len(new) != len(self.criteria):
                 raise ValueError(f"expected {len(self.criteria)} weights, got {len(new)}")
-        criteria = tuple(
-            Criterion(c.name, c.direction, float(w)) for c, w in zip(self.criteria, new)
-        )
+        criteria = tuple(Criterion(c.name, c.direction, float(w)) for c, w in zip(self.criteria, new, strict=True))
         return DecisionProblem(self.alternatives, criteria, self.matrix)
 
 
@@ -121,13 +123,17 @@ def _validate(problem: DecisionProblem) -> list[ValidationIssue]:
 
     expected = (len(problem.alternatives), len(problem.criteria))
     if problem.matrix.shape != expected:
-        issues.append(ValidationIssue(f"matrix shape {problem.matrix.shape} does not match {expected} (alternatives x criteria)"))
+        issues.append(
+            ValidationIssue(f"matrix shape {problem.matrix.shape} does not match {expected} (alternatives x criteria)")
+        )
         return issues
-    for i, j in zip(*np.nonzero(~np.isfinite(problem.matrix))):
-        issues.append(ValidationIssue(
-            "value must be a finite number",
-            f"alternative '{problem.alternatives[i]}', criterion '{problem.criteria[j].name}'",
-        ))
+    for i, j in zip(*np.nonzero(~np.isfinite(problem.matrix)), strict=True):
+        issues.append(
+            ValidationIssue(
+                "value must be a finite number",
+                f"alternative '{problem.alternatives[i]}', criterion '{problem.criteria[j].name}'",
+            )
+        )
     return issues
 
 

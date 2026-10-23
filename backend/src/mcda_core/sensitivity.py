@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
 
@@ -31,7 +31,7 @@ from .normalization import Bounds, Normalization, normalize
 from .ranking import DEFAULT_TIE_TOLERANCE, rank_scores, scores_tied
 
 
-class StabilityScope(str, Enum):
+class StabilityScope(StrEnum):
     FULL_ORDER = "full_order"
     TOP1 = "top1"
 
@@ -85,14 +85,16 @@ def weight_stability_intervals(
                 lower = max(lower, crossing)
 
         rest = weights.sum() - current
-        intervals.append(WeightInterval(
-            criterion=criterion.name,
-            weight=float(current),
-            lower=float(lower),
-            upper=float(upper),
-            lower_normalized=_share(lower, rest),
-            upper_normalized=_share(upper, rest),
-        ))
+        intervals.append(
+            WeightInterval(
+                criterion=criterion.name,
+                weight=float(current),
+                lower=float(lower),
+                upper=float(upper),
+                lower_normalized=_share(lower, rest),
+                upper_normalized=_share(upper, rest),
+            )
+        )
     return intervals
 
 

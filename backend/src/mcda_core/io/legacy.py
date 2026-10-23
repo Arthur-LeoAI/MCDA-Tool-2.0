@@ -133,7 +133,7 @@ def parse_legacy_rows(rows: Rows) -> LegacyWorkbook:
                 lower=parse_number(rows[lower_row][col]) or 0.0,
                 upper=_upper(parse_number(rows[upper_row][col])),
             )
-            for criterion, col in zip(criteria, columns)
+            for criterion, col in zip(criteria, columns, strict=True)
         }
 
     if issues:

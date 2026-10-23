@@ -2,8 +2,8 @@ import io
 
 import openpyxl
 import pytest
-
 from conftest import LEGACY_DIR
+
 from mcda_core.io import read_problem, write_problem
 
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -49,10 +49,13 @@ def test_import_legacy_and_reproduce_its_ranking(client):
     assert len(body["problem"]["criteria"]) == 34
     reference = body["legacy"]["reference_order"]
 
-    evaluated = client.post("/api/evaluate", json={
-        "problem": body["problem"],
-        "methods": [{"method": "weighted_sum", "normalization": "none"}],
-    }).json()["results"][0]
+    evaluated = client.post(
+        "/api/evaluate",
+        json={
+            "problem": body["problem"],
+            "methods": [{"method": "weighted_sum", "normalization": "none"}],
+        },
+    ).json()["results"][0]
     assert evaluated["order"] == reference
 
 
@@ -92,10 +95,13 @@ def test_export_problem_round_trip(client, cars, cars_json, file_format):
 
 
 def test_export_report(client, cars_json):
-    response = client.post("/api/export/report", json={
-        "problem": cars_json,
-        "methods": [{"method": "weighted_sum"}, {"method": "compromise_programming", "p": 1}],
-    })
+    response = client.post(
+        "/api/export/report",
+        json={
+            "problem": cars_json,
+            "methods": [{"method": "weighted_sum"}, {"method": "compromise_programming", "p": 1}],
+        },
+    )
     assert response.status_code == 200
     assert response.headers["content-type"] == XLSX
     workbook = openpyxl.load_workbook(io.BytesIO(response.content))
@@ -106,8 +112,14 @@ def test_export_report(client, cars_json):
 
 
 def test_export_report_without_optional_sheets(client, cars_json):
-    response = client.post("/api/export/report", json={
-        "problem": cars_json, "methods": [{"method": "topsis"}], "stability": None, "include_pareto": False,
-    })
+    response = client.post(
+        "/api/export/report",
+        json={
+            "problem": cars_json,
+            "methods": [{"method": "topsis"}],
+            "stability": None,
+            "include_pareto": False,
+        },
+    )
     workbook = openpyxl.load_workbook(io.BytesIO(response.content))
     assert workbook.sheetnames == ["Results", "Decision"]

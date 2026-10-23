@@ -20,7 +20,7 @@ B, C = Direction.BENEFIT, Direction.COST
 
 def problem(matrix, directions, weights=None, names=("A", "B", "C")):
     weights = weights or [1.0] * len(directions)
-    criteria = tuple(Criterion(f"c{j}", d, w) for j, (d, w) in enumerate(zip(directions, weights)))
+    criteria = tuple(Criterion(f"c{j}", d, w) for j, (d, w) in enumerate(zip(directions, weights, strict=True)))
     return DecisionProblem(names[: len(matrix)], criteria, matrix)
 
 
@@ -112,6 +112,7 @@ def test_cost_direction_mirrors_benefit_under_min_max():
 
 def test_weighted_sum_contributions_add_up(cars):
     result = weighted_sum(cars)
+    assert result.contributions is not None
     # weight share 0.5 x normalised values: power (0, 1, 0.4), price (1, 0, 1)
     np.testing.assert_allclose(result.contributions, [[0.0, 0.5], [0.5, 0.0], [0.2, 0.5]])
     np.testing.assert_allclose(result.contributions.sum(axis=1), result.scores)

@@ -7,7 +7,7 @@ values lie in [0, 1], where 1 is the best value of the reference range.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
 
@@ -16,7 +16,7 @@ from .model import Direction
 Bounds = tuple[float, float] | Sequence[tuple[float, float]]
 
 
-class Normalization(str, Enum):
+class Normalization(StrEnum):
     NONE = "none"
     """Use values as given; all criteria must be benefit criteria."""
     MIN_MAX = "min_max"
@@ -39,7 +39,9 @@ def normalize(
 
     if method is Normalization.NONE:
         if is_cost.any():
-            raise ValueError("normalization 'none' needs benefit criteria only; use min_max or fixed_range for cost criteria")
+            raise ValueError(
+                "normalization 'none' needs benefit criteria only; use min_max or fixed_range for cost criteria"
+            )
         return matrix.copy()
 
     if method is Normalization.MIN_MAX:

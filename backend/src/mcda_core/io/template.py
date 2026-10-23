@@ -71,8 +71,7 @@ def _parse_csv(text: str) -> Rows:
     rows: Rows = [list(row) for row in csv.reader(io.StringIO(text), delimiter=delimiter)]
     if delimiter == ";":
         rows = [
-            [v.replace(",", ".") if isinstance(v, str) and _DECIMAL_COMMA.match(v) else v for v in row]
-            for row in rows
+            [v.replace(",", ".") if isinstance(v, str) and _DECIMAL_COMMA.match(v) else v for v in row] for row in rows
         ]
     return rows
 
@@ -81,9 +80,9 @@ def parse_rows(rows: Rows) -> DecisionProblem:
     """Build a problem from raw cell rows, collecting every issue found."""
     issues: list[ValidationIssue] = []
     if len(rows) < len(HEADER_LABELS):
-        raise ProblemValidationError([ValidationIssue(
-            f"expected the rows {', '.join(HEADER_LABELS)} followed by alternatives"
-        )])
+        raise ProblemValidationError(
+            [ValidationIssue(f"expected the rows {', '.join(HEADER_LABELS)} followed by alternatives")]
+        )
 
     for row_index, label in enumerate(HEADER_LABELS):
         found = rows[row_index][0] if rows[row_index] else None
@@ -109,7 +108,9 @@ def parse_rows(rows: Rows) -> DecisionProblem:
         try:
             direction = Direction.parse(direction_raw)
         except ValueError:
-            issues.append(ValidationIssue(f"direction must be 'benefit' or 'cost', found {direction_raw!r}", cell_ref(1, col)))
+            issues.append(
+                ValidationIssue(f"direction must be 'benefit' or 'cost', found {direction_raw!r}", cell_ref(1, col))
+            )
             direction = Direction.BENEFIT
         if weight is None:
             issues.append(ValidationIssue(f"weight must be a number, found {cell(rows[2], col)!r}", cell_ref(2, col)))
@@ -129,7 +130,9 @@ def parse_rows(rows: Rows) -> DecisionProblem:
         for col in columns:
             value = parse_number(cell(row, col))
             if value is None:
-                issues.append(ValidationIssue(f"value must be a number, found {cell(row, col)!r}", cell_ref(row_index, col)))
+                issues.append(
+                    ValidationIssue(f"value must be a number, found {cell(row, col)!r}", cell_ref(row_index, col))
+                )
                 value = 0.0
             values.append(value)
         alternatives.append(str(name).strip() if not is_blank(name) else "")
@@ -145,7 +148,7 @@ def template_rows(problem: DecisionProblem) -> Rows:
         ["Criterion", *problem.criterion_names],
         ["Direction", *(d.value for d in problem.directions)],
         ["Weight", *(c.weight for c in problem.criteria)],
-        *([name, *map(float, values)] for name, values in zip(problem.alternatives, problem.matrix)),
+        *([name, *map(float, values)] for name, values in zip(problem.alternatives, problem.matrix, strict=True)),
     ]
 
 
@@ -173,7 +176,7 @@ def write_problem(problem: DecisionProblem, target: Source, suffix: str | None =
             target.write(data)
     elif suffix == ".xlsx":
         workbook = openpyxl.Workbook()
-        workbook.remove(workbook.active)
+        workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
         add_template_sheet(workbook, problem)
         workbook.save(target)
     else:

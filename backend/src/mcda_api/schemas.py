@@ -30,7 +30,9 @@ MAX_METHODS = 10
 FiniteFloat = Annotated[float, Field(allow_inf_nan=False)]
 Name = Annotated[str, Field(min_length=1, max_length=200)]
 Row = Annotated[list[FiniteFloat], Field(max_length=MAX_CRITERIA)]
-BoundsIn = tuple[FiniteFloat, FiniteFloat] | Annotated[list[tuple[FiniteFloat, FiniteFloat]], Field(max_length=MAX_CRITERIA)]
+BoundsIn = (
+    tuple[FiniteFloat, FiniteFloat] | Annotated[list[tuple[FiniteFloat, FiniteFloat]], Field(max_length=MAX_CRITERIA)]
+)
 
 
 # --- Problem -----------------------------------------------------------------
@@ -150,7 +152,9 @@ class MethodResultModel(BaseModel):
     """Best first; tied alternatives keep their input order."""
 
     @classmethod
-    def build(cls, spec: WeightedSumSpec | TopsisSpec | CompromiseProgrammingSpec, result: MethodResult) -> MethodResultModel:
+    def build(
+        cls, spec: WeightedSumSpec | TopsisSpec | CompromiseProgrammingSpec, result: MethodResult
+    ) -> MethodResultModel:
         return cls(
             method=result.method,
             label=spec.label(),

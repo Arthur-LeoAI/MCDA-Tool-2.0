@@ -6,11 +6,12 @@ intervals Excel computed. Excel writes 0/0 for criteria with zero weight
 (they are not analysed there), so only weighted criteria are compared.
 """
 
+import itertools
 import math
 
 import pytest
-
 from conftest import LEGACY_DIR
+
 from mcda_core import Normalization, StabilityScope, weight_stability_intervals, weighted_sum
 from mcda_core.io import read_legacy_workbook
 from mcda_core.ranking import scores_tied
@@ -38,7 +39,7 @@ def test_reads_layout(workbook):
 def test_weighted_sum_matches_excel_order(workbook):
     result = weighted_sum(workbook.problem, Normalization.NONE)
     scores = [result.score_of(name) for name in workbook.reference_order]
-    for better, worse in zip(scores, scores[1:]):
+    for better, worse in itertools.pairwise(scores):
         assert better > worse or scores_tied(better, worse)
     assert result.rank_of(workbook.reference_order[0]) == 1
 

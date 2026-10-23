@@ -23,14 +23,21 @@ def test_methods_describe_options(client):
 
 
 def test_evaluate_matches_core(client, cars, cars_json):
-    response = client.post("/api/evaluate", json={
-        "problem": cars_json,
-        "methods": [{"method": "weighted_sum"}, {"method": "topsis"}, {"method": "compromise_programming", "p": "inf"}],
-    })
+    response = client.post(
+        "/api/evaluate",
+        json={
+            "problem": cars_json,
+            "methods": [
+                {"method": "weighted_sum"},
+                {"method": "topsis"},
+                {"method": "compromise_programming", "p": "inf"},
+            ],
+        },
+    )
     assert response.status_code == 200
     results = response.json()["results"]
     expected = [weighted_sum(cars), topsis(cars), compromise_programming(cars, p=math.inf)]
-    for got, want in zip(results, expected):
+    for got, want in zip(results, expected, strict=True):
         assert got["method"] == want.method
         np.testing.assert_allclose([a["score"] for a in got["alternatives"]], want.scores)
         assert [a["rank"] for a in got["alternatives"]] == want.ranks.tolist()
@@ -85,7 +92,11 @@ def test_invalid_settings_for_the_data(client, cars_json, spec, message):
 
 @pytest.mark.parametrize(
     "spec",
-    [{"method": "electre"}, {"method": "compromise_programming", "p": 0.5}, {"method": "topsis", "normalization": "z_score"}],
+    [
+        {"method": "electre"},
+        {"method": "compromise_programming", "p": 0.5},
+        {"method": "topsis", "normalization": "z_score"},
+    ],
 )
 def test_invalid_method_specs(client, cars_json, spec):
     response = client.post("/api/evaluate", json={"problem": cars_json, "methods": [spec]})
@@ -117,7 +128,7 @@ def test_stability(client, cars, cars_json, scope):
     assert response.status_code == 200
     body = response.json()
     assert body["scope"] == scope.value
-    for got, want in zip(body["intervals"], weight_stability_intervals(cars, scope)):
+    for got, want in zip(body["intervals"], weight_stability_intervals(cars, scope), strict=True):
         assert got["criterion"] == want.criterion
         assert got["lower"] == pytest.approx(want.lower)
         assert got["upper"] == (None if math.isinf(want.upper) else pytest.approx(want.upper))
@@ -143,9 +154,13 @@ def test_cors_allows_configured_origin(client):
 
 
 def test_weighted_sum_returns_contributions(client, cars_json):
-    results = client.post("/api/evaluate", json={
-        "problem": cars_json, "methods": [{"method": "weighted_sum"}, {"method": "topsis"}],
-    }).json()["results"]
+    results = client.post(
+        "/api/evaluate",
+        json={
+            "problem": cars_json,
+            "methods": [{"method": "weighted_sum"}, {"method": "topsis"}],
+        },
+    ).json()["results"]
     c = next(a for a in results[0]["alternatives"] if a["name"] == "C")
     assert c["contributions"] == pytest.approx([0.2, 0.5])
     assert all(a["contributions"] is None for a in results[1]["alternatives"])

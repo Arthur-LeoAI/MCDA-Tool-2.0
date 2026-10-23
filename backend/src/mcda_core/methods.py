@@ -113,8 +113,5 @@ def compromise_programming(
         raise ValueError(f"p must be >= 1 (or math.inf), got {p}")
     regret = 1.0 - normalize(problem.matrix, problem.directions, normalization, bounds)
     weighted = regret * problem.normalized_weights
-    if math.isinf(p):
-        scores = weighted.max(axis=1)
-    else:
-        scores = (weighted**p).sum(axis=1) ** (1.0 / p)
+    scores = weighted.max(axis=1) if math.isinf(p) else (weighted**p).sum(axis=1) ** (1.0 / p)
     return MethodResult.from_scores("compromise_programming", problem, scores, higher_is_better=False)

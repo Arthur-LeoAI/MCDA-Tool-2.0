@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "gen:api": "cd ../backend && uv run python -m mcda_api.export_openapi openapi.json && cd ../frontend && npx -y openapi-typescript@7 ../backend/openapi.json -o src/api/schema.d.ts",
+    "gen:api": "cd ../backend && uv run python -m mcda_api.export_openapi openapi.json && uv run python -m mcda_core.project.export_schema project.schema.json && cd ../frontend && npx -y openapi-typescript@7 ../backend/openapi.json -o src/api/schema.d.ts",
     "test": "vitest run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

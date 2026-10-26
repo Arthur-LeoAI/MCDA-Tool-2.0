@@ -71,8 +71,8 @@ jobs:
         working-directory: frontend
       - run: npm run gen:api
         working-directory: frontend
-      - name: Fail if openapi.json or schema.d.ts changed
-        run: git diff --exit-code -- backend/openapi.json frontend/src/api/schema.d.ts
+      - name: Fail if openapi.json, project.schema.json or schema.d.ts changed
+        run: git diff --exit-code -- backend/openapi.json backend/project.schema.json frontend/src/api/schema.d.ts
 
   e2e:
     name: End-to-end

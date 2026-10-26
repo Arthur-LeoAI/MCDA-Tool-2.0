@@ -14,8 +14,8 @@ const TOOLTIP = {
 
 const truncate = (text: string, length = 22) => (text.length > length ? `${text.slice(0, length - 1)}…` : text)
 
-/** Horizontal bars, best alternative on top. */
-export function scoreChart(result: MethodResult, color = '#4f46e5'): EChartsCoreOption {
+/** Horizontal bars, best on top; `scale` multiplies the scores for display (e.g. 100). */
+export function scoreChart(result: MethodResult, scale = 1, color = '#4f46e5'): EChartsCoreOption {
   const rows = [...result.alternatives].sort((a, b) => b.rank - a.rank)
   return {
     grid: { left: 8, right: 56, top: 8, bottom: 8, containLabel: true },
@@ -30,7 +30,7 @@ export function scoreChart(result: MethodResult, color = '#4f46e5'): EChartsCore
       {
         type: 'bar',
         data: rows.map((r) => ({
-          value: r.score,
+          value: r.score * scale,
           itemStyle: { color: r.rank === 1 ? color : `${color}99`, borderRadius: [0, 4, 4, 0] },
         })),
         label: {
@@ -38,7 +38,7 @@ export function scoreChart(result: MethodResult, color = '#4f46e5'): EChartsCore
           position: 'right',
           fontSize: 11,
           color: '#475569',
-          formatter: ({ value }: { value: number }) => formatScore(value),
+          formatter: ({ value }: { value: number }) => (scale === 100 ? value.toFixed(1) : formatScore(value)),
         },
         barMaxWidth: 22,
       },
@@ -47,7 +47,7 @@ export function scoreChart(result: MethodResult, color = '#4f46e5'): EChartsCore
 }
 
 /** One line per alternative across methods; rank 1 at the top. */
-export function rankChart(results: MethodResult[]): EChartsCoreOption {
+export function rankChart(results: MethodResult[], labels: string[]): EChartsCoreOption {
   const names = results[0]?.alternatives.map((a) => a.name) ?? []
   const n = names.length
   return {
@@ -55,7 +55,7 @@ export function rankChart(results: MethodResult[]): EChartsCoreOption {
     tooltip: { ...TOOLTIP, trigger: 'item' },
     xAxis: {
       type: 'category',
-      data: results.map((r) => r.label),
+      data: labels,
       // Always show every method; wrap long labels instead of hiding them.
       axisLabel: { ...AXIS_LABEL, interval: 0, width: 90, overflow: 'break' },
       // Points sit in the middle of their band, so edge labels are not clipped.
@@ -83,12 +83,10 @@ export function rankChart(results: MethodResult[]): EChartsCoreOption {
   }
 }
 
-/** Stacked bars: each criterion's contribution to the weighted-sum score. */
-export function breakdownChart(result: MethodResult, criteria: string[]): EChartsCoreOption {
+/** Stacked bars: each criterion's points in the weighted-sum score (0–100 like the score itself). */
+export function breakdownChart(result: MethodResult, criteria: { id: string; name: string }[]): EChartsCoreOption {
   const rows = [...result.alternatives].sort((a, b) => b.rank - a.rank)
-  const used = criteria
-    .map((name, j) => ({ name, j }))
-    .filter(({ j }) => rows.some((r) => (r.contributions?.[j] ?? 0) !== 0))
+  const used = criteria.filter(({ id }) => rows.some((r) => (r.contributions?.[id] ?? 0) !== 0))
   return {
     grid: { left: 8, right: 16, top: 40, bottom: 8, containLabel: true },
     legend: { type: 'scroll', top: 0, textStyle: { fontSize: 11, color: '#475569' }, pageIconSize: 10 },
@@ -96,7 +94,7 @@ export function breakdownChart(result: MethodResult, criteria: string[]): EChart
       ...TOOLTIP,
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      valueFormatter: (v: number) => formatScore(v),
+      valueFormatter: (v: number) => v.toFixed(1),
     },
     xAxis: { type: 'value', axisLabel: AXIS_LABEL, splitLine: SPLIT_LINE },
     yAxis: {
@@ -104,11 +102,11 @@ export function breakdownChart(result: MethodResult, criteria: string[]): EChart
       data: rows.map((r) => r.name),
       axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v) },
     },
-    series: used.map(({ name, j }, k) => ({
+    series: used.map(({ id, name }, k) => ({
       name,
       type: 'bar',
       stack: 'total',
-      data: rows.map((r) => r.contributions?.[j] ?? 0),
+      data: rows.map((r) => (r.contributions?.[id] ?? 0) * 100),
       color: colorAt(k),
       barMaxWidth: 26,
       emphasis: { focus: 'series' },

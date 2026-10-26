@@ -3,7 +3,15 @@ import { useRef, useState } from 'react'
 import { useT } from '../i18n/useT'
 import { Spinner } from './ui'
 
-export function FileDrop({ onFile, busy }: { onFile: (file: File) => void; busy: boolean }) {
+export function FileDrop({
+  onFile,
+  busy,
+  accept = '.xlsx,.xlsm,.csv',
+}: {
+  onFile: (file: File) => void
+  busy: boolean
+  accept?: string
+}) {
   const t = useT()
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
@@ -41,7 +49,7 @@ export function FileDrop({ onFile, busy }: { onFile: (file: File) => void; busy:
       <input
         ref={input}
         type="file"
-        accept=".xlsx,.xlsm,.csv"
+        accept={accept}
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0]

@@ -3,30 +3,28 @@ import type { components } from './schema'
 
 type Schemas = components['schemas']
 
-export type Problem = Schemas['ProblemModel']
-export type Criterion = Schemas['CriterionModel']
-export type Direction = Criterion['direction']
-export type WeightedSumSpec = Schemas['WeightedSumSpec']
-export type TopsisSpec = Schemas['TopsisSpec']
-export type CompromiseProgrammingSpec = Schemas['CompromiseProgrammingSpec']
-export type MethodSpec = WeightedSumSpec | TopsisSpec | CompromiseProgrammingSpec
-export type MethodName = MethodSpec['method']
-export type Normalization = MethodSpec['normalization']
-export type MethodResult = Schemas['MethodResultModel']
-export type EvaluateResponse = Schemas['EvaluateResponse']
-export type ParetoResponse = Schemas['ParetoResponse']
-export type StabilityResponse = Schemas['StabilityResponse']
-export type StabilityScope = StabilityResponse['scope']
-export type StabilityNormalization = Schemas['StabilityOptions']['normalization']
-export type Interval = Schemas['IntervalModel']
-export type ImportResponse = Schemas['ImportResponse']
-export type LegacyInfo = Schemas['LegacyInfo']
+// Project model v2 (the .mcda.json format)
+export type Project = Schemas['Project']
+export type Alternative = Schemas['Alternative']
+export type Criterion = Schemas['Criterion']
+export type CriterionType = NonNullable<Criterion['type']>
+export type Direction = Schemas['LinearValueFunction']['direction']
+export type ValueFunction = NonNullable<Criterion['value_function']>
+export type RawValue = boolean | number | string | null
+export type WeightedSumMethod = Schemas['WeightedSumMethod']
+export type TopsisMethod = Schemas['TopsisMethod']
+export type CompromiseProgrammingMethod = Schemas['CompromiseProgrammingMethod']
+export type ProjectMethod = WeightedSumMethod | TopsisMethod | CompromiseProgrammingMethod
+export type MethodName = ProjectMethod['method']
+
+// Results
+export type ProjectEvaluation = Schemas['ProjectEvaluation']
+export type MethodResult = Schemas['ProjectMethodResult']
+export type ProjectStability = Schemas['ProjectStability']
+export type StabilityScope = ProjectStability['scope']
+export type Interval = Schemas['ProjectInterval']
+export type ProjectImport = Schemas['ProjectImport']
+
+// Errors
 export type Issue = Schemas['IssueModel']
 export type Location = Schemas['LocationModel']
-
-/** A problem while it is being edited: cells may still be empty. */
-export interface DraftProblem {
-  alternatives: string[]
-  criteria: Criterion[]
-  matrix: (number | null)[][]
-}

@@ -1,10 +1,10 @@
 import { ArrowRight } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import type { StabilityResponse, StabilityScope } from '../api/types'
+import type { ProjectStability, StabilityScope } from '../api/types'
 import { EChart } from '../components/EChart'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { Button, Card, PageHeader, Segmented, Spinner } from '../components/ui'
-import { useApiPost, useCheckedDraft } from '../hooks'
+import { useApiPost, useCheckedProject } from '../hooks'
 import { useT } from '../i18n/useT'
 import { type IntervalRow, intervalRows, stabilityChart } from '../lib/charts'
 import { formatPercent, formatScore } from '../lib/format'
@@ -12,15 +12,15 @@ import { useStore } from '../store'
 
 export function SensitivityPage() {
   const t = useT()
-  const checked = useCheckedDraft()!
-  const { stabilityScope, setStabilityScope, setStep } = useStore()
-  const spec = useStore((s) => s.settings.weighted_sum)
+  const checked = useCheckedProject()!
+  const { setStabilityScope, setStep } = useStore()
   const [includeZero, setIncludeZero] = useState(false)
-  const problem = checked.problem
+  const { project, apiProject } = checked
+  const stabilityScope = project.analysis.stability_scope ?? 'full_order'
 
-  const stability = useApiPost<StabilityResponse>(
-    '/sensitivity/stability',
-    problem && { problem, scope: stabilityScope, normalization: spec.normalization, bounds: spec.bounds },
+  const stability = useApiPost<ProjectStability>(
+    '/projects/stability',
+    apiProject && { project: apiProject, scope: stabilityScope },
   )
   const rows = useMemo(() => intervalRows(stability.data?.intervals ?? [], includeZero), [stability.data, includeZero])
   const option = useMemo(
@@ -33,7 +33,7 @@ export function SensitivityPage() {
       <PageHeader title={t('sens.title')} intro={t('sens.intro')} />
       {checked.issues.length > 0 && (
         <div className="mb-4">
-          <IssueList issues={checked.issues} />
+          <IssueList issues={checked.issues} project={project} />
         </div>
       )}
 
@@ -58,13 +58,13 @@ export function SensitivityPage() {
           />
           {t('sens.showZero')}
         </label>
-        <span className="text-xs text-slate-500">{t('sens.basedOn', { norm: t(`norm.${spec.normalization}`) })}</span>
+        <span className="text-xs text-slate-500">{t('sens.basedOn')}</span>
         {stability.loading && <Spinner />}
       </div>
 
       {stability.error && (
         <div className="mb-4">
-          <ApiErrorBox error={stability.error} draft={checked.draft} />
+          <ApiErrorBox error={stability.error} project={project} />
         </div>
       )}
 

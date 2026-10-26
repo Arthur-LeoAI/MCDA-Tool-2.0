@@ -1,58 +1,49 @@
-import { FileDown, FileSpreadsheet } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { FileDown, FileJson, FileSpreadsheet } from 'lucide-react'
+import { useState } from 'react'
 import { ApiError, asApiError, downloadFile } from '../api/client'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { Button, Card, PageHeader, Spinner } from '../components/ui'
-import { useCheckedDraft } from '../hooks'
+import { useCheckedProject } from '../hooks'
 import { useT } from '../i18n/useT'
-import { selectEnabledSpecs, useStore } from '../store'
+import { methodLabel } from '../lib/methods'
+import { projectFilename, saveProjectFile } from '../lib/projectFile'
 
 export function ExportPage() {
   const t = useT()
-  const checked = useCheckedDraft()!
-  const settings = useStore((s) => s.settings)
-  const enabledMethods = useStore((s) => s.enabledMethods)
-  const specs = useMemo(() => selectEnabledSpecs({ settings, enabledMethods }), [settings, enabledMethods])
+  const checked = useCheckedProject()!
+  const { project, apiProject } = checked
   const [includeStability, setIncludeStability] = useState(true)
   const [includePareto, setIncludePareto] = useState(true)
-  const [busy, setBusy] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
-  const problem = checked.problem
 
-  const run = async (id: string, action: () => Promise<void>) => {
-    setBusy(id)
+  const downloadReport = async () => {
+    setBusy(true)
     setError(null)
     try {
-      await action()
+      await downloadFile('/projects/report', {
+        project: apiProject,
+        include_stability: includeStability,
+        include_pareto: includePareto,
+      })
     } catch (err) {
       setError(asApiError(err))
     } finally {
-      setBusy(null)
+      setBusy(false)
     }
   }
-
-  const ws = settings.weighted_sum
-  const downloadReport = () =>
-    run('report', () =>
-      downloadFile('/export/report', {
-        problem,
-        methods: specs,
-        stability: includeStability ? { normalization: ws.normalization, bounds: ws.bounds } : null,
-        include_pareto: includePareto,
-      }),
-    )
 
   return (
     <div className="max-w-3xl">
       <PageHeader title={t('export.title')} />
       {checked.issues.length > 0 && (
         <div className="mb-4">
-          <IssueList issues={checked.issues} />
+          <IssueList issues={checked.issues} project={project} />
         </div>
       )}
       {error && (
         <div className="mb-4">
-          <ApiErrorBox error={error} draft={checked.draft} />
+          <ApiErrorBox error={error} project={project} />
         </div>
       )}
 
@@ -66,7 +57,7 @@ export function ExportPage() {
       >
         <p className="text-sm text-slate-600">{t('export.reportDesc')}</p>
         <p className="mt-2 text-xs text-slate-500">
-          {t('export.methodsUsed', { methods: specs.map((s) => t(`method.${s.method}`)).join(', ') || '—' })}
+          {t('export.methodsUsed', { methods: project.analysis.methods.map((m) => methodLabel(t, m)).join(', ') })}
         </p>
         <div className="mt-4 space-y-2 text-sm text-slate-700">
           <label className="flex items-center gap-2">
@@ -92,29 +83,30 @@ export function ExportPage() {
           <Button
             variant="primary"
             icon={<FileDown className="size-4" />}
-            disabled={!problem || !specs.length || busy !== null}
+            disabled={!apiProject || busy}
             onClick={downloadReport}
           >
             {t('export.download')}
           </Button>
-          {busy === 'report' && <Spinner />}
+          {busy && <Spinner />}
         </div>
       </Card>
 
-      <Card className="mt-6" title={t('export.problem')}>
-        <p className="text-sm text-slate-600">{t('export.problemDesc')}</p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {(['xlsx', 'csv'] as const).map((format) => (
-            <Button
-              key={format}
-              icon={<FileDown className="size-4" />}
-              disabled={!problem || busy !== null}
-              onClick={() => run(format, () => downloadFile(`/export/problem?format=${format}`, problem))}
-            >
-              .{format}
-            </Button>
-          ))}
-          {(busy === 'xlsx' || busy === 'csv') && <Spinner />}
+      <Card
+        className="mt-6"
+        title={
+          <span className="inline-flex items-center gap-2">
+            <FileJson className="text-accent-600 size-4" />
+            {t('export.projectFile')}
+          </span>
+        }
+      >
+        <p className="text-sm text-slate-600">{t('export.projectFileDesc')}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button icon={<FileDown className="size-4" />} onClick={() => saveProjectFile(project)}>
+            {t('project.save')}
+          </Button>
+          <code className="text-xs text-slate-500">{projectFilename(project)}</code>
         </div>
       </Card>
     </div>

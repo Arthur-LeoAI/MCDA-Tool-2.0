@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import __version__
 from .errors import install_error_handlers
 from .observability import REQUEST_ID_HEADER, configure_logging, install_request_context
+from .projects import router as projects_router
 from .routes import router
 
 
@@ -58,6 +59,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     install_error_handlers(app)
     app.include_router(router)
+    app.include_router(projects_router)
     return app
 
 

@@ -91,10 +91,18 @@ docker compose up --build
 
 ### 接口一览
 
-API 是**无状态**的：前端在每次请求里带上完整的问题数据，服务器不保存任何内容。
+API 是**无状态**的：前端在每次请求里带上完整的项目数据，服务器不保存任何内容。项目文件的格式见 `backend/project.schema.json`。
+
+`/projects/*` 是当前接口。下表中不带 `projects` 的旧接口会在 v0.1.0 发布前删除（ADR 0008）。在 v0.1.0 之前，外部程序不应依赖这个 API。
 
 | 接口 | 作用 |
 |---|---|
+| `POST /api/v1/projects/migrate` | 把任意受支持版本的项目文件（或版本 3 的问题格式）升级为当前版本 |
+| `POST /api/v1/projects/import` | 上传 `.xlsx` / `.csv`（标准模板或旧版 V7 工作簿），转换成项目 |
+| `POST /api/v1/projects/validate` | 校验项目 |
+| `POST /api/v1/projects/evaluate` | 计算：合格和被排除的方案、补全的缺失值、权重、价值分、各方法结果、Pareto 分析 |
+| `POST /api/v1/projects/stability` | 权重稳定区间（基于价值分上的加权和） |
+| `POST /api/v1/projects/report` | Excel 报告 |
 | `GET /api/v1/health` | 健康检查 |
 | `GET /api/v1/methods` | 可用方法、可选的归一化方式和默认参数 |
 | `POST /api/v1/problems/import` | 上传 `.xlsx` / `.csv`，自动识别标准模板或旧版 V7 工作簿 |

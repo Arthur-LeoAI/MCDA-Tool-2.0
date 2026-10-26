@@ -1,18 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import type { DraftProblem, Issue } from '../api/types'
+import type { Issue, Project } from '../api/types'
 import { describeIssue, errorText, fieldLabel, locationText } from './describe'
 
-const draft: DraftProblem = {
-  alternatives: ['Option A', 'Option B'],
+const project = {
+  format: 'mcda-project',
+  version: 2,
+  alternatives: [
+    { id: 'a1', name: 'Option A' },
+    { id: 'a2', name: 'Option B' },
+  ],
   criteria: [
-    { name: 'Cost', direction: 'cost', weight: 1 },
-    { name: 'Quality', direction: 'benefit', weight: 1 },
+    { id: 'c1', name: 'Cost', type: 'numeric', value_function: { kind: 'linear', direction: 'cost', bounds: 'data' } },
+    {
+      id: 'c2',
+      name: 'Quality',
+      type: 'numeric',
+      value_function: { kind: 'linear', direction: 'benefit', bounds: 'data' },
+    },
   ],
-  matrix: [
-    [1, 2],
-    [3, 4],
-  ],
-}
+  data: {},
+} as unknown as Project
 
 describe('errorText', () => {
   it('translates codes and fills params', () => {
@@ -20,9 +27,9 @@ describe('errorText', () => {
     expect(errorText('en', 'file_too_large', { max_mb: 5 })).toBe('The file is larger than 5 MB')
   })
 
-  it('names row/column params from the draft', () => {
+  it('names row/column params from the project', () => {
     const params = { count: 1, row: 2, column: 1, value: 150, low: 0, high: 100 }
-    expect(errorText('en', 'out_of_fixed_range', params, undefined, draft)).toContain('"Option B / Cost" = 150')
+    expect(errorText('en', 'out_of_fixed_range', params, undefined, project)).toContain('"Option B / Cost" = 150')
   })
 
   it('falls back to the server message for unknown codes', () => {
@@ -36,15 +43,18 @@ describe('locations', () => {
     expect(locationText('en', { kind: 'row', index: 2 })).toBe('row 2')
     expect(locationText('zh', { kind: 'alternative', index: 3 })).toBe('第 3 个方案')
     expect(locationText('en', { kind: 'criterion', name: 'Cost' })).toBe('Cost')
+    expect(locationText('zh', { kind: 'group', index: 1 })).toBe('第 1 个分组')
+    expect(locationText('en', { kind: 'constraint', ref: 'k1' })).toBe('condition k1')
     expect(locationText('en', { kind: 'value', alternative: 'A', criterion: 'Cost' })).toBe('A / Cost')
-    expect(locationText('en', { kind: 'field', ref: 'problem.matrix.1.0' }, draft)).toBe('Option B / Cost')
+    expect(locationText('en', { kind: 'field', ref: 'project.data.c1.a2' }, project)).toBe('Option B / Cost')
   })
 
   it('maps request field paths to names', () => {
-    expect(fieldLabel('problem.criteria.1.weight', draft)).toBe('Quality')
-    expect(fieldLabel('alternatives.0', draft)).toBe('Option A')
-    expect(fieldLabel('methods.0.p', draft)).toBe('methods.0.p')
-    expect(fieldLabel('matrix.0.1')).toBe('matrix.0.1')
+    expect(fieldLabel('criteria.1.name', project)).toBe('Quality')
+    expect(fieldLabel('alternatives.0', project)).toBe('Option A')
+    expect(fieldLabel('data.c2', project)).toBe('Quality')
+    expect(fieldLabel('analysis.methods.0.p', project)).toBe('analysis.methods.0.p')
+    expect(fieldLabel('data.c1.a1')).toBe('data.c1.a1')
   })
 
   it('describes a full issue', () => {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { type ApiError, asApiError, postJson } from './api/client'
-import { checkDraft } from './lib/problem'
+import type { Project } from './api/types'
+import { forApi, localIssues } from './lib/project'
 import { useStore } from './store'
 
 interface ApiState<T> {
@@ -46,8 +47,29 @@ export function useApiPost<T>(path: string, body: unknown, delay = 250): ApiStat
   return { data: settled.data, error: fresh ? settled.error : null, loading: !fresh }
 }
 
-/** The current draft checked locally; `problem` is set once it can be sent to the API. */
-export function useCheckedDraft() {
-  const draft = useStore((s) => s.draft)
-  return useMemo(() => (draft ? { draft, ...checkDraft(draft) } : null), [draft])
+/**
+ * The current project with local checks. `apiProject` is the project ready
+ * to send to the API, or null while local issues (e.g. empty names) remain.
+ */
+export function useCheckedProject() {
+  const project = useStore((s) => s.project)
+  return useMemo(() => {
+    if (!project) return null
+    const issues = localIssues(project)
+    return { project, issues, apiProject: issues.length ? null : forApi(project) }
+  }, [project])
+}
+
+/** Converts a draft saved by version 3 of the app (once, on start-up). */
+export function useMigratePendingDraft() {
+  const pending = useStore((s) => s.pendingV1)
+  const [error, setError] = useState<ApiError | null>(null)
+  useEffect(() => {
+    if (!pending) return
+    postJson<Project>('/projects/migrate', pending)
+      .then((project) => useStore.getState().loadProject(project))
+      .catch((err) => setError(asApiError(err)))
+      .finally(() => useStore.getState().resolvePendingV1())
+  }, [pending])
+  return { migrating: pending !== null, error }
 }

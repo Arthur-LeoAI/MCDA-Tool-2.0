@@ -23,6 +23,7 @@ from mcda_core import (
     topsis,
     weighted_sum,
 )
+from mcda_core.errors import LocationKind
 
 MAX_ALTERNATIVES = 500
 MAX_CRITERIA = 200
@@ -288,12 +289,13 @@ class ReportRequest(BaseModel):
 class LocationModel(BaseModel):
     """Where an issue is; which fields are set depends on ``kind``.
 
-    cell: ``ref`` ("B4") · alternative/criterion: ``name`` or 1-based ``index`` ·
+    cell: ``ref`` ("B4") · alternative/criterion/group: ``name`` or 1-based ``index`` ·
+    constraint: id in ``ref`` ·
     value: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·
     field: request path in ``ref`` ("problem.matrix.0.1")
     """
 
-    kind: Literal["cell", "alternative", "criterion", "value", "row", "field"]
+    kind: LocationKind
     ref: str | None = None
     name: str | None = None
     index: int | None = None

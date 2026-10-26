@@ -8,6 +8,11 @@ const CI = Boolean(process.env.CI)
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Each worker runs a browser against the same local servers; more than two slow each other down.
+  workers: 2,
+  // Whole user flows (import, several pages, downloads) need more than the 30 s default.
+  timeout: 60_000,
+  expect: { timeout: 10_000 },
   forbidOnly: CI,
   retries: CI ? 1 : 0,
   reporter: CI ? [['list'], ['html', { open: 'never' }]] : 'list',

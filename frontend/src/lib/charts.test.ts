@@ -11,6 +11,7 @@ const interval = (
   upperShare: number,
 ): Interval => ({
   criterion,
+  criterion_id: criterion,
   weight,
   lower,
   upper,
@@ -39,12 +40,13 @@ describe('intervalRows', () => {
   })
 })
 
-const result = (method: string, ranks: number[], contributions?: number[][]): MethodResult => ({
+const result = (method: string, ranks: number[], contributions?: Record<string, number>[]): MethodResult => ({
   method,
   label: method,
-  spec: { method: 'weighted_sum', normalization: 'min_max', bounds: [0, 100] },
+  spec: { method: 'weighted_sum' },
   higher_is_better: true,
   alternatives: ranks.map((rank, i) => ({
+    id: `a${i}`,
     name: `A${i}`,
     score: 1 / rank,
     rank,
@@ -60,7 +62,11 @@ describe('chart options', () => {
   })
 
   it('draws one rank line per alternative', () => {
-    const option = rankChart([result('ws', [2, 1]), result('topsis', [1, 2])]) as { series: { data: number[] }[] }
+    const option = rankChart([result('ws', [2, 1]), result('topsis', [1, 2])], ['WS', 'TOPSIS']) as {
+      series: { data: number[] }[]
+      xAxis: { data: string[] }
+    }
+    expect(option.xAxis.data).toEqual(['WS', 'TOPSIS'])
     expect(option.series.map((s) => s.data)).toEqual([
       [2, 1],
       [1, 2],
@@ -73,12 +79,25 @@ describe('chart options', () => {
         'ws',
         [1, 2],
         [
-          [0.5, 0, 0.1],
-          [0.2, 0, 0.3],
+          { c0: 0.5, c1: 0, c2: 0.1 },
+          { c0: 0.2, c1: 0, c2: 0.3 },
         ],
       ),
-      ['c0', 'c1', 'c2'],
+      [
+        { id: 'c0', name: 'Price' },
+        { id: 'c1', name: 'Unused' },
+        { id: 'c2', name: 'Quality' },
+      ],
     ) as { series: { name: string }[] }
-    expect(option.series.map((s) => s.name)).toEqual(['c0', 'c2'])
+    expect(option.series.map((s) => s.name)).toEqual(['Price', 'Quality'])
+  })
+})
+
+describe('breakdown scale', () => {
+  it('shows contributions as points of the 0–100 score', () => {
+    const option = breakdownChart(result('ws', [1, 2], [{ c0: 0.25 }, { c0: 0.5 }]), [{ id: 'c0', name: 'Price' }]) as {
+      series: { data: number[] }[]
+    }
+    expect(option.series[0].data).toEqual([50, 25])
   })
 })

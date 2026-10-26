@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Interval, MethodResult } from '../api/types'
-import { breakdownChart, intervalRows, rankChart, scoreChart } from './charts'
+import { breakdownChart, curveChart, intervalRows, rankChart, scoreChart } from './charts'
 
 const interval = (
   criterion: string,
@@ -99,5 +99,33 @@ describe('breakdown scale', () => {
       series: { data: number[] }[]
     }
     expect(option.series[0].data).toEqual([50, 25])
+  })
+})
+
+describe('curve chart', () => {
+  it('draws the curve, scored alternatives and excluded ones', () => {
+    const option = curveChart(
+      {
+        criterion_id: 'c1',
+        low: 0,
+        high: 10,
+        points: [
+          [0, 0],
+          [10, 1],
+        ],
+        alternatives: [
+          { id: 'a1', x: 4, value: 0.4 },
+          { id: 'a2', x: 8, value: null },
+        ],
+      },
+      { a1: 'Mat', a2: 'Box' },
+      { excluded: 'excluded' },
+    ) as { series: { data: { name?: string; value: number[] }[] }[] }
+    expect(option.series[0].data.map((d) => d.value)).toEqual([
+      [0, 0],
+      [10, 1],
+    ])
+    expect(option.series[1].data).toEqual([{ name: 'Mat', value: [4, 0.4] }])
+    expect(option.series[2].data).toEqual([{ name: 'Box', value: [8, 0] }])
   })
 })

@@ -21,11 +21,13 @@ from mcda_core.project.curve import value_curve
 from mcda_core.project.model import (
     CompromiseProgrammingMethod,
     ProjectMethod,
+    RobustnessSettings,
     Source,
     TopsisMethod,
     WeightedSumMethod,
 )
 from mcda_core.project.quality import quality_report
+from mcda_core.project.robustness import robustness
 from mcda_core.project.weighting import derive
 
 from . import __version__
@@ -241,6 +243,56 @@ def project_stability(request: StabilityRequest) -> ProjectStability:
             ProjectInterval(criterion_id=criterion_ids[i.criterion], **IntervalModel.build(i).model_dump())
             for i in intervals
         ],
+    )
+
+
+class RobustAlternative(BaseModel):
+    id: str
+    name: str
+    rank_probabilities: list[float]
+    """Item r is the probability of rank r + 1."""
+    p_best: float
+    mean_rank: float
+
+
+class ConfidenceModel(BaseModel):
+    id: str
+    """The alternative ranked first with the current weights."""
+    p_best: float
+    level: Literal["high", "medium", "low"]
+
+
+class RobustnessModel(BaseModel):
+    settings: RobustnessSettings
+    alternatives: list[RobustAlternative]
+    """Eligible alternatives, best mean rank first."""
+    wins: list[list[float]]
+    """wins[i][j]: probability that alternative i scores higher than j (same order as alternatives)."""
+    confidence: ConfidenceModel
+
+
+@router.post("/robustness", response_model=RobustnessModel)
+def project_robustness(project: Project) -> RobustnessModel:
+    """Monte Carlo simulation of the weighted sum with uncertain weights (settings from analysis.robustness)."""
+    prepared = _prepare(project)
+    result = compute(lambda: robustness(prepared))
+    names = {a.id: a.name for a in project.alternatives}
+    return RobustnessModel(
+        settings=result.settings,
+        alternatives=[
+            RobustAlternative(
+                id=id_,
+                name=names[id_],
+                rank_probabilities=[float(p) for p in result.rank_probabilities[k]],
+                p_best=float(result.p_best[k]),
+                mean_rank=float(result.mean_rank[k]),
+            )
+            for k, id_ in enumerate(result.alternative_ids)
+        ],
+        wins=result.wins.tolist(),
+        confidence=ConfidenceModel(
+            id=result.confidence.alternative_id, p_best=result.confidence.p_best, level=result.confidence.level
+        ),
     )
 
 

@@ -453,6 +453,34 @@
         "title": "CompromiseProgrammingSpec",
         "type": "object"
       },
+      "ConfidenceModel": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Level",
+            "type": "string"
+          },
+          "p_best": {
+            "title": "P Best",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "p_best",
+          "level"
+        ],
+        "title": "ConfidenceModel",
+        "type": "object"
+      },
       "Criterion": {
         "additionalProperties": false,
         "properties": {
@@ -2208,6 +2236,77 @@
         "title": "ProjectStability",
         "type": "object"
       },
+      "RobustAlternative": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mean_rank": {
+            "title": "Mean Rank",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "p_best": {
+            "title": "P Best",
+            "type": "number"
+          },
+          "rank_probabilities": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Rank Probabilities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "rank_probabilities",
+          "p_best",
+          "mean_rank"
+        ],
+        "title": "RobustAlternative",
+        "type": "object"
+      },
+      "RobustnessModel": {
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/RobustAlternative"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "confidence": {
+            "$ref": "#/components/schemas/ConfidenceModel"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RobustnessSettings"
+          },
+          "wins": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Wins",
+            "type": "array"
+          }
+        },
+        "required": [
+          "settings",
+          "alternatives",
+          "wins",
+          "confidence"
+        ],
+        "title": "RobustnessModel",
+        "type": "object"
+      },
       "RobustnessSettings": {
         "additionalProperties": false,
         "properties": {
@@ -3767,6 +3866,48 @@
           }
         },
         "summary": "Project Report",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/robustness": {
+      "post": {
+        "description": "Monte Carlo simulation of the weighted sum with uncertain weights (settings from analysis.robustness).",
+        "operationId": "project_robustness_api_v1_projects_robustness_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RobustnessModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project Robustness",
         "tags": [
           "projects"
         ]

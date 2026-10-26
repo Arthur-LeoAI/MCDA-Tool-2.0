@@ -312,6 +312,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/weights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Project Weights
+         * @description Local weights of every level and the global criterion weights; the data need not be complete.
+         */
+        post: operations["project_weights_api_v1_projects_weights_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sensitivity/stability": {
         parameters: {
             query?: never;
@@ -394,6 +414,28 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AhpModel */
+        AhpModel: {
+            /** Consistent */
+            consistent: boolean;
+            /** Cr */
+            cr: number;
+            /** Lambda Max */
+            lambda_max: number;
+            /** Worst Pairs */
+            worst_pairs: components["schemas"]["AhpPairModel"][];
+        };
+        /** AhpPairModel */
+        AhpPairModel: {
+            /** Given */
+            given: number;
+            /** I */
+            i: string;
+            /** Implied */
+            implied: number;
+            /** J */
+            j: string;
+        };
         /** Alternative */
         Alternative: {
             /** Id */
@@ -769,6 +811,21 @@ export interface components {
             prescaled: boolean[];
             /** Reference Order */
             reference_order: string[];
+        };
+        /** LevelModel */
+        LevelModel: {
+            ahp?: components["schemas"]["AhpModel"] | null;
+            /** Key */
+            key: string;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "direct" | "rank" | "ahp";
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
         };
         /**
          * LevelWeighting
@@ -1470,6 +1527,15 @@ export interface components {
                 [key: string]: components["schemas"]["LevelWeighting"];
             };
         };
+        /** WeightsModel */
+        WeightsModel: {
+            /** Levels */
+            levels: components["schemas"]["LevelModel"][];
+            /** Weights */
+            weights: {
+                [key: string]: number;
+            };
+        };
         /** ReportRequest */
         mcda_api__projects__ReportRequest: {
             /**
@@ -2096,6 +2162,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Validity"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    project_weights_api_v1_projects_weights_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Project"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeightsModel"];
                 };
             };
             /** @description Unprocessable Content */

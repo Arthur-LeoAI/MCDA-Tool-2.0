@@ -60,7 +60,6 @@ MESSAGES: dict[str, str] = {
     "constraint_invalid": "invalid condition: {reason}",
     "too_few_eligible": "only {count} alternative(s) remain after exclusions; at least 2 are needed",
     "raw_basis_needs_linear_numeric": "classic TOPSIS needs numeric criteria with linear value functions",
-    "feature_not_available": "{feature} is not available yet",
     "project_unreadable": "not a project file or problem data",
     "project_version_unsupported": "project format version {version} is newer than this app supports ({supported})",
     # hard constraints (S3): why an alternative was excluded
@@ -69,6 +68,11 @@ MESSAGES: dict[str, str] = {
     "constraint_failed_in": "{criterion} must be one of: {labels}; is {actual!r}",
     "constraint_missing": "{criterion} is missing but required by a condition",
     "curve_needs_numeric": "value curves exist only for numeric criteria",
+    # weighting (S4)
+    "weighting_duplicate": "{item} appears more than once in the ranking",
+    "ahp_incomplete": "compare {i} with {j}",
+    "ahp_too_many_items": "pairwise comparison handles at most {maximum} items, this level has {count}",
+    "ahp_value_invalid": "the comparison of {i} with {j} must be between 1/9 and 9 and given once, got {value}",
     # arbitrary tables (S2)
     "table_no_criteria": "choose at least one column as a criterion",
     "table_column_invalid": "column {index} does not exist in the table",

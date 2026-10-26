@@ -26,6 +26,7 @@ from .model import (
     Project,
     TargetValueFunction,
 )
+from .weighting import weighting_issues
 
 
 def project_issues(project: Project) -> list[ValidationIssue]:
@@ -49,6 +50,7 @@ def project_issues(project: Project) -> list[ValidationIssue]:
     issues += _data_issues(project)
     issues += _constraint_issues(project)
     issues += _weighting_issues(project, group_ids)
+    issues += weighting_issues(project)
     return issues
 
 
@@ -177,7 +179,7 @@ def _constraint_issues(project: Project) -> list[ValidationIssue]:
 def _weighting_issues(project: Project, group_ids: set[str]) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     criterion_ids = {c.id for c in project.criteria}
-    levels = [("groups", project.weighting.groups, group_ids)] if project.weighting.groups else []
+    levels = [("groups", project.weighting.groups, group_ids | {ROOT_LEVEL})] if project.weighting.groups else []
     for key, level in project.weighting.within.items():
         if key != ROOT_LEVEL and key not in group_ids:
             issues.append(_unknown("group", key, Location("field", ref=f"weighting.within.{key}")))

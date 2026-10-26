@@ -1,6 +1,65 @@
 {
   "components": {
     "schemas": {
+      "AhpModel": {
+        "properties": {
+          "consistent": {
+            "title": "Consistent",
+            "type": "boolean"
+          },
+          "cr": {
+            "title": "Cr",
+            "type": "number"
+          },
+          "lambda_max": {
+            "title": "Lambda Max",
+            "type": "number"
+          },
+          "worst_pairs": {
+            "items": {
+              "$ref": "#/components/schemas/AhpPairModel"
+            },
+            "title": "Worst Pairs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cr",
+          "lambda_max",
+          "consistent",
+          "worst_pairs"
+        ],
+        "title": "AhpModel",
+        "type": "object"
+      },
+      "AhpPairModel": {
+        "properties": {
+          "given": {
+            "title": "Given",
+            "type": "number"
+          },
+          "i": {
+            "title": "I",
+            "type": "string"
+          },
+          "implied": {
+            "title": "Implied",
+            "type": "number"
+          },
+          "j": {
+            "title": "J",
+            "type": "string"
+          }
+        },
+        "required": [
+          "i",
+          "j",
+          "given",
+          "implied"
+        ],
+        "title": "AhpPairModel",
+        "type": "object"
+      },
       "Alternative": {
         "additionalProperties": false,
         "properties": {
@@ -1052,6 +1111,47 @@
           "prescaled"
         ],
         "title": "LegacyInfo",
+        "type": "object"
+      },
+      "LevelModel": {
+        "properties": {
+          "ahp": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AhpModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "method": {
+            "enum": [
+              "direct",
+              "rank",
+              "ahp"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "key",
+          "method",
+          "weights"
+        ],
+        "title": "LevelModel",
         "type": "object"
       },
       "LevelWeighting": {
@@ -2852,6 +2952,30 @@
         "title": "Weighting",
         "type": "object"
       },
+      "WeightsModel": {
+        "properties": {
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/LevelModel"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "levels",
+          "weights"
+        ],
+        "title": "WeightsModel",
+        "type": "object"
+      },
       "mcda_api__projects__ReportRequest": {
         "properties": {
           "include_pareto": {
@@ -3727,6 +3851,48 @@
           }
         },
         "summary": "Validate Project",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
+    "/api/v1/projects/weights": {
+      "post": {
+        "description": "Local weights of every level and the global criterion weights; the data need not be complete.",
+        "operationId": "project_weights_api_v1_projects_weights_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeightsModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project Weights",
         "tags": [
           "projects"
         ]

@@ -119,3 +119,34 @@ test('save a project file, clear, open it again: same result', async ({ page }) 
   await expect(ranking).toHaveCount(3)
   expect(await ranking.allInnerTexts()).toEqual(before)
 })
+
+const MESSY_EXPORT = fileURLToPath(new URL('./fixtures/messy-export.xlsx', import.meta.url))
+
+test('arbitrary table: match columns, import, data quality', async ({ page }) => {
+  await page.goto('/')
+  await page.locator('input[type=file]').first().setInputFiles(MESSY_EXPORT)
+  await expect(page.getByText('对应列')).toBeVisible()
+
+  // The first sheet only holds a note; switch to the data sheet.
+  await page.getByRole('combobox', { name: '工作表' }).selectOption('Products')
+  await expect(page.getByRole('textbox', { name: '表头所在行' })).toHaveValue('2')
+  await expect(page.getByRole('combobox', { name: '方案名所在的列' })).toHaveValue('0')
+  await expect(page.getByRole('checkbox', { name: '用作准则: Notes' })).not.toBeChecked()
+
+  // Price is a cost; low competition is best, so reverse the detected order.
+  const priceRow = page.locator('tr', { has: page.getByRole('checkbox', { name: '用作准则: Price' }) })
+  await priceRow.getByRole('radio', { name: '成本型' }).click()
+  const competitionRow = page.locator('tr', { has: page.getByRole('checkbox', { name: '用作准则: Competition' }) })
+  await competitionRow.getByRole('button', { name: '反转' }).click()
+  await page.getByRole('button', { name: '导入 6 个准则' }).click()
+
+  await expect(page.getByText('5 个方案 × 6 个准则')).toBeVisible()
+  await expect(page.getByRole('textbox', { name: 'Silicone mat / Price' })).toHaveValue('12.99')
+  await expect(page.getByRole('textbox', { name: 'Desk lamp / Weight (kg)' })).toHaveValue('1234.5')
+  const quality = page.locator('div', { hasText: /^数据质量/ })
+  await expect(quality.getByText('Price: 1 个缺失值，处理方式：按最差处理')).toBeVisible()
+  await expect(quality.getByText(/Weight \(kg\): 1 个极端值：Desk lamp/)).toBeVisible()
+
+  await nav(page, '结果').click()
+  await expect(page.locator('section', { hasText: '排名对比' }).locator('tbody tr')).toHaveCount(5)
+})

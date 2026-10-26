@@ -36,11 +36,18 @@ describe('postJson', () => {
   })
 
   it('handles non-JSON error bodies', async () => {
-    stubFetch(async () => new Response('Bad gateway', { status: 502, statusText: 'Bad Gateway' }))
+    stubFetch(async () => new Response('Oops', { status: 500, statusText: 'Internal Server Error' }))
     const error = await failure(postJson('/x', {}))
-    expect(error.status).toBe(502)
+    expect(error.status).toBe(500)
     expect(error.code).toBe('unknown')
     expect(error.issues).toEqual([])
+  })
+
+  it.each([502, 503, 504])('treats a proxy %i without our error body as an unreachable API', async (status) => {
+    stubFetch(async () => new Response('Bad gateway', { status }))
+    const error = await failure(postJson('/x', {}))
+    expect(error.status).toBe(status)
+    expect(error.code).toBe('network')
   })
 
   it('reports network failures as status 0', async () => {

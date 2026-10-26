@@ -25,6 +25,12 @@ export type StabilityScope = ProjectStability['scope']
 export type Interval = Schemas['ProjectInterval']
 export type ProjectImport = Schemas['ProjectImport']
 
+// Arbitrary tables (S2)
+export type TableInspection = Schemas['TableInspection']
+export type TableColumn = Schemas['TableColumn']
+export type TableColumnSpec = Schemas['TableColumnSpec']
+export type TableCell = TableInspection['rows'][number][number]
+
 // Errors
 export type Issue = Schemas['IssueModel']
 export type Location = Schemas['LocationModel']

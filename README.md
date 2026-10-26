@@ -98,7 +98,10 @@ API 是**无状态**的：前端在每次请求里带上完整的项目数据，
 | 接口 | 作用 |
 |---|---|
 | `POST /api/v1/projects/migrate` | 把任意受支持版本的项目文件（或版本 3 的问题格式）升级为当前版本 |
-| `POST /api/v1/projects/import` | 上传 `.xlsx` / `.csv`（标准模板或旧版 V7 工作簿），转换成项目 |
+| `POST /api/v1/tables/inspect` | 上传任意 `.xlsx` / `.csv`：标准模板和旧版工作簿直接返回项目，其他表格返回识别出的结构 |
+| `POST /api/v1/tables/build` | 按用户选择的列对应关系，把表格转换成项目 |
+| `POST /api/v1/projects/quality` | 数据质量报告（缺失值、常数列、极端值等） |
+| `POST /api/v1/projects/import` | 上传标准模板或旧版 V7 工作簿，转换成项目 |
 | `POST /api/v1/projects/validate` | 校验项目 |
 | `POST /api/v1/projects/evaluate` | 计算：合格和被排除的方案、补全的缺失值、权重、价值分、各方法结果、Pareto 分析 |
 | `POST /api/v1/projects/stability` | 权重稳定区间（基于价值分上的加权和） |

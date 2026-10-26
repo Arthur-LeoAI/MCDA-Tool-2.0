@@ -183,32 +183,47 @@ class Upload:
     legacy: LegacyWorkbook | None
 
 
-def read_upload(http_request: Request, file: UploadFile) -> Upload:
-    """Check type and size of an uploaded spreadsheet and read it as a template or legacy workbook."""
+@dataclass(frozen=True)
+class ReceivedFile:
+    filename: str
+    suffix: str
+    data: bytes
+
+
+def receive_upload(http_request: Request, file: UploadFile) -> ReceivedFile:
+    """Check the type and size of an uploaded spreadsheet and read its bytes."""
     filename = PurePath(file.filename or "upload").name
     suffix = PurePath(filename).suffix.lower()
     if suffix not in UPLOAD_SUFFIXES:
         raise ApiError(415, "unsupported_file_type", {"suffix": suffix})
-
     max_bytes = http_request.app.state.settings.max_upload_bytes
     data = file.file.read(max_bytes + 1)
     if len(data) > max_bytes:
         raise ApiError(413, "file_too_large", {"max_mb": round(max_bytes / (1024 * 1024), 2)})
+    return ReceivedFile(filename, suffix, data)
 
+
+def unreadable(received: ReceivedFile, exc: Exception) -> ApiError:
+    logger.info("unreadable upload: %s", exc)
+    return ApiError(422, "file_unreadable", {"filename": received.filename, "suffix": received.suffix})
+
+
+def read_upload(http_request: Request, file: UploadFile) -> Upload:
+    """Read an uploaded spreadsheet as a standard template or legacy workbook."""
+    received = receive_upload(http_request, file)
     try:
-        if suffix == ".csv":
-            return Upload(filename, read_problem(io.BytesIO(data), suffix), None)
-        rows = read_xlsx_rows(io.BytesIO(data), prefer_sheet=TEMPLATE_SHEET)
+        if received.suffix == ".csv":
+            return Upload(received.filename, read_problem(io.BytesIO(received.data), received.suffix), None)
+        rows = read_xlsx_rows(io.BytesIO(received.data), prefer_sheet=TEMPLATE_SHEET)
     except ProblemValidationError:
         raise
     except Exception as exc:  # corrupt or non-spreadsheet content
-        logger.info("unreadable upload: %s", exc)
-        raise ApiError(422, "file_unreadable", {"filename": filename, "suffix": suffix}) from exc
+        raise unreadable(received, exc) from exc
 
     if looks_like_legacy(rows):
         legacy = parse_legacy_rows(rows)
-        return Upload(filename, legacy.problem, legacy)
-    return Upload(filename, parse_rows(rows), None)
+        return Upload(received.filename, legacy.problem, legacy)
+    return Upload(received.filename, parse_rows(rows), None)
 
 
 # --- Export ------------------------------------------------------------------

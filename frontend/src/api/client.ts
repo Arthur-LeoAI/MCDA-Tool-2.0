@@ -44,7 +44,15 @@ async function toApiError(response: Response): Promise<ApiError> {
       requestId: body.request_id ?? requestId,
     })
   } catch {
-    return new ApiError(response.status, 'unknown', response.statusText || `HTTP ${response.status}`, { requestId })
+    // Not our error format. 502–504 come from a proxy (Vite in development, nginx in
+    // Docker) that could not reach the API: report that like a network failure.
+    const unreachable = [502, 503, 504].includes(response.status)
+    return new ApiError(
+      response.status,
+      unreachable ? 'network' : 'unknown',
+      response.statusText || `HTTP ${response.status}`,
+      { requestId },
+    )
   }
 }
 

@@ -24,9 +24,10 @@ from mcda_core.project.model import (
     TopsisMethod,
     WeightedSumMethod,
 )
+from mcda_core.project.quality import quality_report
 
 from . import __version__
-from .routes import ERRORS, XLSX_MEDIA_TYPE, _file_response, compute, read_upload
+from .routes import ERRORS, XLSX_MEDIA_TYPE, Upload, _file_response, compute, read_upload
 from .schemas import ErrorResponse, IntervalModel, IssueModel
 
 router = APIRouter(prefix="/api/v1/projects", tags=["projects"], responses=ERRORS)
@@ -253,26 +254,33 @@ def import_project(http_request: Request, file: Annotated[UploadFile, File()]) -
     data (already on a 0-100 benefit scale) gets the fixed range [0, 100].
     """
     upload = read_upload(http_request, file)
+    source_format, project = project_from_upload(upload)
+    return ProjectImport(filename=upload.filename, source_format=source_format, project=project)
+
+
+def project_from_upload(upload: Upload) -> tuple[Literal["template", "legacy"], Project]:
+    """A template or legacy workbook as a project (stamped with the app version)."""
     legacy = upload.legacy
     if legacy is None:
-        source = Source(filename=upload.filename, kind="template")
-        project = project_from_problem(upload.problem, source=source)
-    else:
-        ids = {name: f"a{i + 1}" for i, name in enumerate(legacy.problem.alternatives)}
-        source = Source(
-            filename=upload.filename,
-            kind="legacy",
-            legacy={
-                "reference_order": [ids[name] for name in legacy.reference_order],
-                "prescaled": list(legacy.prescaled),
-            },
-        )
-        project = project_from_problem(legacy.problem, bounds=(0.0, 100.0), source=source)
-    return ProjectImport(
+        project = project_from_problem(upload.problem, source=Source(filename=upload.filename, kind="template"))
+        return "template", project.model_copy(update={"app_version": __version__})
+    ids = {name: f"a{i + 1}" for i, name in enumerate(legacy.problem.alternatives)}
+    source = Source(
         filename=upload.filename,
-        source_format="legacy" if legacy else "template",
-        project=project.model_copy(update={"app_version": __version__}),
+        kind="legacy",
+        legacy={
+            "reference_order": [ids[name] for name in legacy.reference_order],
+            "prescaled": list(legacy.prescaled),
+        },
     )
+    project = project_from_problem(legacy.problem, bounds=(0.0, 100.0), source=source)
+    return "legacy", project.model_copy(update={"app_version": __version__})
+
+
+@router.post("/quality", response_model=list[IssueModel])
+def project_quality(project: Project) -> list[IssueModel]:
+    """Data quality findings per criterion (missing values, constant columns, extreme values, ...)."""
+    return [IssueModel(**finding.to_dict()) for finding in quality_report(project)]
 
 
 @router.post("/report", response_class=Response, responses={200: {"content": {XLSX_MEDIA_TYPE: {}}}})

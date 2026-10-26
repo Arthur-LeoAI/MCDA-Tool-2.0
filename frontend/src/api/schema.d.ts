@@ -212,6 +212,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/quality": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Project Quality
+         * @description Data quality findings per criterion (missing values, constant columns, extreme values, ...).
+         */
+        post: operations["project_quality_api_v1_projects_quality_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/report": {
         parameters: {
             query?: never;
@@ -283,6 +303,47 @@ export interface paths {
         put?: never;
         /** Stability */
         post: operations["stability_api_v1_sensitivity_stability_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tables/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Build Table Project
+         * @description Build a project from an inspected table and the user's column choices.
+         */
+        post: operations["build_table_project_api_v1_tables_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tables/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Inspect Table
+         * @description Read any spreadsheet. Templates and legacy workbooks come back as projects;
+         *     other tables come back with detected structure for the user to confirm.
+         */
+        post: operations["inspect_table_api_v1_tables_inspect_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -388,6 +449,11 @@ export interface components {
         };
         /** Body_import_project_api_v1_projects_import_post */
         Body_import_project_api_v1_projects_import_post: {
+            /** File */
+            file: string;
+        };
+        /** Body_inspect_table_api_v1_tables_inspect_post */
+        Body_inspect_table_api_v1_tables_inspect_post: {
             /** File */
             file: string;
         };
@@ -1137,6 +1203,99 @@ export interface components {
          * @enum {string}
          */
         StabilityScope: "full_order" | "top1";
+        /** TableBuildRequest */
+        TableBuildRequest: {
+            /** Columns */
+            columns: components["schemas"]["TableColumnSpec"][];
+            /** Filename */
+            filename?: string | null;
+            /** Header Row */
+            header_row: number;
+            /** Name Column */
+            name_column: number;
+            /** Rows */
+            rows: (boolean | number | string | null)[][];
+            /** Sheet */
+            sheet?: string | null;
+        };
+        /** TableColumn */
+        TableColumn: {
+            /** Categories */
+            categories: string[];
+            /**
+             * Detected Type
+             * @enum {string}
+             */
+            detected_type: "numeric" | "ordinal" | "categorical" | "boolean" | "text" | "empty";
+            /** Examples */
+            examples: string[];
+            /** Header */
+            header: string;
+            /** Index */
+            index: number;
+            /** Numeric Share */
+            numeric_share: number;
+            /** Percent */
+            percent: boolean;
+            /** Present */
+            present: number;
+        };
+        /** TableColumnSpec */
+        TableColumnSpec: {
+            /** Categories */
+            categories?: string[] | null;
+            /** @default benefit */
+            direction: components["schemas"]["Direction"];
+            /** Index */
+            index: number;
+            /** Name */
+            name?: string | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric" | "ordinal" | "categorical" | "boolean";
+        };
+        /** TableInspection */
+        TableInspection: {
+            /**
+             * Columns
+             * @default []
+             */
+            columns: components["schemas"]["TableColumn"][];
+            /** Filename */
+            filename: string;
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "table" | "template" | "legacy";
+            /**
+             * Header Row
+             * @default 0
+             */
+            header_row: number;
+            /** Name Column */
+            name_column?: number | null;
+            project?: components["schemas"]["Project"] | null;
+            /**
+             * Rows
+             * @default []
+             */
+            rows: (boolean | number | string | null)[][];
+            /** Sheet */
+            sheet?: string | null;
+            /**
+             * Sheets
+             * @default []
+             */
+            sheets: string[];
+            /**
+             * Truncated
+             * @default false
+             */
+            truncated: boolean;
+        };
         /**
          * TargetValueFunction
          * @description 1 inside [ideal_low, ideal_high], falling linearly to 0 at lower and upper.
@@ -1734,6 +1893,39 @@ export interface operations {
             };
         };
     };
+    project_quality_api_v1_projects_quality_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Project"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssueModel"][];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     project_report_api_v1_projects_report_post: {
         parameters: {
             query?: never;
@@ -1853,6 +2045,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StabilityResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    build_table_project_api_v1_tables_build_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TableBuildRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    inspect_table_api_v1_tables_inspect_post: {
+        parameters: {
+            query?: {
+                sheet?: string | null;
+                header_row?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_inspect_table_api_v1_tables_inspect_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableInspection"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Unprocessable Content */

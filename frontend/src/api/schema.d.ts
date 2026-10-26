@@ -152,6 +152,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/curve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Project Curve
+         * @description Points to draw a numeric criterion's value function, and where each alternative lies on it.
+         */
+        post: operations["project_curve_api_v1_projects_curve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/evaluate": {
         parameters: {
             query?: never;
@@ -573,6 +593,37 @@ export interface components {
             name: string;
             /** Weight */
             weight: number;
+        };
+        /** CurveAlternative */
+        CurveAlternative: {
+            /** Id */
+            id: string;
+            /** Value */
+            value: number | null;
+            /** X */
+            x: number;
+        };
+        /** CurveModel */
+        CurveModel: {
+            /** Alternatives */
+            alternatives: components["schemas"]["CurveAlternative"][];
+            /** Criterion Id */
+            criterion_id: string;
+            /** High */
+            high: number;
+            /** Low */
+            low: number;
+            /** Points */
+            points: [
+                number,
+                number
+            ][];
+        };
+        /** CurveRequest */
+        CurveRequest: {
+            /** Criterion Id */
+            criterion_id: string;
+            project: components["schemas"]["Project"];
         };
         /**
          * Direction
@@ -1761,6 +1812,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemModel"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    project_curve_api_v1_projects_curve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CurveRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurveModel"];
                 };
             };
             /** @description Unprocessable Content */

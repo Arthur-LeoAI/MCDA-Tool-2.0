@@ -220,7 +220,6 @@ def test_too_few_eligible_alternatives():
 @pytest.mark.parametrize(
     ("change", "feature"),
     [
-        ({"constraints": [{"id": "k", "criterion_id": "x", "op": ">=", "value": 1}]}, "constraints"),
         ({"groups": [{"id": "g", "name": "G"}]}, "criteria_groups"),
         ({"weighting": {"within": {"_root": {"method": "rank", "order": [["x"]]}}}}, "rank_ahp_weighting"),
     ],

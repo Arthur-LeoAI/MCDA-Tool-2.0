@@ -150,3 +150,34 @@ test('arbitrary table: match columns, import, data quality', async ({ page }) =>
   await nav(page, '结果').click()
   await expect(page.locator('section', { hasText: '排名对比' }).locator('tbody tr')).toHaveCount(5)
 })
+
+test('criterion settings: condition excludes, value curve changes', async ({ page }) => {
+  await loadExample(page)
+  await nav(page, '准则与权重').click()
+
+  // A hard condition on Quality: Option B (quality 6) must be excluded.
+  await page.getByRole('button', { name: '设置: Quality' }).click()
+  await page.getByRole('textbox', { name: 'Quality: value' }).fill('7')
+  await page.getByRole('button', { name: '添加条件' }).click()
+  await expect(page.getByText('Quality >= 7')).toBeVisible()
+  // The chart is the ECharts SVG in the section headed "价值曲线" (not the icons).
+  const curveChart = () =>
+    page
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: '价值曲线' }) })
+      .locator('svg:not(.lucide)')
+  await expect(curveChart().first()).toBeVisible()
+
+  await nav(page, '结果').click()
+  await expect(page.getByText('已排除的方案')).toBeVisible()
+  await expect(page.getByText('Option B: Quality 应 >= 7，实际为 6')).toBeVisible()
+  await expect(page.locator('section', { hasText: '排名对比' }).locator('tbody tr')).toHaveCount(2)
+
+  // Logarithmic scoring for Cost changes the curve and keeps the analysis valid.
+  await nav(page, '准则与权重').click()
+  await page.getByRole('button', { name: '设置: Cost' }).click()
+  await page.getByRole('combobox', { name: '换算方式' }).first().selectOption('log')
+  await expect(curveChart()).toHaveCount(1) // one settings panel is open at a time
+  await expect(page.getByRole('combobox', { name: '换算方式' })).toHaveValue('log')
+  await expect(page.locator('section', { hasText: '实时排名' }).locator('ol > li')).toHaveCount(2)
+})

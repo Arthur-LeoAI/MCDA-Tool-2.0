@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowRight, ArrowUp, Equal, Percent, RotateCcw, Search } from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUp, ChevronUp, Equal, Percent, RotateCcw, Search, Settings2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { Criterion, Direction, Project, ProjectEvaluation } from '../api/types'
+import { CriterionSettings } from '../components/CriterionSettings'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { NumberInput } from '../components/NumberInput'
 import { Button, Card, PageHeader, Segmented, Spinner } from '../components/ui'
@@ -26,6 +27,7 @@ export function WeightsPage() {
   const { updateProject, importedWeights, setStep } = useStore()
   const [query, setQuery] = useState('')
   const [hideZero, setHideZero] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const { project } = checked
   const weights = weightsOf(project)
@@ -112,6 +114,16 @@ export function WeightsPage() {
                 sliderMax={sliderMax}
                 onWeight={(weight) => updateProject((p) => setWeight(p, criterion.id, weight))}
                 onDirection={(direction) => updateProject((p) => setDirection(p, criterion.id, direction))}
+                open={openId === criterion.id}
+                onToggle={() => setOpenId(openId === criterion.id ? null : criterion.id)}
+                settings={
+                  <CriterionSettings
+                    project={project}
+                    apiProject={checked.apiProject}
+                    criterion={criterion}
+                    update={updateProject}
+                  />
+                }
               />
             ))}
           </ul>
@@ -137,6 +149,9 @@ function CriterionRow({
   sliderMax,
   onWeight,
   onDirection,
+  open,
+  onToggle,
+  settings,
 }: {
   criterion: Criterion
   weight: number
@@ -144,46 +159,62 @@ function CriterionRow({
   sliderMax: number
   onWeight: (weight: number) => void
   onDirection: (direction: Direction) => void
+  open: boolean
+  onToggle: () => void
+  settings: React.ReactNode
 }) {
   const t = useT()
   const direction = directionOf(criterion)
   return (
-    <li className="grid grid-cols-1 items-center gap-x-4 gap-y-2 py-3 sm:grid-cols-[minmax(0,14rem)_8.5rem_minmax(0,1fr)]">
-      <div className="truncate text-sm font-medium text-slate-800" title={criterion.name}>
-        {criterion.name}
+    <li className="py-3">
+      <div className="grid grid-cols-1 items-center gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,14rem)_8.5rem_minmax(0,1fr)_auto]">
+        <div className="truncate text-sm font-medium text-slate-800" title={criterion.name}>
+          {criterion.name}
+        </div>
+        {direction ? (
+          <Segmented<Direction>
+            size="sm"
+            value={direction}
+            onChange={onDirection}
+            options={[
+              { value: 'benefit', label: t('common.benefit'), title: t('common.benefitHint') },
+              { value: 'cost', label: t('common.cost'), title: t('common.costHint') },
+            ]}
+          />
+        ) : (
+          <span className="text-xs text-slate-400">—</span>
+        )}
+        <div className="flex items-center gap-3">
+          <input
+            type="range"
+            min={0}
+            max={sliderMax}
+            step={sliderMax / 1000}
+            value={weight}
+            aria-label={`${t('common.weight')} ${criterion.name}`}
+            onChange={(e) => onWeight(Number(e.target.value))}
+            className="accent-accent-600 min-w-0 flex-1"
+          />
+          <NumberInput
+            value={weight}
+            label={`${t('common.weight')} ${criterion.name}`}
+            onCommit={(value) => value !== null && value >= 0 && onWeight(value)}
+            className="w-20"
+          />
+          <div className="w-14 text-right text-xs text-slate-500 tabular-nums">{formatPercent(share)}</div>
+        </div>
+        <Button
+          variant="ghost"
+          className="!px-2 !py-1 text-xs"
+          aria-expanded={open}
+          aria-label={`${open ? t('settings.close') : t('settings.open')}: ${criterion.name}`}
+          icon={open ? <ChevronUp className="size-3.5" /> : <Settings2 className="size-3.5" />}
+          onClick={onToggle}
+        >
+          {open ? t('settings.close') : t('settings.open')}
+        </Button>
       </div>
-      {direction ? (
-        <Segmented<Direction>
-          size="sm"
-          value={direction}
-          onChange={onDirection}
-          options={[
-            { value: 'benefit', label: t('common.benefit'), title: t('common.benefitHint') },
-            { value: 'cost', label: t('common.cost'), title: t('common.costHint') },
-          ]}
-        />
-      ) : (
-        <span className="text-xs text-slate-400">—</span>
-      )}
-      <div className="flex items-center gap-3">
-        <input
-          type="range"
-          min={0}
-          max={sliderMax}
-          step={sliderMax / 1000}
-          value={weight}
-          aria-label={`${t('common.weight')} ${criterion.name}`}
-          onChange={(e) => onWeight(Number(e.target.value))}
-          className="accent-accent-600 min-w-0 flex-1"
-        />
-        <NumberInput
-          value={weight}
-          label={`${t('common.weight')} ${criterion.name}`}
-          onCommit={(value) => value !== null && value >= 0 && onWeight(value)}
-          className="w-20"
-        />
-        <div className="w-14 text-right text-xs text-slate-500 tabular-nums">{formatPercent(share)}</div>
-      </div>
+      {open && settings}
     </li>
   )
 }

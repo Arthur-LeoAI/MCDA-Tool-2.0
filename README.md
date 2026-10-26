@@ -104,6 +104,7 @@ API 是**无状态**的：前端在每次请求里带上完整的项目数据，
 | `POST /api/v1/projects/import` | 上传标准模板或旧版 V7 工作簿，转换成项目 |
 | `POST /api/v1/projects/validate` | 校验项目 |
 | `POST /api/v1/projects/evaluate` | 计算：合格和被排除的方案、补全的缺失值、权重、价值分、各方法结果、Pareto 分析 |
+| `POST /api/v1/projects/curve` | 某个准则的价值曲线及各方案在曲线上的位置 |
 | `POST /api/v1/projects/stability` | 权重稳定区间（基于价值分上的加权和） |
 | `POST /api/v1/projects/report` | Excel 报告 |
 | `GET /api/v1/health` | 健康检查 |

@@ -559,6 +559,102 @@
         "title": "CriterionModel",
         "type": "object"
       },
+      "CurveAlternative": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "x",
+          "value"
+        ],
+        "title": "CurveAlternative",
+        "type": "object"
+      },
+      "CurveModel": {
+        "properties": {
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/CurveAlternative"
+            },
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "high": {
+            "title": "High",
+            "type": "number"
+          },
+          "low": {
+            "title": "Low",
+            "type": "number"
+          },
+          "points": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "low",
+          "high",
+          "points",
+          "alternatives"
+        ],
+        "title": "CurveModel",
+        "type": "object"
+      },
+      "CurveRequest": {
+        "properties": {
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "required": [
+          "project",
+          "criterion_id"
+        ],
+        "title": "CurveRequest",
+        "type": "object"
+      },
       "Direction": {
         "description": "Whether higher (benefit) or lower (cost) values are preferred.",
         "enum": [
@@ -3276,6 +3372,48 @@
         "summary": "Validate Problem",
         "tags": [
           "analysis"
+        ]
+      }
+    },
+    "/api/v1/projects/curve": {
+      "post": {
+        "description": "Points to draw a numeric criterion's value function, and where each alternative lies on it.",
+        "operationId": "project_curve_api_v1_projects_curve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurveModel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project Curve",
+        "tags": [
+          "projects"
         ]
       }
     },

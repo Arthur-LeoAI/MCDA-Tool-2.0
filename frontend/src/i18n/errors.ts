@@ -35,6 +35,12 @@ const zh: Record<string, string> = {
   feature_not_available: '此功能（{feature}）尚未开放',
   project_unreadable: '无法识别的项目文件',
   project_version_unsupported: '项目文件版本 {version} 比当前程序支持的版本（{supported}）新，请更新程序',
+  // hard constraints: why an alternative was excluded
+  constraint_failed_compare: '{criterion} 应 {op} {value}{unit}，实际为 {actual}',
+  constraint_failed_between: '{criterion} 应在 {low} 到 {high}{unit} 之间，实际为 {actual}',
+  constraint_failed_in: '{criterion} 应为以下之一：{labels}；实际为"{actual}"',
+  constraint_missing: '{criterion} 缺失，但条件要求必须有值',
+  curve_needs_numeric: '只有数值准则才有价值曲线',
   // arbitrary tables
   table_no_criteria: '请至少选择一列作为准则',
   table_column_invalid: '表格里没有第 {index} 列',
@@ -114,6 +120,11 @@ const en: Record<string, string> = {
   project_unreadable: 'Not a recognised project file',
   project_version_unsupported:
     'Project format version {version} is newer than this app supports ({supported}); please update',
+  constraint_failed_compare: '{criterion} must be {op} {value}{unit}, is {actual}',
+  constraint_failed_between: '{criterion} must be between {low} and {high}{unit}, is {actual}',
+  constraint_failed_in: '{criterion} must be one of: {labels}; is "{actual}"',
+  constraint_missing: '{criterion} is missing but a condition requires a value',
+  curve_needs_numeric: 'Value curves exist only for numeric criteria',
   table_no_criteria: 'Choose at least one column as a criterion',
   table_column_invalid: 'Column {index} does not exist in the table',
   table_header_row_invalid: 'Row {row} cannot be the header row',

@@ -63,6 +63,12 @@ MESSAGES: dict[str, str] = {
     "feature_not_available": "{feature} is not available yet",
     "project_unreadable": "not a project file or problem data",
     "project_version_unsupported": "project format version {version} is newer than this app supports ({supported})",
+    # hard constraints (S3): why an alternative was excluded
+    "constraint_failed_compare": "{criterion} must be {op} {value}{unit}, is {actual}",
+    "constraint_failed_between": "{criterion} must be between {low} and {high}{unit}, is {actual}",
+    "constraint_failed_in": "{criterion} must be one of: {labels}; is {actual!r}",
+    "constraint_missing": "{criterion} is missing but required by a condition",
+    "curve_needs_numeric": "value curves exist only for numeric criteria",
     # arbitrary tables (S2)
     "table_no_criteria": "choose at least one column as a criterion",
     "table_column_invalid": "column {index} does not exist in the table",

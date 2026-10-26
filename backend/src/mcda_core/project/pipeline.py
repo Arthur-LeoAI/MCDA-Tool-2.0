@@ -1,9 +1,9 @@
 """Analysis pipeline for projects (technical design §3).
 
-S1 covers: missing values, value functions and category scores, direct
-weights on a single level, the methods, Pareto analysis and stability
-intervals on the value matrix. Constraints (S3), groups and rank/AHP
-weighting (S4) raise ``feature_not_available`` instead of being ignored.
+Covers hard constraints, missing values, value functions and category
+scores, direct weights on a single level, the methods, Pareto analysis and
+stability intervals on the value matrix. Groups and rank/AHP weighting (S4)
+raise ``feature_not_available`` instead of being ignored.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ from ..model import DecisionProblem, Direction
 from ..normalization import Normalization
 from ..pareto import DominanceInfo, pareto_analysis
 from ..sensitivity import StabilityScope, WeightInterval, weight_stability_intervals
+from .constraints import violations
 from .model import (
     ROOT_LEVEL,
     CompromiseProgrammingMethod,
@@ -76,7 +77,7 @@ class PreparedProject:
             vf = criterion.value_function
             if criterion.type != "numeric" or not isinstance(vf, LinearValueFunction):
                 raise McdaError("raw_basis_needs_linear_numeric")
-            column = np.array([_number(self.project.raw(criterion.id, i)) for i in self.eligible])
+            column = np.array([number_or_nan(self.project.raw(criterion.id, i)) for i in self.eligible])
             missing = np.isnan(column)
             if missing.any():
                 present = column[~missing]
@@ -97,7 +98,8 @@ def prepare(project: Project) -> PreparedProject:
     excluded: list[Exclusion] = []
     eligible: list[str] = []
     for alternative in project.alternatives:
-        reasons = tuple(
+        # Hard constraints first (S3), then criteria whose missing values exclude the alternative.
+        reasons = tuple(violations(project, alternative.id)) + tuple(
             ValidationIssue("missing_value", {"policy": "exclude"}, _value_location(project, alternative.id, c))
             for c in project.criteria
             if c.missing == "exclude" and project.raw(c.id, alternative.id) is None
@@ -135,8 +137,6 @@ def prepare(project: Project) -> PreparedProject:
 
 
 def _require_available(project: Project) -> None:
-    if project.constraints:
-        raise McdaError("feature_not_available", feature="constraints")
     weighting = project.weighting
     if project.groups or weighting.groups or set(weighting.within) - {ROOT_LEVEL}:
         raise McdaError("feature_not_available", feature="criteria_groups")
@@ -149,7 +149,8 @@ def _value_location(project: Project, alternative_id: str, criterion: Criterion)
     return Location("value", alternative=name, criterion=criterion.name)
 
 
-def _number(value: object) -> float:
+def number_or_nan(value: object) -> float:
+    """A raw value as float; NaN for missing or non-numeric values."""
     return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else math.nan
 
 
@@ -157,7 +158,7 @@ def _criterion_values(project: Project, criterion: Criterion, eligible: list[str
     """Value scores of the eligible alternatives, NaN where the raw value is missing."""
     raw = [project.raw(criterion.id, i) for i in eligible]
     if criterion.type == "numeric":
-        x = np.array([_number(v) for v in raw])
+        x = np.array([number_or_nan(v) for v in raw])
         present = x[~np.isnan(x)]
         data_range = (float(present.min()), float(present.max())) if present.size else None
         assert criterion.value_function is not None  # validated

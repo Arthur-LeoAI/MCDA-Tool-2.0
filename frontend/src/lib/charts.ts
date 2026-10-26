@@ -1,6 +1,6 @@
 // ECharts option builders (pure functions of API results).
 import type { EChartsCoreOption } from 'echarts'
-import type { Interval, MethodResult } from '../api/types'
+import type { Interval, MethodResult, ValueCurve } from '../api/types'
 import { colorAt, formatPercent, formatScore } from './format'
 
 const AXIS_LABEL = { color: '#64748b', fontSize: 11 }
@@ -189,6 +189,56 @@ export function stabilityChart(rows: IntervalRow[], labels: { current: string; u
         symbolSize: 9,
         itemStyle: { color: '#0f172a', borderColor: '#fff', borderWidth: 1.5 },
         z: 5,
+      },
+    ],
+  }
+}
+
+/** A criterion's value function with each alternative on it; excluded ones sit grey on the axis. */
+export function curveChart(
+  curve: ValueCurve,
+  names: Record<string, string>,
+  labels: { excluded: string },
+): EChartsCoreOption {
+  const scored = curve.alternatives.filter((a) => a.value !== null)
+  const excluded = curve.alternatives.filter((a) => a.value === null)
+  return {
+    grid: { left: 8, right: 24, top: 16, bottom: 8, containLabel: true },
+    tooltip: {
+      ...TOOLTIP,
+      trigger: 'item',
+      formatter: (p: { seriesIndex: number; data: { name?: string; value: [number, number] } }) =>
+        p.seriesIndex === 0
+          ? `${formatScore(p.data.value[0])} → ${p.data.value[1].toFixed(2)}`
+          : `<b>${p.data.name}</b><br/>${formatScore(p.data.value[0])}${
+              p.seriesIndex === 2 ? ` (${labels.excluded})` : ` → ${p.data.value[1].toFixed(2)}`
+            }`,
+    },
+    xAxis: { type: 'value', min: curve.low, max: curve.high, axisLabel: AXIS_LABEL, splitLine: SPLIT_LINE },
+    yAxis: { type: 'value', min: 0, max: 1, interval: 0.25, axisLabel: AXIS_LABEL, splitLine: SPLIT_LINE },
+    series: [
+      {
+        type: 'line',
+        data: curve.points.map((point) => ({ value: point })),
+        showSymbol: false,
+        lineStyle: { width: 2.5, color: '#4f46e5' },
+        z: 1,
+      },
+      {
+        type: 'scatter',
+        data: scored.map((a) => ({ name: names[a.id] ?? a.id, value: [a.x, a.value] })),
+        symbolSize: 10,
+        itemStyle: { color: '#0f172a', borderColor: '#fff', borderWidth: 1.5 },
+        label: { show: scored.length <= 12, position: 'top', fontSize: 10, color: '#334155', formatter: '{b}' },
+        z: 3,
+      },
+      {
+        type: 'scatter',
+        data: excluded.map((a) => ({ name: names[a.id] ?? a.id, value: [a.x, 0] })),
+        symbol: 'diamond',
+        symbolSize: 9,
+        itemStyle: { color: '#cbd5e1' },
+        z: 2,
       },
     ],
   }

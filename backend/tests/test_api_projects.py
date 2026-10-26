@@ -76,10 +76,13 @@ def test_evaluate_reports_exclusions_and_imputations(client, cars_project):
 
 
 def test_unavailable_features_are_explicit(client, cars_project):
-    cars_project["constraints"] = [{"id": "k1", "criterion_id": "c1", "op": ">=", "value": 110}]
+    cars_project["groups"] = [{"id": "g1", "name": "Group"}]
     response = client.post("/api/v1/projects/evaluate", json=cars_project)
     assert response.status_code == 422
-    assert (response.json()["code"], response.json()["params"]) == ("feature_not_available", {"feature": "constraints"})
+    assert (response.json()["code"], response.json()["params"]) == (
+        "feature_not_available",
+        {"feature": "criteria_groups"},
+    )
 
 
 def test_stability(client, cars_project):

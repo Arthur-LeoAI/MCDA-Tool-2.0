@@ -1,5 +1,5 @@
 // Pure, immutable editing operations on a project (the v2 model; see backend mcda_core.project).
-import type { Criterion, Direction, Issue, Project, RawValue } from '../api/types'
+import type { Constraint, Criterion, Direction, Issue, NewConstraint, Project, RawValue } from '../api/types'
 
 export const ROOT = '_root'
 
@@ -174,3 +174,34 @@ export function forApi(project: Project): Project {
     criteria: project.criteria.map((c) => ({ ...c, name: c.name.trim() })),
   }
 }
+
+// --- Scoring and conditions (S3) ----------------------------------------------------------
+
+/** Numeric raw values of one criterion (for default parameters in editors). */
+export function numericRange(project: Project, criterionId: string): [number, number] | null {
+  const values = project.alternatives
+    .map((a) => raw(project, criterionId, a.id))
+    .filter((v): v is number => typeof v === 'number')
+  return values.length ? [Math.min(...values), Math.max(...values)] : null
+}
+
+export const constraintsFor = (project: Project, criterionId: string) =>
+  project.constraints.filter((c) => c.criterion_id === criterionId)
+
+export function addConstraint(project: Project, constraint: NewConstraint): Project {
+  const id = newId(
+    'k',
+    project.constraints.map((c) => c.id),
+  )
+  return { ...project, constraints: [...project.constraints, { ...constraint, id } as Constraint] }
+}
+
+export const removeConstraint = (project: Project, id: string): Project => ({
+  ...project,
+  constraints: project.constraints.filter((c) => c.id !== id),
+})
+
+export const updateConstraint = (project: Project, id: string, patch: Partial<Constraint>): Project => ({
+  ...project,
+  constraints: project.constraints.map((c) => (c.id === id ? ({ ...c, ...patch } as Constraint) : c)),
+})

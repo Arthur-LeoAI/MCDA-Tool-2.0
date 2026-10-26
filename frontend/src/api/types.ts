@@ -25,6 +25,13 @@ export type StabilityScope = ProjectStability['scope']
 export type Interval = Schemas['ProjectInterval']
 export type ProjectImport = Schemas['ProjectImport']
 
+export type Constraint = Project['constraints'][number]
+export type ConstraintOp = Constraint['op']
+/** A constraint before it gets an id (Omit distributed over each kind of constraint). */
+export type NewConstraint = Constraint extends infer C ? (C extends Constraint ? Omit<C, 'id'> : never) : never
+export type ValueCurve = Schemas['CurveModel']
+export type MissingPolicy = NonNullable<Criterion['missing']>
+
 // Arbitrary tables (S2)
 export type TableInspection = Schemas['TableInspection']
 export type TableColumn = Schemas['TableColumn']

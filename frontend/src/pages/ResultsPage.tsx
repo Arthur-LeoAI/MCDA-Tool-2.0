@@ -6,6 +6,7 @@ import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { Badge, Button, Card, PageHeader, Segmented, Select, Spinner } from '../components/ui'
 import { useApiPost, useCheckedProject } from '../hooks'
 import type { MessageKey } from '../i18n/messages'
+import { describeIssue } from '../i18n/describe'
 import { useT } from '../i18n/useT'
 import { breakdownChart, rankChart, scoreChart } from '../lib/charts'
 import { displayScale, formatResultScore, methodLabel } from '../lib/methods'
@@ -26,6 +27,7 @@ export function ResultsPage() {
   const t = useT()
   const checked = useCheckedProject()!
   const setStep = useStore((s) => s.setStep)
+  const language = useStore((s) => s.language)
   const { project, apiProject } = checked
 
   const evaluation = useApiPost<ProjectEvaluation>('/projects/evaluate', apiProject)
@@ -53,10 +55,20 @@ export function ResultsPage() {
       {data && (data.excluded.length > 0 || data.imputed.length > 0) && (
         <div className="mt-4 space-y-1 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-600">
           {data.excluded.length > 0 && (
-            <p className="flex items-center gap-1.5">
-              <Info className="size-4 text-amber-500" />
-              {t('results.excluded', { names: data.excluded.map((e) => names.get(e.alternative_id)).join(', ') })}
-            </p>
+            <div>
+              <p className="flex items-center gap-1.5 font-medium text-slate-700">
+                <Info className="size-4 text-amber-500" />
+                {t('results.excludedTitle')}
+              </p>
+              <ul className="mt-1 ml-6 space-y-0.5">
+                {data.excluded.map((e) => (
+                  <li key={e.alternative_id}>
+                    <span className="font-medium">{names.get(e.alternative_id)}</span>:{' '}
+                    {e.reasons.map((r) => describeIssue(language, r, project).text).join('; ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
           {data.imputed.length > 0 && (
             <p className="flex items-center gap-1.5">

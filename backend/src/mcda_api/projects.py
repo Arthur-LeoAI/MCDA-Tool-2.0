@@ -17,6 +17,7 @@ from mcda_core import McdaError, MethodResult, StabilityScope
 from mcda_core.io import write_report
 from mcda_core.project import PreparedProject, Project, migrate, pareto, prepare, project_from_problem, run_method
 from mcda_core.project import stability as stability_intervals
+from mcda_core.project.curve import value_curve
 from mcda_core.project.model import (
     CompromiseProgrammingMethod,
     ProjectMethod,
@@ -239,6 +240,40 @@ def project_stability(request: StabilityRequest) -> ProjectStability:
             ProjectInterval(criterion_id=criterion_ids[i.criterion], **IntervalModel.build(i).model_dump())
             for i in intervals
         ],
+    )
+
+
+class CurveRequest(BaseModel):
+    project: Project
+    criterion_id: str
+
+
+class CurveAlternative(BaseModel):
+    id: str
+    x: float
+    value: float | None
+    """None for excluded alternatives."""
+
+
+class CurveModel(BaseModel):
+    criterion_id: str
+    low: float
+    high: float
+    points: list[tuple[float, float]]
+    """(raw value, value score) along the axis."""
+    alternatives: list[CurveAlternative]
+
+
+@router.post("/curve", response_model=CurveModel)
+def project_curve(request: CurveRequest) -> CurveModel:
+    """Points to draw a numeric criterion's value function, and where each alternative lies on it."""
+    curve = compute(lambda: value_curve(request.project, request.criterion_id))
+    return CurveModel(
+        criterion_id=curve.criterion_id,
+        low=curve.low,
+        high=curve.high,
+        points=curve.points,
+        alternatives=[CurveAlternative(id=p.alternative_id, x=p.x, value=p.value) for p in curve.alternatives],
     )
 
 

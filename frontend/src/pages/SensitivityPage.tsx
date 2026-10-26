@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import type { ProjectStability, StabilityScope } from '../api/types'
 import { EChart } from '../components/EChart'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
+import { RobustnessPanel } from '../components/RobustnessPanel'
 import { Button, Card, PageHeader, Segmented, Spinner } from '../components/ui'
 import { useApiPost, useCheckedProject } from '../hooks'
 import { useT } from '../i18n/useT'
@@ -13,7 +14,7 @@ import { useStore } from '../store'
 export function SensitivityPage() {
   const t = useT()
   const checked = useCheckedProject()!
-  const { setStabilityScope, setStep } = useStore()
+  const { setStabilityScope, setStep, updateProject } = useStore()
   const [includeZero, setIncludeZero] = useState(false)
   const { project, apiProject } = checked
   const stabilityScope = project.analysis.stability_scope ?? 'full_order'
@@ -78,6 +79,10 @@ export function SensitivityPage() {
           </Card>
         </div>
       )}
+
+      <div className="mt-6">
+        <RobustnessPanel project={project} apiProject={apiProject} update={updateProject} />
+      </div>
 
       <div className="mt-6 flex justify-end">
         <Button variant="primary" onClick={() => setStep('export')}>

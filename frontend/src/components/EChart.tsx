@@ -1,11 +1,21 @@
-import { BarChart, LineChart, ScatterChart } from 'echarts/charts'
-import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { BarChart, HeatmapChart, LineChart, ScatterChart } from 'echarts/charts'
+import { GridComponent, LegendComponent, TooltipComponent, VisualMapComponent } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { SVGRenderer } from 'echarts/renderers'
 import { useEffect, useRef } from 'react'
 
 // Register only what the app uses, which keeps the bundle small.
-echarts.use([BarChart, LineChart, ScatterChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer])
+echarts.use([
+  BarChart,
+  HeatmapChart,
+  LineChart,
+  ScatterChart,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  VisualMapComponent,
+  SVGRenderer,
+])
 
 /** Thin ECharts wrapper: one chart instance per element, resized with its container. */
 export function EChart({

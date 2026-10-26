@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import type { Interval, MethodResult } from '../api/types'
-import { breakdownChart, curveChart, intervalRows, rankChart, scoreChart } from './charts'
+import type { Interval, MethodResult, ProjectRobustness } from '../api/types'
+import {
+  breakdownChart,
+  curveChart,
+  intervalRows,
+  rankChart,
+  rankDistributionChart,
+  scoreChart,
+  winsChart,
+} from './charts'
 
 const interval = (
   criterion: string,
@@ -127,5 +135,48 @@ describe('curve chart', () => {
     ])
     expect(option.series[1].data).toEqual([{ name: 'Mat', value: [4, 0.4] }])
     expect(option.series[2].data).toEqual([{ name: 'Box', value: [8, 0] }])
+  })
+})
+
+describe('robustness charts', () => {
+  const alternative = (id: string, probabilities: number[]) => ({
+    id,
+    name: id.toUpperCase(),
+    rank_probabilities: probabilities,
+    p_best: probabilities[0],
+    mean_rank: probabilities.reduce((sum, p, r) => sum + p * (r + 1), 0),
+  })
+  const names = ['a', 'b', 'c', 'd', 'e', 'f']
+  const robustness = {
+    settings: { mode: 'around', spread: 0.2, samples: 100, seed: 1 },
+    alternatives: names.map((id, i) =>
+      alternative(
+        id,
+        names.map((_, r) => (r === i ? 1 : 0)),
+      ),
+    ),
+    wins: names.map((_, i) => names.map((__, j) => (i < j ? 1 : 0))),
+    confidence: { id: 'a', p_best: 1, level: 'high' },
+  } as ProjectRobustness
+
+  it('stacks the first five ranks and combines the rest, best alternative on top', () => {
+    const option = rankDistributionChart(robustness, { rank: (r) => `#${r}`, rest: (r) => `#${r}+` }) as {
+      yAxis: { data: string[] }
+      series: { name: string; data: number[] }[]
+    }
+    expect(option.series.map((s) => s.name)).toEqual(['#1', '#2', '#3', '#4', '#5', '#6+'])
+    expect(option.yAxis.data.at(-1)).toBe('A')
+    expect(option.series[0].data.at(-1)).toBe(100)
+    expect(option.series[5].data[0]).toBe(100) // F is always last
+  })
+
+  it('limits the heatmap and leaves the diagonal empty', () => {
+    const option = winsChart(robustness, 3, 'beats') as {
+      xAxis: { data: string[] }
+      series: { data: [number, number, number | string][] }[]
+    }
+    expect(option.xAxis.data).toEqual(['A', 'B', 'C'])
+    expect(option.series[0].data).toContainEqual([1, 0, 100]) // A beats B
+    expect(option.series[0].data).toContainEqual([0, 0, '-'])
   })
 })

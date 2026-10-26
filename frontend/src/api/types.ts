@@ -30,6 +30,8 @@ export type Interval = Schemas['ProjectInterval']
 export type ProjectImport = Schemas['ProjectImport']
 export type ProjectWeights = Schemas['WeightsModel']
 export type LevelWeights = Schemas['LevelModel']
+export type ProjectRobustness = Schemas['RobustnessModel']
+export type RobustnessSettings = Schemas['RobustnessSettings']
 
 export type Constraint = Project['constraints'][number]
 export type ConstraintOp = Constraint['op']

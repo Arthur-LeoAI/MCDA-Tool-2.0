@@ -218,3 +218,17 @@ test('groups: ranking between groups, pairwise comparison within a group', async
   await expect(group1.getByText('最终 62.5%')).toBeVisible() // 75 % x 5/6
   await expect(page.locator('section', { hasText: '实时排名' }).locator('ol > li')).toHaveCount(3)
 })
+
+test('robustness: rank distribution and confidence, sampling mode changes the result', async ({ page }) => {
+  await loadExample(page)
+  await nav(page, '敏感性分析').click()
+  const card = page.locator('section').filter({ has: page.getByRole('heading', { name: '稳健性（蒙特卡洛）' }) })
+  await expect(card.getByText('可靠程度')).toBeVisible()
+  await expect(card.getByRole('heading', { name: '名次分布' })).toBeVisible()
+  await expect(card.locator('tbody tr')).toHaveCount(3)
+  const before = await card.locator('tbody').innerText()
+
+  await card.getByRole('radio', { name: '权重完全未知' }).click()
+  await expect(card.getByRole('slider', { name: '波动幅度' })).toBeHidden()
+  await expect(card.locator('tbody')).not.toHaveText(before)
+})

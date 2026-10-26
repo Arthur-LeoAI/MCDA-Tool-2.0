@@ -4,21 +4,19 @@ import {
   addAlternative,
   addCriterion,
   directionOf,
-  equalWeights,
   forApi,
   localIssues,
   missingCount,
   newId,
-  normalizedWeights,
   raw,
   removeAlternative,
   removeCriterion,
   setDirection,
   setValue,
-  setWeight,
-  weightsOf,
 } from './project'
 import { projectFilename } from './projectFile'
+
+const weightsOf = (p: Project) => p.weighting.within._root.weights
 
 const project = (): Project =>
   ({
@@ -63,7 +61,7 @@ describe('ids and names', () => {
     ])
     const added = p.criteria[2]
     expect([added.id, added.name, added.value_function?.kind]).toEqual(['c3', 'cost 2', 'linear'])
-    expect(weightsOf(p).c3).toBe(1)
+    expect(weightsOf(p).c3).toBe(2) // the mean of the other weights
   })
 })
 
@@ -88,14 +86,6 @@ describe('editing', () => {
     expect(directionOf(p.criteria[0])).toBe('benefit')
     expect(directionOf(setDirection(p, 'c2', 'cost').criteria[1])).toBe('cost')
     expect(original).toEqual(project())
-  })
-})
-
-describe('weights', () => {
-  it('reads, sets and normalizes direct weights', () => {
-    expect(normalizedWeights(project())).toEqual({ c1: 0.75, c2: 0.25 })
-    expect(equalWeights(project())).toEqual({ c1: 0.5, c2: 0.5 })
-    expect(weightsOf(setWeight(project(), 'c2', 3))).toEqual({ c1: 3, c2: 3 })
   })
 })
 

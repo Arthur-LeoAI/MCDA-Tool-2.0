@@ -15,6 +15,7 @@ import type { MessageKey } from '../i18n/messages'
 import { useT } from '../i18n/useT'
 import { curveChart } from '../lib/charts'
 import { addConstraint, constraintsFor, numericRange, removeConstraint, updateCriterion } from '../lib/project'
+import { setCriterionGroup } from '../lib/weighting'
 import { EChart } from './EChart'
 import { ApiErrorBox } from './IssueList'
 import { NumberInput } from './NumberInput'
@@ -113,6 +114,17 @@ export function CriterionSettings({
               ))}
             </ul>
           </section>
+        )}
+        {(project.groups ?? []).length > 0 && (
+          <Select
+            label={t('settings.group')}
+            value={criterion.group_id ?? ''}
+            onChange={(group) => update((p) => setCriterionGroup(p, criterion.id, group || null))}
+            options={[
+              { value: '', label: t('groups.ungrouped') },
+              ...(project.groups ?? []).map((g) => ({ value: g.id, label: g.name })),
+            ]}
+          />
         )}
         <Select<MissingPolicy>
           label={t('settings.missing')}

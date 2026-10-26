@@ -7,9 +7,9 @@ import type {
   ProjectMethod,
   StabilityScope,
   TopsisMethod,
+  Weighting,
 } from './api/types'
 import type { Language } from './i18n/messages'
-import { weightsOf } from './lib/project'
 
 export type StepId = 'data' | 'weights' | 'results' | 'sensitivity' | 'export'
 
@@ -34,8 +34,8 @@ interface State {
   language: Language
   step: StepId
   project: Project | null
-  /** Weights when the project was imported or opened: for "reset" and rank changes. */
-  importedWeights: Record<string, number> | null
+  /** Weighting when the project was imported or opened: for "reset" and rank changes. */
+  importedWeighting: Weighting | null
   methodMemory: MethodMemory
   /** A version-1 draft from local storage, converted on start-up via the API. */
   pendingV1: Record<string, unknown> | null
@@ -90,7 +90,7 @@ export const useStore = create<State>()(
       language: 'zh',
       step: 'data',
       project: null,
-      importedWeights: null,
+      importedWeighting: null,
       methodMemory: defaultMethodMemory(),
       pendingV1: null,
       storageFull: false,
@@ -102,13 +102,13 @@ export const useStore = create<State>()(
           const memory = { ...s.methodMemory }
           for (const spec of project.analysis.methods) Object.assign(memory, { [spec.method]: spec })
           const stamped = { ...project, meta: { ...project.meta, created: project.meta.created ?? timestamp() } }
-          return { project: stamped, importedWeights: { ...weightsOf(project) }, methodMemory: memory }
+          return { project: stamped, importedWeighting: project.weighting, methodMemory: memory }
         }),
       updateProject: (change) =>
         set((s) =>
           s.project ? { project: { ...change(s.project), meta: { ...s.project.meta, modified: timestamp() } } } : {},
         ),
-      clear: () => set({ project: null, importedWeights: null, step: 'data', methodMemory: defaultMethodMemory() }),
+      clear: () => set({ project: null, importedWeighting: null, step: 'data', methodMemory: defaultMethodMemory() }),
       toggleMethod: (method) =>
         set((s) => {
           if (!s.project) return {}
@@ -140,19 +140,21 @@ export const useStore = create<State>()(
     }),
     {
       name: 'mcda-workspace',
-      version: 2,
+      version: 3,
       storage: createJSONStorage(() => storage),
       partialize: (s) => ({
         language: s.language,
         step: s.step,
         project: s.project,
-        importedWeights: s.importedWeights,
+        importedWeighting: s.importedWeighting,
         methodMemory: s.methodMemory,
         pendingV1: s.pendingV1,
       }),
       migrate: (persisted, version) => {
         const old = (persisted ?? {}) as Record<string, unknown>
-        if (version >= 2) return old as unknown as State
+        if (version >= 3) return old as unknown as State
+        // Version 2 kept root-level weights only; the baseline is not worth converting.
+        if (version === 2) return { ...old, importedWeights: undefined, importedWeighting: null } as unknown as State
         // Version 1 kept a draft problem and per-method settings; the API converts them.
         const draft = old.draft as Record<string, unknown> | null | undefined
         const settings = (old.settings ?? {}) as Record<string, Record<string, unknown>>
@@ -162,7 +164,7 @@ export const useStore = create<State>()(
           language: (old.language as Language) ?? 'zh',
           step: 'data',
           project: null,
-          importedWeights: null,
+          importedWeighting: null,
           methodMemory: defaultMethodMemory(),
           pendingV1: draft
             ? {

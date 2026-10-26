@@ -1,88 +1,138 @@
-import { ArrowDown, ArrowRight, ArrowUp, ChevronUp, Equal, Percent, RotateCcw, Search, Settings2 } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ChevronUp,
+  FolderPlus,
+  RotateCcw,
+  Search,
+  Settings2,
+  Trash2,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
-import type { Criterion, Direction, Project, ProjectEvaluation } from '../api/types'
+import type { Criterion, Direction, Project, ProjectEvaluation, ProjectWeights } from '../api/types'
 import { CriterionSettings } from '../components/CriterionSettings'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
-import { NumberInput } from '../components/NumberInput'
+import { WeightLevel, type LevelItem } from '../components/WeightLevel'
 import { Button, Card, PageHeader, Segmented, Spinner } from '../components/ui'
 import { useApiPost, useCheckedProject } from '../hooks'
 import { useT } from '../i18n/useT'
-import { formatPercent, formatScore } from '../lib/format'
 import { formatResultScore } from '../lib/methods'
-import {
-  directionOf,
-  equalWeights,
-  normalizedWeights,
-  setDirection,
-  setWeight,
-  setWeights,
-  totalWeight,
-  weightsOf,
-} from '../lib/project'
+import { directionOf, newId, setDirection } from '../lib/project'
+import { GROUPS, ROOT, addGroup, levelOf, removeGroup, renameGroup, setLevel, structure } from '../lib/weighting'
 import { useStore } from '../store'
 
 export function WeightsPage() {
   const t = useT()
   const checked = useCheckedProject()!
-  const { updateProject, importedWeights, setStep } = useStore()
+  const { updateProject, importedWeighting, setStep } = useStore()
   const [query, setQuery] = useState('')
   const [hideZero, setHideZero] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
 
   const { project } = checked
-  const weights = weightsOf(project)
-  const total = totalWeight(project)
-  const importedTotal = importedWeights ? Object.values(importedWeights).reduce((a, b) => a + b, 0) : 0
-  const sliderMax = Math.max(1, importedTotal, ...project.criteria.map((c) => weights[c.id] ?? 0))
-  const visible = project.criteria
-    .filter((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
-    .filter((c) => !hideZero || (weights[c.id] ?? 0) > 0)
+  const weights = useApiPost<ProjectWeights>('/projects/weights', checked.apiProject, 150)
+  const { upper, lower } = structure(project)
+  const groups = project.groups ?? []
+  const criteria = new Map(project.criteria.map((c) => [c.id, c]))
+  const resultOf = (key: string) => weights.data?.levels.find((l) => l.key === key)
+  const groupName = (id: string) =>
+    id === ROOT ? t('groups.ungrouped') : (groups.find((g) => g.id === id)?.name ?? id)
+  const emptyGroups = groups.filter((g) => !(g.id in lower))
+
+  const criterionItems = (ids: string[]): LevelItem[] =>
+    ids.map((id) => ({ id, name: criteria.get(id)!.name, global: upper ? weights.data?.weights[id] : undefined }))
+  const matches = (item: LevelItem) =>
+    item.name.toLowerCase().includes(query.trim().toLowerCase()) &&
+    (!hideZero || (weights.data?.weights[item.id] ?? 1) > 0)
+
+  const criterionControls = (id: string) => (
+    <CriterionControls
+      criterion={criteria.get(id)!}
+      open={openId === id}
+      onToggle={() => setOpenId(openId === id ? null : id)}
+      onDirection={(direction) => updateProject((p) => setDirection(p, id, direction))}
+    />
+  )
+  const criterionDetails = (id: string) =>
+    openId === id && (
+      <CriterionSettings
+        project={project}
+        apiProject={checked.apiProject}
+        criterion={criteria.get(id)!}
+        update={updateProject}
+      />
+    )
+
+  const addNewGroup = () =>
+    updateProject((p) => {
+      const existing = p.groups ?? []
+      const names = existing.map((g) => g.name)
+      let n = existing.length + 1
+      while (names.includes(`${t('groups.newName')} ${n}`)) n++
+      const id = newId(
+        'g',
+        existing.map((g) => g.id),
+      )
+      return addGroup(p, id, `${t('groups.newName')} ${n}`)
+    })
+
+  const groupActions = (id: string) =>
+    id !== ROOT && (
+      <>
+        <input
+          value={groupName(id)}
+          aria-label={`${t('groups.rename')}: ${groupName(id)}`}
+          onChange={(e) => updateProject((p) => renameGroup(p, id, e.target.value))}
+          className="focus:border-accent-500 w-40 rounded-md border border-slate-300 px-2 py-1 text-sm focus:outline-none"
+        />
+        <Button
+          variant="danger"
+          className="!p-1.5"
+          aria-label={`${t('groups.remove')}: ${groupName(id)}`}
+          title={t('groups.remove')}
+          icon={<Trash2 className="size-4" />}
+          onClick={() => updateProject((p) => removeGroup(p, id))}
+        />
+      </>
+    )
 
   return (
     <div>
-      <PageHeader title={t('weights.title')} intro={t('weights.intro')} />
+      <PageHeader
+        title={t('weights.title')}
+        intro={t('weights.intro')}
+        actions={
+          <>
+            <Button icon={<FolderPlus className="size-4" />} onClick={addNewGroup}>
+              {t('groups.add')}
+            </Button>
+            {importedWeighting && (
+              <Button
+                variant="ghost"
+                icon={<RotateCcw className="size-4" />}
+                onClick={() => updateProject((p) => ({ ...p, weighting: importedWeighting }))}
+              >
+                {t('weights.resetImported')}
+              </Button>
+            )}
+          </>
+        }
+      />
       {checked.issues.length > 0 && (
         <div className="mb-4">
           <IssueList issues={checked.issues} project={project} />
         </div>
       )}
+      {weights.error && (
+        <div className="mb-4">
+          <ApiErrorBox error={weights.error} project={project} />
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card
-          title={
-            <span>
-              {t('weights.total')}: <span className="tabular-nums">{formatScore(total)}</span>
-            </span>
-          }
-          actions={
-            <>
-              <Button
-                variant="ghost"
-                icon={<Equal className="size-4" />}
-                onClick={() => updateProject((p) => setWeights(p, equalWeights(p)))}
-              >
-                {t('weights.equal')}
-              </Button>
-              <Button
-                variant="ghost"
-                icon={<Percent className="size-4" />}
-                onClick={() => updateProject((p) => setWeights(p, normalizedWeights(p)))}
-              >
-                {t('weights.normalize')}
-              </Button>
-              {importedWeights && (
-                <Button
-                  variant="ghost"
-                  icon={<RotateCcw className="size-4" />}
-                  onClick={() => updateProject((p) => setWeights(p, { ...importedWeights }))}
-                >
-                  {t('weights.resetImported')}
-                </Button>
-              )}
-            </>
-          }
-        >
-          <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center gap-4">
             <label className="relative">
               <Search className="pointer-events-none absolute top-2 left-2.5 size-4 text-slate-400" />
               <input
@@ -90,7 +140,7 @@ export function WeightsPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('weights.search')}
-                className="focus:border-accent-500 w-56 rounded-lg border border-slate-300 py-1.5 pr-3 pl-8 text-sm focus:outline-none"
+                className="focus:border-accent-500 w-56 rounded-lg border border-slate-300 bg-white py-1.5 pr-3 pl-8 text-sm focus:outline-none"
               />
             </label>
             <label className="inline-flex items-center gap-2 text-sm text-slate-600">
@@ -104,30 +154,37 @@ export function WeightsPage() {
             </label>
           </div>
 
-          <ul className="divide-y divide-slate-100">
-            {visible.map((criterion) => (
-              <CriterionRow
-                key={criterion.id}
-                criterion={criterion}
-                weight={weights[criterion.id] ?? 0}
-                share={total > 0 ? (weights[criterion.id] ?? 0) / total : 0}
-                sliderMax={sliderMax}
-                onWeight={(weight) => updateProject((p) => setWeight(p, criterion.id, weight))}
-                onDirection={(direction) => updateProject((p) => setDirection(p, criterion.id, direction))}
-                open={openId === criterion.id}
-                onToggle={() => setOpenId(openId === criterion.id ? null : criterion.id)}
-                settings={
-                  <CriterionSettings
-                    project={project}
-                    apiProject={checked.apiProject}
-                    criterion={criterion}
-                    update={updateProject}
-                  />
-                }
-              />
-            ))}
-          </ul>
-        </Card>
+          {upper && (
+            <WeightLevel
+              title={t('groups.upper')}
+              items={upper.map((id) => ({ id, name: groupName(id) }))}
+              level={levelOf(project, GROUPS, upper)}
+              result={resultOf(GROUPS)}
+              onChange={(level) => updateProject((p) => setLevel(p, GROUPS, level))}
+            />
+          )}
+
+          {Object.entries(lower).map(([key, ids]) => (
+            <WeightLevel
+              key={key}
+              title={upper ? groupName(key) : t('weights.criteria')}
+              actions={upper && groupActions(key)}
+              items={criterionItems(ids)}
+              level={levelOf(project, key, ids)}
+              result={resultOf(`within.${key}`)}
+              onChange={(level) => updateProject((p) => setLevel(p, key, level))}
+              visible={matches}
+              controls={criterionControls}
+              details={criterionDetails}
+            />
+          ))}
+
+          {emptyGroups.map((g) => (
+            <Card key={g.id} title={g.name} actions={groupActions(g.id)}>
+              <p className="text-sm text-slate-500">{t('groups.empty')}</p>
+            </Card>
+          ))}
+        </div>
 
         <div className="xl:sticky xl:top-20 xl:self-start">
           <LiveRanking project={checked.apiProject} />
@@ -142,80 +199,45 @@ export function WeightsPage() {
   )
 }
 
-function CriterionRow({
+function CriterionControls({
   criterion,
-  weight,
-  share,
-  sliderMax,
-  onWeight,
-  onDirection,
   open,
   onToggle,
-  settings,
+  onDirection,
 }: {
   criterion: Criterion
-  weight: number
-  share: number
-  sliderMax: number
-  onWeight: (weight: number) => void
-  onDirection: (direction: Direction) => void
   open: boolean
   onToggle: () => void
-  settings: React.ReactNode
+  onDirection: (direction: Direction) => void
 }) {
   const t = useT()
   const direction = directionOf(criterion)
   return (
-    <li className="py-3">
-      <div className="grid grid-cols-1 items-center gap-x-4 gap-y-2 sm:grid-cols-[minmax(0,14rem)_8.5rem_minmax(0,1fr)_auto]">
-        <div className="truncate text-sm font-medium text-slate-800" title={criterion.name}>
-          {criterion.name}
-        </div>
-        {direction ? (
-          <Segmented<Direction>
-            size="sm"
-            value={direction}
-            onChange={onDirection}
-            options={[
-              { value: 'benefit', label: t('common.benefit'), title: t('common.benefitHint') },
-              { value: 'cost', label: t('common.cost'), title: t('common.costHint') },
-            ]}
-          />
-        ) : (
-          <span className="text-xs text-slate-400">—</span>
-        )}
-        <div className="flex items-center gap-3">
-          <input
-            type="range"
-            min={0}
-            max={sliderMax}
-            step={sliderMax / 1000}
-            value={weight}
-            aria-label={`${t('common.weight')} ${criterion.name}`}
-            onChange={(e) => onWeight(Number(e.target.value))}
-            className="accent-accent-600 min-w-0 flex-1"
-          />
-          <NumberInput
-            value={weight}
-            label={`${t('common.weight')} ${criterion.name}`}
-            onCommit={(value) => value !== null && value >= 0 && onWeight(value)}
-            className="w-20"
-          />
-          <div className="w-14 text-right text-xs text-slate-500 tabular-nums">{formatPercent(share)}</div>
-        </div>
-        <Button
-          variant="ghost"
-          className="!px-2 !py-1 text-xs"
-          aria-expanded={open}
-          aria-label={`${open ? t('settings.close') : t('settings.open')}: ${criterion.name}`}
-          icon={open ? <ChevronUp className="size-3.5" /> : <Settings2 className="size-3.5" />}
-          onClick={onToggle}
-        >
-          {open ? t('settings.close') : t('settings.open')}
-        </Button>
-      </div>
-      {open && settings}
-    </li>
+    <>
+      {direction ? (
+        <Segmented<Direction>
+          size="sm"
+          value={direction}
+          onChange={onDirection}
+          options={[
+            { value: 'benefit', label: t('common.benefit'), title: t('common.benefitHint') },
+            { value: 'cost', label: t('common.cost'), title: t('common.costHint') },
+          ]}
+        />
+      ) : (
+        <span className="w-[6.5rem] text-xs text-slate-400">—</span>
+      )}
+      <Button
+        variant="ghost"
+        className="!px-2 !py-1 text-xs"
+        aria-expanded={open}
+        aria-label={`${open ? t('settings.close') : t('settings.open')}: ${criterion.name}`}
+        icon={open ? <ChevronUp className="size-3.5" /> : <Settings2 className="size-3.5" />}
+        onClick={onToggle}
+      >
+        {open ? t('settings.close') : t('settings.open')}
+      </Button>
+    </>
   )
 }
 
@@ -226,12 +248,12 @@ const weightedSumOnly = (project: Project): Project => ({
 
 function LiveRanking({ project }: { project: Project | null }) {
   const t = useT()
-  const importedWeights = useStore((s) => s.importedWeights)
+  const importedWeighting = useStore((s) => s.importedWeighting)
 
   const current = useApiPost<ProjectEvaluation>('/projects/evaluate', project && weightedSumOnly(project), 150)
   const baselineProject = useMemo(
-    () => (project && importedWeights ? weightedSumOnly(setWeights(project, importedWeights)) : null),
-    [project, importedWeights],
+    () => (project && importedWeighting ? weightedSumOnly({ ...project, weighting: importedWeighting }) : null),
+    [project, importedWeighting],
   )
   const baseline = useApiPost<ProjectEvaluation>('/projects/evaluate', baselineProject, 150)
 

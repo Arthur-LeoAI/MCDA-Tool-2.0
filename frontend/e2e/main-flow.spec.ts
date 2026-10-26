@@ -181,3 +181,40 @@ test('criterion settings: condition excludes, value curve changes', async ({ pag
   await expect(page.getByRole('combobox', { name: '换算方式' })).toHaveValue('log')
   await expect(page.locator('section', { hasText: '实时排名' }).locator('ol > li')).toHaveCount(2)
 })
+
+test('groups: ranking between groups, pairwise comparison within a group', async ({ page }) => {
+  await loadExample(page)
+  await nav(page, '准则与权重').click()
+  const card = (title: string) =>
+    page.locator('section').filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+
+  // Two groups; Cost and Quality go into the first, Risk into the second.
+  await page.getByRole('button', { name: '新建分组' }).click()
+  await page.getByRole('button', { name: '新建分组' }).click()
+  await expect(card('分组 2')).toContainText('这个分组还没有准则')
+  for (const [criterion, group] of [
+    ['Cost', '分组 1'],
+    ['Quality', '分组 1'],
+    ['Risk', '分组 2'],
+  ]) {
+    await page.getByRole('button', { name: `设置: ${criterion}` }).click()
+    await page.getByRole('combobox', { name: '所属分组' }).selectOption({ label: group })
+    await page.getByRole('button', { name: `收起: ${criterion}` }).click()
+  }
+
+  // Between groups: a ranking with group 1 first gives ROC weights 75 % and 25 %.
+  const upper = card('分组之间的权重')
+  await upper.getByRole('radio', { name: '排序' }).click()
+  await upper.getByRole('checkbox', { name: '与上一项并列: 分组 2' }).uncheck()
+  await expect(upper.getByText('75.0%')).toBeVisible()
+  await expect(upper.getByText('25.0%')).toBeVisible()
+
+  // Within group 1: Quality is five times as important as Cost.
+  const group1 = card('分组 1')
+  await group1.getByRole('radio', { name: '两两比较' }).click()
+  await group1.getByRole('slider', { name: '比较 Cost 和 Quality' }).fill('4')
+  await expect(group1.getByText('Quality 更重要（5）')).toBeVisible()
+  await expect(group1.getByText('一致性比率 CR = 0.000')).toBeVisible()
+  await expect(group1.getByText('最终 62.5%')).toBeVisible() // 75 % x 5/6
+  await expect(page.locator('section', { hasText: '实时排名' }).locator('ol > li')).toHaveCount(3)
+})

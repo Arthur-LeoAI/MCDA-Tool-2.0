@@ -1,7 +1,9 @@
 import { ArrowRight, CircleCheck, FileDown, FolderOpen, History, Info, Sparkles, Trash2, Upload } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { ApiError, asApiError, downloadFile, getBlob, uploadFile } from '../api/client'
-import type { ProjectImport } from '../api/types'
+import type { TableInspection } from '../api/types'
+import { ColumnMapper } from '../components/ColumnMapper'
+import { QualityPanel } from '../components/QualityPanel'
 import { DataGrid } from '../components/DataGrid'
 import { FileDrop } from '../components/FileDrop'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
@@ -20,6 +22,7 @@ export function DataPage() {
   const checked = useCheckedProject()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
+  const [pending, setPending] = useState<{ file: Blob; filename: string; inspection: TableInspection } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   // Rules only the server checks (references, types, values, ...).
   const validation = useApiPost<{ valid: true }>('/projects/validate', checked?.apiProject ?? null, 400)
@@ -32,7 +35,10 @@ export function DataPage() {
       if (isProjectFile(filename)) {
         loadProject(await openProjectFile(file))
       } else {
-        loadProject((await uploadFile<ProjectImport>('/projects/import', file, filename)).project)
+        // Templates and legacy workbooks come back as projects; other tables need column choices.
+        const inspection = await uploadFile<TableInspection>('/tables/inspect', file, filename)
+        if (inspection.project) loadProject(inspection.project)
+        else setPending({ file, filename, inspection })
       }
     } catch (err) {
       setError(asApiError(err))
@@ -76,6 +82,24 @@ export function DataPage() {
       </Button>
     </>
   )
+
+  if (pending) {
+    return (
+      <div>
+        <PageHeader title={t('data.title')} />
+        <ColumnMapper
+          file={pending.file}
+          filename={pending.filename}
+          initial={pending.inspection}
+          onDone={(project) => {
+            loadProject(project)
+            setPending(null)
+          }}
+          onCancel={() => setPending(null)}
+        />
+      </div>
+    )
+  }
 
   if (!checked) {
     return (
@@ -190,6 +214,10 @@ export function DataPage() {
           </div>
         )}
       </Card>
+
+      <div className="mt-4">
+        <QualityPanel project={apiProject} />
+      </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1">{templateButtons}</div>

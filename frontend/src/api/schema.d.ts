@@ -272,6 +272,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/robustness": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Project Robustness
+         * @description Monte Carlo simulation of the weighted sum with uncertain weights (settings from analysis.robustness).
+         */
+        post: operations["project_robustness_api_v1_projects_robustness_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/stability": {
         parameters: {
             query?: never;
@@ -596,6 +616,18 @@ export interface components {
              * @default 2
              */
             p: number | "inf";
+        };
+        /** ConfidenceModel */
+        ConfidenceModel: {
+            /** Id */
+            id: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "high" | "medium" | "low";
+            /** P Best */
+            p_best: number;
         };
         /** Criterion */
         Criterion: {
@@ -1224,6 +1256,28 @@ export interface components {
             /** Intervals */
             intervals: components["schemas"]["ProjectInterval"][];
             scope: components["schemas"]["StabilityScope"];
+        };
+        /** RobustAlternative */
+        RobustAlternative: {
+            /** Id */
+            id: string;
+            /** Mean Rank */
+            mean_rank: number;
+            /** Name */
+            name: string;
+            /** P Best */
+            p_best: number;
+            /** Rank Probabilities */
+            rank_probabilities: number[];
+        };
+        /** RobustnessModel */
+        RobustnessModel: {
+            /** Alternatives */
+            alternatives: components["schemas"]["RobustAlternative"][];
+            confidence: components["schemas"]["ConfidenceModel"];
+            settings: components["schemas"]["RobustnessSettings"];
+            /** Wins */
+            wins: number[][];
         };
         /** RobustnessSettings */
         RobustnessSettings: {
@@ -2096,6 +2150,39 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    project_robustness_api_v1_projects_robustness_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Project"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RobustnessModel"];
                 };
             };
             /** @description Unprocessable Content */

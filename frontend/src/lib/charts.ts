@@ -1,6 +1,6 @@
 // ECharts option builders (pure functions of API results).
 import type { EChartsCoreOption } from 'echarts'
-import type { Interval, MethodResult, ValueCurve } from '../api/types'
+import type { Interval, MethodResult, ProjectRobustness, ValueCurve } from '../api/types'
 import { colorAt, formatPercent, formatScore } from './format'
 
 const AXIS_LABEL = { color: '#64748b', fontSize: 11 }
@@ -239,6 +239,107 @@ export function curveChart(
         symbolSize: 9,
         itemStyle: { color: '#cbd5e1' },
         z: 2,
+      },
+    ],
+  }
+}
+
+/** Ranks shown separately in the rank distribution; later ranks are combined. */
+export const SHOWN_RANKS = 5
+// Rank 1 darkest; the combined rest in grey.
+const RANK_COLORS = ['#3730a3', '#4f46e5', '#818cf8', '#a5b4fc', '#c7d2fe']
+
+/** Stacked bars: each alternative's probability of each rank (best mean rank on top), in percent. */
+export function rankDistributionChart(
+  robustness: ProjectRobustness,
+  labels: { rank: (r: number) => string; rest: (r: number) => string },
+): EChartsCoreOption {
+  const rows = [...robustness.alternatives].reverse() // ECharts draws the first category at the bottom
+  const m = robustness.alternatives.length
+  const shown = Math.min(m, SHOWN_RANKS)
+  const series = Array.from({ length: shown }, (_, r) => ({
+    name: labels.rank(r + 1),
+    data: rows.map((a) => a.rank_probabilities[r] * 100),
+    color: RANK_COLORS[r],
+  }))
+  if (m > shown) {
+    series.push({
+      name: labels.rest(shown + 1),
+      data: rows.map((a) => a.rank_probabilities.slice(shown).reduce((x, y) => x + y, 0) * 100),
+      color: '#e2e8f0',
+    })
+  }
+  return {
+    grid: { left: 8, right: 16, top: 36, bottom: 8, containLabel: true },
+    legend: { top: 0, textStyle: { fontSize: 11, color: '#475569' } },
+    tooltip: {
+      ...TOOLTIP,
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      valueFormatter: (v: number) => `${v.toFixed(1)}%`,
+    },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLabel: { ...AXIS_LABEL, formatter: '{value}%' },
+      splitLine: SPLIT_LINE,
+    },
+    yAxis: {
+      type: 'category',
+      data: rows.map((a) => a.name),
+      axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v) },
+    },
+    series: series.map((s) => ({ ...s, type: 'bar', stack: 'ranks', barMaxWidth: 22, emphasis: { focus: 'series' } })),
+  }
+}
+
+/** Heatmap of P(row beats column) in percent for the first `limit` alternatives. */
+export function winsChart(robustness: ProjectRobustness, limit: number, beats: string): EChartsCoreOption {
+  const names = robustness.alternatives.slice(0, limit).map((a) => a.name)
+  const data = names.flatMap((_, i) =>
+    names.map((__, j) => [j, i, i === j ? '-' : Math.round(robustness.wins[i][j] * 1000) / 10]),
+  )
+  return {
+    grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: true },
+    tooltip: {
+      ...TOOLTIP,
+      trigger: 'item',
+      formatter: (p: { value: [number, number, number | string] }) =>
+        typeof p.value[2] === 'number' ? `${names[p.value[1]]} ${beats} ${names[p.value[0]]}: ${p.value[2]}%` : '',
+    },
+    xAxis: {
+      type: 'category',
+      data: names,
+      position: 'top',
+      axisLabel: {
+        ...AXIS_LABEL,
+        interval: 0,
+        rotate: names.length > 6 ? 40 : 0,
+        formatter: (v: string) => truncate(v, 14),
+      },
+      splitArea: { show: false },
+    },
+    yAxis: {
+      type: 'category',
+      data: names,
+      inverse: true,
+      axisLabel: { ...AXIS_LABEL, formatter: (v: string) => truncate(v, 18) },
+    },
+    visualMap: { show: false, min: 0, max: 100, inRange: { color: ['#f8fafc', '#4338ca'] } },
+    series: [
+      {
+        type: 'heatmap',
+        data,
+        label: {
+          show: names.length <= 8,
+          fontSize: 10,
+          color: '#0f172a',
+          textBorderColor: '#fff',
+          textBorderWidth: 2,
+          formatter: (p: { value: unknown[] }) => `${p.value[2]}`,
+        },
+        itemStyle: { borderColor: '#fff', borderWidth: 1 },
       },
     ],
   }

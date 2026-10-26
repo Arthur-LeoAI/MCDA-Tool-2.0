@@ -2,6 +2,7 @@ import { ArrowRight, Crown, Info } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { MethodName, MethodResult, Project, ProjectEvaluation, TopsisMethod } from '../api/types'
 import { EChart } from '../components/EChart'
+import { ConclusionCard } from '../components/ConclusionCard'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { Badge, Button, Card, PageHeader, Segmented, Select, Spinner } from '../components/ui'
 import { useApiPost, useCheckedProject } from '../hooks'
@@ -41,6 +42,12 @@ export function ResultsPage() {
       {checked.issues.length > 0 && (
         <div className="mb-4">
           <IssueList issues={checked.issues} project={project} />
+        </div>
+      )}
+
+      {data && (
+        <div className="mb-4">
+          <ConclusionCard project={project} apiProject={apiProject} conclusion={data.conclusion} />
         </div>
       )}
 

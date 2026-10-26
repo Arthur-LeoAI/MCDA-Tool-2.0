@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { type ApiError, asApiError, postJson } from './api/client'
-import type { Project } from './api/types'
+import type { Project, ProjectEvaluation, ProjectRobustness } from './api/types'
+import { conclusionParagraphs } from './i18n/conclusion'
 import { forApi, localIssues } from './lib/project'
 import { useStore } from './store'
 
@@ -72,4 +73,18 @@ export function useMigratePendingDraft() {
       .finally(() => useStore.getState().resolvePendingV1())
   }, [pending])
   return { migrating: pending !== null, error }
+}
+
+/** Names of alternatives and criteria by id. */
+export const idNames = (project: Project) =>
+  new Map([...project.alternatives, ...project.criteria].map((item) => [item.id, item.name] as const))
+
+/** Evaluation and robustness of a project, and the conclusion written from them (S6). */
+export function useConclusion(project: Project, apiProject: Project | null) {
+  const language = useStore((s) => s.language)
+  const evaluation = useApiPost<ProjectEvaluation>('/projects/evaluate', apiProject)
+  const robustness = useApiPost<ProjectRobustness>('/projects/robustness', apiProject, 300)
+  const conclusion = evaluation.data?.conclusion
+  const paragraphs = conclusion ? conclusionParagraphs(language, conclusion, idNames(project), robustness.data) : []
+  return { evaluation, robustness, paragraphs }
 }

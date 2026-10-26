@@ -5,12 +5,6 @@ import pytest
 from conftest import LEGACY_DIR
 
 from mcda_core.io import write_problem
-from mcda_core.project import project_from_problem
-
-
-@pytest.fixture
-def cars_project(cars) -> dict:
-    return project_from_problem(cars).model_dump(mode="json")
 
 
 def test_migrate_v1_problem(client, cars_json):
@@ -113,7 +107,17 @@ def test_report(client, cars_project):
     response = client.post("/api/v1/projects/report", json={"project": cars_project})
     assert response.status_code == 200
     workbook = openpyxl.load_workbook(io.BytesIO(response.content))
-    assert workbook.sheetnames == ["Results", "Stability (full order)", "Stability (top 1)", "Pareto", "Decision"]
+    assert workbook.sheetnames == [
+        "Conclusion",
+        "Results",
+        "Data handling",
+        "Weights",
+        "Stability (full order)",
+        "Stability (top 1)",
+        "Pareto",
+        "Robustness",
+        "Decision",
+    ]
     decision = list(workbook["Decision"].iter_rows(values_only=True))
     assert decision[3] == ("A", 100, 30)  # raw data, not value scores
 
@@ -122,6 +126,13 @@ def test_report_leaves_out_decision_sheet_for_non_numeric_data(client, cars_proj
     cars_project["criteria"].append({"id": "c3", "name": "eco", "type": "boolean", "direction": "benefit"})
     cars_project["data"]["c3"] = {"a1": True, "a2": False, "a3": True}
     response = client.post(
-        "/api/v1/projects/report", json={"project": cars_project, "include_stability": False, "include_pareto": False}
+        "/api/v1/projects/report",
+        json={
+            "project": cars_project,
+            "include_stability": False,
+            "include_pareto": False,
+            "include_robustness": False,
+        },
     )
-    assert openpyxl.load_workbook(io.BytesIO(response.content)).sheetnames == ["Results"]
+    sheets = openpyxl.load_workbook(io.BytesIO(response.content)).sheetnames
+    assert sheets == ["Conclusion", "Results", "Data handling", "Weights"]

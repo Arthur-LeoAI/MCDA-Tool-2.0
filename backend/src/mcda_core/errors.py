@@ -73,6 +73,15 @@ MESSAGES: dict[str, str] = {
     "ahp_incomplete": "compare {i} with {j}",
     "ahp_too_many_items": "pairwise comparison handles at most {maximum} items, this level has {count}",
     "ahp_value_invalid": "the comparison of {i} with {j} must be between 1/9 and 9 and given once, got {value}",
+    # conclusion caveats (S6)
+    "caveat_tied_first": "{alternatives} are tied for first place",
+    "caveat_excluded": "{count} alternative(s) were excluded before scoring",
+    "caveat_imputed": "{count} missing value(s) were filled in ({criteria})",
+    "caveat_constant": "{criterion} is the same for every alternative and does not affect the ranking",
+    "caveat_ahp_inconsistent": "the pairwise comparisons in {group} are not very consistent (CR = {cr})",
+    "caveat_ahp_inconsistent_groups": "the pairwise comparisons between groups are not very consistent (CR = {cr})",
+    "caveat_ahp_inconsistent_criteria": "the pairwise comparisons of the criteria are not very consistent (CR = {cr})",
+    "caveat_methods_disagree": "{methods} rank another alternative first",
     # arbitrary tables (S2)
     "table_no_criteria": "choose at least one column as a criterion",
     "table_column_invalid": "column {index} does not exist in the table",

@@ -35,7 +35,7 @@ def test_unexpected_errors_return_500_with_request_id_only():
     assert "secret" not in response.text
 
 
-def test_json_log_lines_have_request_fields_but_no_body(cars_json):
+def test_json_log_lines_have_request_fields_but_no_body(cars_project):
     records: list[logging.LogRecord] = []
 
     class Capture(logging.Handler):
@@ -46,7 +46,7 @@ def test_json_log_lines_have_request_fields_but_no_body(cars_json):
     capture = Capture()
     logger.addHandler(capture)
     try:
-        TestClient(app).post("/api/v1/problems/validate", json=cars_json, headers={"X-Request-ID": "log-1"})
+        TestClient(app).post("/api/v1/projects/validate", json=cars_project, headers={"X-Request-ID": "log-1"})
     finally:
         logger.removeHandler(capture)
 
@@ -54,33 +54,30 @@ def test_json_log_lines_have_request_fields_but_no_body(cars_json):
     line = json.loads(JsonFormatter().format(record))
     assert line["request_id"] == "log-1"
     assert line["method"] == "POST"
-    assert line["path"] == "/api/v1/problems/validate"
+    assert line["path"] == "/api/v1/projects/validate"
     assert line["status"] == 200
-    assert "power" not in json.dumps(line)  # problem data must never be logged
+    assert "power" not in json.dumps(line)  # project data must never be logged
 
 
 @pytest.mark.parametrize(
-    ("spec", "code", "params"),
+    ("value_function", "code", "params"),
     [
-        (
-            {"method": "weighted_sum", "normalization": "fixed_range", "bounds": [0, 100]},
-            "out_of_fixed_range",
-            {"count": 2, "row": 2, "column": 1, "value": 150.0, "low": 0.0, "high": 100.0},
-        ),
-        ({"method": "weighted_sum", "normalization": "none"}, "normalization_none_cost", {}),
+        ({"kind": "log", "bounds": "data"}, "log_negative_value", {"value": -5.0}),
+        ({"kind": "linear", "bounds": [100, 0]}, "value_function_invalid", {"reason": "bounds_order"}),
     ],
 )
-def test_setting_errors_have_codes_and_params(client, cars_json, spec, code, params):
-    response = client.post("/api/v1/evaluate", json={"problem": cars_json, "methods": [spec]})
+def test_setting_errors_have_codes_and_params(client, cars_project, value_function, code, params):
+    cars_project["criteria"][0]["value_function"] = value_function
+    cars_project["data"]["c1"]["a1"] = -5.0
+    response = client.post("/api/v1/projects/evaluate", json=cars_project)
     assert response.status_code == 422
-    body = response.json()
-    assert body["code"] == code
-    assert body["params"] == params
+    (issue,) = response.json()["issues"]
+    assert (issue["code"], issue["params"]) == (code, params)
 
 
 def test_upload_errors_have_codes(client):
-    too_big = client.post("/api/v1/problems/import", files={"file": ("big.csv", b"x" * (200 * 1024 + 1))})
+    too_big = client.post("/api/v1/projects/import", files={"file": ("big.csv", b"x" * (200 * 1024 + 1))})
     assert too_big.json()["code"] == "file_too_large"
     assert too_big.json()["params"] == {"max_mb": 0.2}
-    wrong = client.post("/api/v1/problems/import", files={"file": ("a.json", b"{}")})
+    wrong = client.post("/api/v1/projects/import", files={"file": ("a.json", b"{}")})
     assert (wrong.json()["code"], wrong.json()["params"]) == ("unsupported_file_type", {"suffix": ".json"})

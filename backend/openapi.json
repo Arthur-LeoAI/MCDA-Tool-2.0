@@ -204,6 +204,20 @@
         "title": "Body_import_project_api_v1_projects_import_post",
         "type": "object"
       },
+      "Body_inspect_table_api_v1_tables_inspect_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_inspect_table_api_v1_tables_inspect_post",
+        "type": "object"
+      },
       "Category": {
         "additionalProperties": false,
         "properties": {
@@ -2200,6 +2214,308 @@
         "title": "StabilityScope",
         "type": "string"
       },
+      "TableBuildRequest": {
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/TableColumnSpec"
+            },
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Columns",
+            "type": "array"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "header_row": {
+            "minimum": 0.0,
+            "title": "Header Row",
+            "type": "integer"
+          },
+          "name_column": {
+            "minimum": 0.0,
+            "title": "Name Column",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "maxItems": 200,
+              "type": "array"
+            },
+            "maxItems": 520,
+            "title": "Rows",
+            "type": "array"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          }
+        },
+        "required": [
+          "rows",
+          "header_row",
+          "name_column",
+          "columns"
+        ],
+        "title": "TableBuildRequest",
+        "type": "object"
+      },
+      "TableColumn": {
+        "properties": {
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "detected_type": {
+            "enum": [
+              "numeric",
+              "ordinal",
+              "categorical",
+              "boolean",
+              "text",
+              "empty"
+            ],
+            "title": "Detected Type",
+            "type": "string"
+          },
+          "examples": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Examples",
+            "type": "array"
+          },
+          "header": {
+            "title": "Header",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "numeric_share": {
+            "title": "Numeric Share",
+            "type": "number"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "boolean"
+          },
+          "present": {
+            "title": "Present",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "index",
+          "header",
+          "detected_type",
+          "present",
+          "numeric_share",
+          "percent",
+          "categories",
+          "examples"
+        ],
+        "title": "TableColumn",
+        "type": "object"
+      },
+      "TableColumnSpec": {
+        "properties": {
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 500,
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categories"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/Direction",
+            "default": "benefit"
+          },
+          "index": {
+            "minimum": 0.0,
+            "title": "Index",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "type": {
+            "enum": [
+              "numeric",
+              "ordinal",
+              "categorical",
+              "boolean"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "type"
+        ],
+        "title": "TableColumnSpec",
+        "type": "object"
+      },
+      "TableInspection": {
+        "properties": {
+          "columns": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TableColumn"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "format": {
+            "enum": [
+              "table",
+              "template",
+              "legacy"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "header_row": {
+            "default": 0,
+            "title": "Header Row",
+            "type": "integer"
+          },
+          "name_column": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name Column"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Project"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rows": {
+            "default": [],
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          },
+          "sheets": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
+          "truncated": {
+            "default": false,
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "filename",
+          "format"
+        ],
+        "title": "TableInspection",
+        "type": "object"
+      },
       "TargetValueFunction": {
         "additionalProperties": false,
         "description": "1 inside [ideal_low, ideal_high], falling linearly to 0 at lower and upper.",
@@ -3110,6 +3426,52 @@
         ]
       }
     },
+    "/api/v1/projects/quality": {
+      "post": {
+        "description": "Data quality findings per criterion (missing values, constant columns, extreme values, ...).",
+        "operationId": "project_quality_api_v1_projects_quality_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IssueModel"
+                  },
+                  "title": "Response Project Quality Api V1 Projects Quality Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project Quality",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
     "/api/v1/projects/report": {
       "post": {
         "description": "Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data.",
@@ -3270,6 +3632,145 @@
         "summary": "Stability",
         "tags": [
           "analysis"
+        ]
+      }
+    },
+    "/api/v1/tables/build": {
+      "post": {
+        "description": "Build a project from an inspected table and the user's column choices.",
+        "operationId": "build_table_project_api_v1_tables_build_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TableBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Build Table Project",
+        "tags": [
+          "tables"
+        ]
+      }
+    },
+    "/api/v1/tables/inspect": {
+      "post": {
+        "description": "Read any spreadsheet. Templates and legacy workbooks come back as projects;\nother tables come back with detected structure for the user to confirm.",
+        "operationId": "inspect_table_api_v1_tables_inspect_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sheet",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sheet"
+            }
+          },
+          {
+            "in": "query",
+            "name": "header_row",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Header Row"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_inspect_table_api_v1_tables_inspect_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableInspection"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Content Too Large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported Media Type"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Inspect Table",
+        "tags": [
+          "tables"
         ]
       }
     },

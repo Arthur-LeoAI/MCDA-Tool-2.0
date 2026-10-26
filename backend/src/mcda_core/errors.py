@@ -63,6 +63,18 @@ MESSAGES: dict[str, str] = {
     "feature_not_available": "{feature} is not available yet",
     "project_unreadable": "not a project file or problem data",
     "project_version_unsupported": "project format version {version} is newer than this app supports ({supported})",
+    # arbitrary tables (S2)
+    "table_no_criteria": "choose at least one column as a criterion",
+    "table_column_invalid": "column {index} does not exist in the table",
+    "table_header_row_invalid": "row {row} cannot be the header row",
+    "sheet_not_found": "worksheet {sheet!r} not found",
+    "table_empty": "the table has no data below the header row",
+    # data quality findings (not errors)
+    "quality_missing": "{count} missing value(s), handled as: {policy}",
+    "quality_constant": "all alternatives have the same value; this criterion cannot discriminate",
+    "quality_outliers": "{count} extreme value(s): {alternatives}",
+    "quality_suggest_log": "values span a factor of {ratio}; a logarithmic value function may fit better",
+    "quality_categories_equal": "all categories have the same score; this criterion has no effect",
     # HTTP API
     "invalid_problem": "Invalid decision problem",
     "invalid_request": "Invalid request",

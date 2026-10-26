@@ -76,6 +76,11 @@ def _parse_csv(text: str) -> Rows:
     return rows
 
 
+def read_csv_rows(data: bytes) -> Rows:
+    """CSV bytes as rows of text cells (UTF-8 or Windows code page; ',' or ';')."""
+    return _parse_csv(_decode(data))
+
+
 def parse_rows(rows: Rows) -> DecisionProblem:
     """Build a problem from raw cell rows, collecting every issue found."""
     issues: list[ValidationIssue] = []

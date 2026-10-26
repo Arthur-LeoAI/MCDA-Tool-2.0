@@ -1,7 +1,6 @@
 // Pure, immutable editing operations on a project (the v2 model; see backend mcda_core.project).
 import type { Constraint, Criterion, Direction, Issue, NewConstraint, Project, RawValue } from '../api/types'
-
-export const ROOT = '_root'
+import { ROOT, dropItem, setLevel, withItem } from './weighting'
 
 /** A fresh id like "a7" that is not in use yet. */
 export function newId(prefix: string, taken: Iterable<string>): string {
@@ -69,15 +68,18 @@ export function addCriterion(project: Project, baseName: string): Project {
     value_function: { kind: 'linear', direction: 'benefit', bounds: 'data' },
     missing: 'worst',
   }
-  return setWeights({ ...project, criteria: [...project.criteria, criterion] }, { ...weightsOf(project), [id]: 1 })
+  const added = { ...project, criteria: [...project.criteria, criterion] }
+  const root = project.weighting.within[ROOT]
+  return root ? setLevel(added, ROOT, withItem(root, id)) : added
 }
 
 export function removeCriterion(project: Project, id: string): Project {
   const data = { ...project.data }
   delete data[id]
-  const weights = { ...weightsOf(project) }
-  delete weights[id]
-  return setWeights({ ...project, criteria: project.criteria.filter((c) => c.id !== id), data }, weights)
+  const key = project.criteria.find((c) => c.id === id)?.group_id ?? ROOT
+  const removed = { ...project, criteria: project.criteria.filter((c) => c.id !== id), data }
+  const level = project.weighting.within[key]
+  return level ? setLevel(removed, key, dropItem(level, id)) : removed
 }
 
 export function updateCriterion(project: Project, id: string, patch: Partial<Criterion>): Project {
@@ -105,41 +107,6 @@ export function setDirection(project: Project, id: string, direction: Direction)
     }),
   }
 }
-
-// --- Weights (S1: direct weights on the root level) ------------------------------------
-
-export function weightsOf(project: Project): Record<string, number> {
-  return project.weighting.within[ROOT]?.weights ?? {}
-}
-
-export function setWeights(project: Project, weights: Record<string, number>): Project {
-  const level = project.weighting.within[ROOT] ?? { method: 'direct', weights: {} }
-  return {
-    ...project,
-    weighting: {
-      ...project.weighting,
-      within: { ...project.weighting.within, [ROOT]: { ...level, method: 'direct', weights } },
-    },
-  }
-}
-
-export const setWeight = (project: Project, id: string, weight: number) =>
-  setWeights(project, { ...weightsOf(project), [id]: weight })
-
-export function totalWeight(project: Project): number {
-  const weights = weightsOf(project)
-  return project.criteria.reduce((sum, c) => sum + (weights[c.id] ?? 0), 0)
-}
-
-/** Weights rescaled to sum to 1 (unchanged if they are all zero). */
-export function normalizedWeights(project: Project): Record<string, number> {
-  const weights = weightsOf(project)
-  const total = totalWeight(project)
-  return Object.fromEntries(project.criteria.map((c) => [c.id, total > 0 ? (weights[c.id] ?? 0) / total : 0]))
-}
-
-export const equalWeights = (project: Project): Record<string, number> =>
-  Object.fromEntries(project.criteria.map((c) => [c.id, 1 / project.criteria.length]))
 
 // --- Local checks -----------------------------------------------------------------------
 

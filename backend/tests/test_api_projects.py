@@ -75,14 +75,13 @@ def test_evaluate_reports_exclusions_and_imputations(client, cars_project):
     assert body["imputed"] == [{"alternative_id": "a2", "criterion_id": "c1", "policy": "worst"}]
 
 
-def test_unavailable_features_are_explicit(client, cars_project):
+def test_groups_without_weights_are_equal(client, cars_project):
     cars_project["groups"] = [{"id": "g1", "name": "Group"}]
+    cars_project["criteria"][0]["group_id"] = "g1"
     response = client.post("/api/v1/projects/evaluate", json=cars_project)
-    assert response.status_code == 422
-    assert (response.json()["code"], response.json()["params"]) == (
-        "feature_not_available",
-        {"feature": "criteria_groups"},
-    )
+    assert response.status_code == 200
+    # Upper level: g1 and the ungrouped criteria, equally weighted.
+    assert response.json()["weights"] == {"c1": 0.5, "c2": 0.5}
 
 
 def test_stability(client, cars_project):

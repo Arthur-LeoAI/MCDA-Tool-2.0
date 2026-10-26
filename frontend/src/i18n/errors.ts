@@ -32,7 +32,6 @@ const zh: Record<string, string> = {
   constraint_invalid: '条件设置无效（{reason}）',
   too_few_eligible: '排除后只剩 {count} 个方案，至少需要 2 个',
   raw_basis_needs_linear_numeric: '经典 TOPSIS 要求所有准则都是数值、并使用线性换算',
-  feature_not_available: '此功能（{feature}）尚未开放',
   project_unreadable: '无法识别的项目文件',
   project_version_unsupported: '项目文件版本 {version} 比当前程序支持的版本（{supported}）新，请更新程序',
   // hard constraints: why an alternative was excluded
@@ -41,6 +40,10 @@ const zh: Record<string, string> = {
   constraint_failed_in: '{criterion} 应为以下之一：{labels}；实际为"{actual}"',
   constraint_missing: '{criterion} 缺失，但条件要求必须有值',
   curve_needs_numeric: '只有数值准则才有价值曲线',
+  weighting_duplicate: '{item} 在排序里出现了不止一次',
+  ahp_incomplete: '请比较 {i} 和 {j}',
+  ahp_too_many_items: '两两比较每层最多 {maximum} 项，这一层有 {count} 项。请先分组',
+  ahp_value_invalid: '{i} 和 {j} 的比较值必须在 1/9 到 9 之间，并且只填一次（现在是 {value}）',
   // arbitrary tables
   table_no_criteria: '请至少选择一列作为准则',
   table_column_invalid: '表格里没有第 {index} 列',
@@ -116,7 +119,6 @@ const en: Record<string, string> = {
   constraint_invalid: 'Invalid condition ({reason})',
   too_few_eligible: 'Only {count} alternative(s) remain after exclusions; at least 2 are needed',
   raw_basis_needs_linear_numeric: 'Classic TOPSIS needs numeric criteria with linear value functions',
-  feature_not_available: 'This feature ({feature}) is not available yet',
   project_unreadable: 'Not a recognised project file',
   project_version_unsupported:
     'Project format version {version} is newer than this app supports ({supported}); please update',
@@ -125,6 +127,11 @@ const en: Record<string, string> = {
   constraint_failed_in: '{criterion} must be one of: {labels}; is "{actual}"',
   constraint_missing: '{criterion} is missing but a condition requires a value',
   curve_needs_numeric: 'Value curves exist only for numeric criteria',
+  weighting_duplicate: '{item} appears more than once in the ranking',
+  ahp_incomplete: 'Compare {i} with {j}',
+  ahp_too_many_items:
+    'Pairwise comparison handles at most {maximum} items; this level has {count}. Group the criteria first',
+  ahp_value_invalid: 'The comparison of {i} with {j} must be between 1/9 and 9 and given once (now {value})',
   table_no_criteria: 'Choose at least one column as a criterion',
   table_column_invalid: 'Column {index} does not exist in the table',
   table_header_row_invalid: 'Row {row} cannot be the header row',

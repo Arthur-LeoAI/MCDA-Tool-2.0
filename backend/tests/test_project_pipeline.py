@@ -217,21 +217,6 @@ def test_too_few_eligible_alternatives():
     assert excinfo.value.code == "too_few_eligible"
 
 
-@pytest.mark.parametrize(
-    ("change", "feature"),
-    [
-        ({"groups": [{"id": "g", "name": "G"}]}, "criteria_groups"),
-        ({"weighting": {"within": {"_root": {"method": "rank", "order": [["x"]]}}}}, "rank_ahp_weighting"),
-    ],
-)
-def test_later_features_are_refused_not_ignored(change, feature):
-    document = mixed_project("worst")
-    document.update(change)
-    with pytest.raises(McdaError) as excinfo:
-        prepare(parse_project(document))
-    assert excinfo.value.params == {"feature": feature}
-
-
 def test_classic_topsis_needs_linear_numeric_criteria():
     with pytest.raises(McdaError) as excinfo:
         run_method(prepare(parse_project(mixed_project("worst"))), TopsisMethod(basis="raw"))

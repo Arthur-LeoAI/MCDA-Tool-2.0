@@ -26,6 +26,7 @@ from mcda_core.project.model import (
     WeightedSumMethod,
 )
 from mcda_core.project.quality import quality_report
+from mcda_core.project.weighting import derive
 
 from . import __version__
 from .routes import ERRORS, XLSX_MEDIA_TYPE, Upload, _file_response, compute, read_upload
@@ -274,6 +275,62 @@ def project_curve(request: CurveRequest) -> CurveModel:
         high=curve.high,
         points=curve.points,
         alternatives=[CurveAlternative(id=p.alternative_id, x=p.x, value=p.value) for p in curve.alternatives],
+    )
+
+
+class AhpPairModel(BaseModel):
+    i: str
+    j: str
+    given: float
+    """How much more important i was judged than j."""
+    implied: float
+    """w_i / w_j of the resulting weights."""
+
+
+class AhpModel(BaseModel):
+    cr: float
+    lambda_max: float
+    consistent: bool
+    worst_pairs: list[AhpPairModel]
+
+
+class LevelModel(BaseModel):
+    key: str
+    """"groups" or "within.<group id>" ("within._root" for ungrouped criteria)."""
+    method: Literal["direct", "rank", "ahp"]
+    weights: dict[str, float]
+    """Local weights of the level's items (sum 1, or all 0)."""
+    ahp: AhpModel | None = None
+
+
+class WeightsModel(BaseModel):
+    levels: list[LevelModel]
+    weights: dict[str, float]
+    """Global weight of each criterion."""
+
+
+@router.post("/weights", response_model=WeightsModel)
+def project_weights(project: Project) -> WeightsModel:
+    """Local weights of every level and the global criterion weights; the data need not be complete."""
+    result = compute(lambda: derive(project))
+    return WeightsModel(
+        levels=[
+            LevelModel(
+                key=level.key,
+                method=level.method,
+                weights=dict(zip(level.items, level.weights, strict=True)),
+                ahp=None
+                if level.ahp is None
+                else AhpModel(
+                    cr=level.ahp.cr,
+                    lambda_max=level.ahp.lambda_max,
+                    consistent=level.ahp.consistent,
+                    worst_pairs=[AhpPairModel(**p.__dict__) for p in level.ahp.worst_pairs],
+                ),
+            )
+            for level in result.levels
+        ],
+        weights=result.global_weights,
     )
 
 

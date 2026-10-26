@@ -16,6 +16,10 @@ export type TopsisMethod = Schemas['TopsisMethod']
 export type CompromiseProgrammingMethod = Schemas['CompromiseProgrammingMethod']
 export type ProjectMethod = WeightedSumMethod | TopsisMethod | CompromiseProgrammingMethod
 export type MethodName = ProjectMethod['method']
+export type Weighting = Schemas['Weighting']
+export type LevelWeighting = Schemas['LevelWeighting']
+export type WeightingMethod = LevelWeighting['method']
+export type Group = Schemas['Group']
 
 // Results
 export type ProjectEvaluation = Schemas['ProjectEvaluation']
@@ -24,6 +28,8 @@ export type ProjectStability = Schemas['ProjectStability']
 export type StabilityScope = ProjectStability['scope']
 export type Interval = Schemas['ProjectInterval']
 export type ProjectImport = Schemas['ProjectImport']
+export type ProjectWeights = Schemas['WeightsModel']
+export type LevelWeights = Schemas['LevelModel']
 
 export type Constraint = Project['constraints'][number]
 export type ConstraintOp = Constraint['op']

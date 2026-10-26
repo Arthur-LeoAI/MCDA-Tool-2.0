@@ -1,9 +1,8 @@
 """Analysis pipeline for projects (technical design §3).
 
 Covers hard constraints, missing values, value functions and category
-scores, direct weights on a single level, the methods, Pareto analysis and
-stability intervals on the value matrix. Groups and rank/AHP weighting (S4)
-raise ``feature_not_available`` instead of being ignored.
+scores, global weights from groups and the weighting methods, the methods,
+Pareto analysis and stability intervals on the value matrix.
 """
 
 from __future__ import annotations
@@ -22,7 +21,6 @@ from ..pareto import DominanceInfo, pareto_analysis
 from ..sensitivity import StabilityScope, WeightInterval, weight_stability_intervals
 from .constraints import violations
 from .model import (
-    ROOT_LEVEL,
     CompromiseProgrammingMethod,
     Criterion,
     LinearValueFunction,
@@ -33,6 +31,7 @@ from .model import (
 )
 from .validate import project_issues
 from .values import value_scores
+from .weighting import derive
 
 
 @dataclass(frozen=True)
@@ -58,7 +57,7 @@ class PreparedProject:
     imputed: tuple[Imputation, ...]
     values: np.ndarray
     weights: np.ndarray
-    """Weights as entered (not normalised), aligned with ``project.criteria``."""
+    """Global weights (sum 1), aligned with ``project.criteria``."""
 
     def value_problem(self) -> DecisionProblem:
         """Benefit-oriented problem on value scores, named like the project."""
@@ -93,7 +92,6 @@ def prepare(project: Project) -> PreparedProject:
     issues = project_issues(project)
     if issues:
         raise ProblemValidationError(issues)
-    _require_available(project)
 
     excluded: list[Exclusion] = []
     eligible: list[str] = []
@@ -123,9 +121,7 @@ def prepare(project: Project) -> PreparedProject:
             imputed += [Imputation(eligible[i], criterion.id, criterion.missing) for i in np.flatnonzero(missing)]
         columns.append(column)
 
-    level = project.weighting.within.get(ROOT_LEVEL)
-    direct = level.weights if level else {}
-    weights = np.array([direct.get(c.id, 0.0) for c in project.criteria], dtype=float)
+    weights = np.array(list(derive(project).global_weights.values()), dtype=float)
     return PreparedProject(
         project=project,
         eligible=tuple(eligible),
@@ -134,14 +130,6 @@ def prepare(project: Project) -> PreparedProject:
         values=np.column_stack(columns),
         weights=weights,
     )
-
-
-def _require_available(project: Project) -> None:
-    weighting = project.weighting
-    if project.groups or weighting.groups or set(weighting.within) - {ROOT_LEVEL}:
-        raise McdaError("feature_not_available", feature="criteria_groups")
-    if any(level.method != "direct" for level in weighting.within.values()):
-        raise McdaError("feature_not_available", feature="rank_ahp_weighting")
 
 
 def _value_location(project: Project, alternative_id: str, criterion: Criterion) -> Location:

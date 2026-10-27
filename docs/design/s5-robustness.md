@@ -1,74 +1,74 @@
-# S5 设计说明：稳健性分析（蒙特卡洛）
+# S5 design note: robustness analysis (Monte Carlo)
 
-- 状态：已完成
-- 依据：需求文档 F5.1、F5.2；技术设计 §2.6、§3.3
+- Status: done
+- Based on: PRD F5.1, F5.2; technical design §2.6, §3.3
 
-## 要解决的问题
+## Problem
 
-权重稳定区间一次只改变一个准则的权重。用户更想知道的是：**如果所有权重都有些不确定，推荐的方案还站得住吗？** S5 用蒙特卡洛模拟回答这个问题。项目模型里已经有 `analysis.robustness` 设置（`mode`、`spread`、`samples`、`seed`），S5 把它用起来。
+Weight stability intervals change the weight of only one criterion at a time. What users really want to know is: **if all the weights are somewhat uncertain, does the recommended alternative still hold up?** S5 answers this with a Monte Carlo simulation. The project model already has the `analysis.robustness` settings (`mode`, `spread`, `samples`, `seed`); S5 puts them to use.
 
-## 计算
+## Calculation
 
-先固定价值矩阵 V（合格方案 × 准则），只让**准则的最终权重** w 随机变化。分组时也是直接扰动最终权重，不分别扰动各层。
+The value matrix V (eligible alternatives × criteria) is fixed first, and only the **final criterion weights** w vary randomly. With groups, the final weights are perturbed directly, not each level separately.
 
-**两种抽样方式**：
-- `around`（"在当前权重附近"，默认）：w'_j = w_j · exp(σ · z_j)，z_j 服从标准正态分布，σ = `spread`（默认 0.2），再归一化为总和 1。权重为 0 的准则保持为 0。
-- `unknown`（"权重完全未知"）：在权重大于 0 的准则上按 Dirichlet(1, …, 1) 抽样，也就是在所有权重组合里均匀抽样。权重为 0 的准则仍然不参加。
+**Two sampling modes**:
+- `around` ("around the current weights", default): w'_j = w_j · exp(σ · z_j), where z_j follows the standard normal distribution and σ = `spread` (default 0.2), then normalized to sum to 1. Criteria with weight 0 stay at 0.
+- `unknown` ("weights completely unknown"): sample Dirichlet(1, …, 1) over the criteria with weight greater than 0, i.e. sample uniformly over all weight combinations. Criteria with weight 0 still do not take part.
 
-**每次抽样**：
-- 计算加权和 S = W · Vᵀ（N 个样本 × m 个方案）；
-- 名次用竞争排名：方案 i 的名次 = 1 + 得分**明显**高于它的方案个数；
-- 差距不超过 1e-9 视为并列，和计算方法里的规则一致。
+**For each sample**:
+- Compute the weighted sum S = W · Vᵀ (N samples × m alternatives);
+- Ranks use competition ranking: the rank of alternative i = 1 + the number of alternatives whose score is **clearly** higher;
+- Differences of at most 1e-9 count as ties, consistent with the rule in the calculation methods.
 
-**输出**：
-- 名次接受度：每个方案排在第 1 … m 名的比例；
-- 排第一的概率：并列第一也算；
-- 平均名次；
-- 两两胜率：P(S_i > S_j)，并列不算胜；
-- 当前权重下排第一的方案的**可靠程度**：P(第一) ≥ 0.8 为"高"，0.5–0.8 为"中"，< 0.5 为"低"。这是本产品自己定的规则，不是文献标准，界面上会同时显示概率。
+**Output**:
+- Rank acceptability: the share of samples in which each alternative is ranked 1 … m;
+- Probability of being first: a tie for first also counts;
+- Mean rank;
+- Pairwise win rates: P(S_i > S_j); ties do not count as wins;
+- The **confidence** of the alternative ranked first under the current weights: P(first) ≥ 0.8 is "high", 0.5–0.8 is "medium", < 0.5 is "low". This is a rule defined by this product, not a standard from the literature; the UI always shows the probability alongside it.
 
-**实现**：
-- 按 1000 个样本一批，用 NumPy 一次比较一批里所有方案对，同时得到名次和胜率，内存占用有上限；
-- 随机数用 `numpy.random.default_rng(seed)`，相同的种子得到相同的结果；
-- 样本数为 100–20 000（模型里已有限制）。
+**Implementation**:
+- Samples are processed in batches of 1000; NumPy compares all alternative pairs in a batch at once, producing ranks and win rates together, with bounded memory use;
+- Random numbers use `numpy.random.default_rng(seed)`; the same seed gives the same result;
+- The sample count is 100–20 000 (already constrained in the model).
 
-## 接口
+## API
 
-`POST /api/v1/projects/robustness`（参数为项目，设置取自 `analysis.robustness`）返回：
+`POST /api/v1/projects/robustness` (parameter: project; settings taken from `analysis.robustness`) returns:
 
-- 设置：`mode`、`spread`、`samples`、`seed`；
-- `alternatives`：每个合格方案的 `id`、`name`、`rank_probabilities`（长度 m，第 r 项是排第 r 名的概率）、`p_best`、`mean_rank`；按平均名次排序；
-- `pairwise`：`wins[i][j]` = P(i 胜过 j)，顺序和 `alternatives` 相同；
-- `confidence`：当前第一名的 `id`、`p_best` 和 `level`。
+- Settings: `mode`, `spread`, `samples`, `seed`;
+- `alternatives`: for each eligible alternative, `id`, `name`, `rank_probabilities` (length m; item r is the probability of rank r), `p_best`, `mean_rank`; sorted by mean rank;
+- `pairwise`: `wins[i][j]` = P(i beats j), in the same order as `alternatives`;
+- `confidence`: the `id`, `p_best` and `level` of the current first place.
 
-它单独提供，因为它比其他计算慢（技术设计 §4）。
+It is a separate endpoint because it is slower than the other calculations (technical design §4).
 
-## 前端
+## Frontend
 
-"敏感性分析"页，在稳定区间下方加一张"稳健性（蒙特卡洛）"卡片：
+On the "Sensitivity analysis" page, a "Robustness (Monte Carlo)" card is added below the stability intervals:
 
-- **设置**：
-  - 抽样方式：在当前权重附近 / 权重完全未知；
-  - 波动幅度（只在"附近"时显示）：10%–100%；
-  - 抽样次数：1000、5000、20 000；
-  - 随机种子；
-  - 设置保存在项目里，改动后自动重新计算。
-- **可靠程度**：当前第一名、排第一的概率和等级。
-- **名次分布**：堆叠条形图，每个方案一行，颜色表示第 1、2、3 … 名的概率。
-- **排第一的概率**和平均名次的列表。
-- **两两胜率**：热力图。方案太多时只显示平均名次最好的 12 个，并说明这一点。
+- **Settings**:
+  - Sampling mode: around the current weights / weights completely unknown;
+  - Spread (shown only for "around"): 10%–100%;
+  - Number of samples: 1000, 5000, 20 000;
+  - Random seed;
+  - The settings are saved in the project, and changes trigger automatic recalculation.
+- **Confidence**: the current first place, its probability of being first, and the level.
+- **Rank distribution**: stacked bar chart, one row per alternative, colors showing the probability of rank 1, 2, 3 ….
+- A list of the **probability of being first** and the mean rank.
+- **Pairwise win rates**: heat map. With too many alternatives only the 12 with the best mean rank are shown, and the UI says so.
 
-结果报告里的稳健性部分放到 S6。
+The robustness part of the results report is left to S6.
 
-## 怎么验证
+## Verification
 
-- 后端单元测试：
-  - 固定种子可以复现，不同种子结果不同；
-  - `unknown` 模式下平均权重约为 1/n；
-  - `around` 模式下权重为 0 的准则保持为 0，平均权重接近当前权重；
-  - 被支配的方案永远不排第一；
-  - 名次概率每行、每列加起来都是 1（没有并列时）；
-  - 并列第一都算第一；
-  - 两两胜率 wins[i][j] + wins[j][i] + P(并列) = 1。
-- 性能测试：100 个方案 × 20 个准则、5000 次抽样在 2 秒内完成（需求文档的指标）。
-- 端到端测试：示例数据打开稳健性卡片，看到名次分布和可靠程度；切换到"权重完全未知"后结果改变。
+- Backend unit tests:
+  - A fixed seed is reproducible; different seeds give different results;
+  - In `unknown` mode the mean weight is about 1/n;
+  - In `around` mode criteria with weight 0 stay at 0, and the mean weights are close to the current weights;
+  - A dominated alternative is never ranked first;
+  - Each row and each column of the rank probabilities sums to 1 (when there are no ties);
+  - Ties for first all count as first;
+  - Pairwise win rates: wins[i][j] + wins[j][i] + P(tie) = 1.
+- Performance test: 100 alternatives × 20 criteria with 5000 samples finishes within 2 seconds (the PRD target).
+- End-to-end test: with the example data, open the robustness card and see the rank distribution and confidence; after switching to "weights completely unknown", the results change.

@@ -1,51 +1,51 @@
-# S8 设计说明：引导模式和专家模式
+# S8 design note: guided mode and expert mode
 
-- 状态：已完成
-- 依据：需求文档 §4（核心用户流程）、F8.1–F8.3；技术设计 §6
+- Status: done
+- Based on: PRD §4 (core user flow), F8.1–F8.3; technical design §6
 
-## 要解决的问题
+## Problem
 
-现在的五个页面功能完整，但对不熟悉 MCDA 的用户来说选项太多：方法、归一化、稳定区间都摆在一起。S8 加一个分步骤的**引导模式**，现有页面作为**专家模式**保留。两种模式用同一个项目，随时可以切换，切换时不丢数据。
+The current five pages are complete, but for users unfamiliar with MCDA they offer too many options: methods, normalization and stability intervals are all laid out together. S8 adds a step-by-step **guided mode**, and keeps the existing pages as **expert mode**. Both modes use the same project, the user can switch at any time, and switching loses no data.
 
-S8 只改前端，不需要新的接口。
+S8 changes only the frontend and needs no new endpoints.
 
-## 模式
+## Modes
 
-- 页头有"引导 / 专家"切换。
-- 模式和引导模式当前的步骤保存在浏览器里（store），不写进项目文件。模式是用户的习惯，不属于某个项目。
-- **默认模式**：
-  - 第一次打开的用户默认用引导模式（需求文档：P1、P2 默认引导模式）；
-  - 已经在用旧版本的用户（浏览器里有 v3 的数据）保持专家模式，避免界面突然改变。
-- 技术设计 §6 计划用功能开关（`src/flags.ts`）在开发期间隐藏引导模式。S8 一次完成，所以不再加开关。
+- The page header has a "Guided / Expert" switch.
+- The mode and the current guided-mode step are stored in the browser (store), not in the project file. The mode is a user preference and does not belong to a project.
+- **Default mode**:
+  - First-time users get guided mode by default (PRD: P1 and P2 default to guided mode);
+  - Users already on the old version (v3 data in the browser) stay in expert mode, so the interface does not change suddenly.
+- Technical design §6 planned to hide guided mode during development with a feature flag (`src/flags.ts`). S8 was completed in one go, so no flag is added.
 
-## 引导模式的七个步骤
+## The seven steps of guided mode
 
-| 步骤 | 内容 | 复用的部件 |
+| Step | Content | Reused components |
 |---|---|---|
-| 1 场景 | 选择模板（Amazon 美国站选品、ELT 技术评估）或"从空白开始"；可以直接用示例数据（跳到第 4 步） | 模板卡片 |
-| 2 导入 | 上传 xlsx / csv，或打开项目文件。标准模板、旧版工作簿和项目文件直接进入第 4 步 | 文件拖放 |
-| 3 对应列 | 按第 1 步选的模板自动对应列，用户确认或修改 | 对应列 |
-| 4 检查 | 方案和准则的数量、校验问题、数据质量报告和建议 | 问题列表、数据质量 |
-| 5 准则 | 每个准则的说明、换算方式、曲线预览、缺失值处理和硬性条件 | 准则设置 |
-| 6 权重 | 默认推荐排序；需要更精细时可以两两比较 | 权重层级卡片 |
-| 7 结论 | 结论文字、可靠程度、被排除的方案；下载报告、保存项目、到专家模式深入查看 | 结论卡片、导出 |
+| 1 Scenario | Choose a template (Amazon US product selection, ELT technology assessment) or "Start from blank"; example data can be used directly (jumps to step 4) | Template cards |
+| 2 Import | Upload xlsx / csv, or open a project file. Standard templates, legacy workbooks and project files go straight to step 4 | File drop zone |
+| 3 Map columns | Columns are mapped automatically using the template chosen in step 1; the user confirms or changes them | Column mapping |
+| 4 Check | Number of alternatives and criteria, validation issues, data quality report and suggestions | Issue list, data quality |
+| 5 Criteria | For each criterion: note, conversion, curve preview, missing-value handling and hard constraints | Criterion settings |
+| 6 Weights | Ranking is recommended by default; pairwise comparison is available when more precision is needed | Weight level cards |
+| 7 Conclusion | Conclusion text, confidence, excluded alternatives; download the report, save the project, go to expert mode for a deeper look | Conclusion card, export |
 
-- 每一步顶部有一句说明，底部有"上一步 / 下一步"。
-- 没有项目时只能进入第 1–3 步。
-- 第 4 步有校验错误时，"下一步"不可用，并说明需要先修正什么。
-- 模板的**界面用词**在引导模式里生效：例如 Amazon 模板把"方案"称为"产品"，ELT 模板称为"技术"（S7 推迟到这里）。只替换引导模式里的说明文字，专家模式保持不变。
+- Each step has a one-sentence explanation at the top and "Back / Next" at the bottom.
+- Without a project, only steps 1–3 are available.
+- When step 4 has validation errors, "Next" is disabled, with an explanation of what must be fixed first.
+- The template's **UI terms** take effect in guided mode: for example, the Amazon template calls alternatives "products" and the ELT template calls them "technologies" (deferred here from S7). Only the explanatory text in guided mode is replaced; expert mode stays unchanged.
 
-## 实现要点
+## Implementation notes
 
-- 新的 `GuidedApp`：步骤条、步骤内容和导航。每一步是一个单独的组件。
-- "准则与权重"页的权重层级部分提取成 `WeightLevels`，专家模式和引导模式共用。
-- 对应列组件新增 `initialTemplate`：模板列表加载完成后，按模板设置初始选择。
-- store 升到 v4，新增 `mode`、`guided.step`、`guided.templateId`。
+- New `GuidedApp`: step bar, step content and navigation. Each step is a separate component.
+- The weight level part of the "Criteria & weights" page is extracted into `WeightLevels`, shared by expert mode and guided mode.
+- The column mapping component gets a new `initialTemplate`: once the template list has loaded, the initial selection is set from the template.
+- The store moves to v4, adding `mode`, `guided.step` and `guided.templateId`.
 
-## 怎么验证
+## Verification
 
-- 单元测试：store 迁移（v3 → 专家模式，新用户 → 引导模式）、界面用词的替换。
-- 端到端测试：
-  - 旗舰流程：选 Amazon 模板 → 导入一个列名是别名的表格 → 自动对应 → 检查 → 准则 → 排序设权重 → 看到结论 → 切换到专家模式，数据还在；
-  - 示例数据直接跳到检查步骤；
-  - 现有的专家模式测试在专家模式下运行。
+- Unit tests: store migration (v3 → expert mode, new user → guided mode), replacement of UI terms.
+- End-to-end tests:
+  - Flagship flow: choose the Amazon template → import a table whose column names are aliases → automatic mapping → check → criteria → set weights by ranking → see the conclusion → switch to expert mode, and the data is still there;
+  - Example data jumps straight to the check step;
+  - The existing expert mode tests run in expert mode.

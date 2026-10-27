@@ -1,20 +1,20 @@
-# 0003 API 无状态，服务器不保存用户数据
+# 0003 Stateless API; the server does not store user data
 
-- 状态：已采纳（M4 引入账号系统时重新评估）
-- 日期：2026-10-23
+- Status: Accepted (to be reevaluated when M4 introduces user accounts)
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-用户上传的往往是企业的业务数据，比如成本、利润和供应商信息。保存这些数据就要承担 GDPR 的义务（存储、删除、数据处理协议），还需要账号和权限系统。在验证工具的价值之前，这些投入没有必要。
+Users often upload their company's business data, such as costs, profits and supplier information. Storing this data brings GDPR obligations (storage, deletion, data processing agreements) and also requires an account and permission system. Until the value of the tool has been validated, this investment is not necessary.
 
-## 决定
+## Decision
 
-- 每个请求都带上完整的问题数据，服务器处理完就丢弃，不写入磁盘或数据库。
-- 用户正在编辑的数据保存在浏览器的 localStorage 里。在 MVP 中，可以把项目保存成文件。
-- 日志不记录请求和响应的内容（见 ADR 0004 和 `SECURITY.md`）。
+- Every request carries the complete problem data; the server discards it after processing and does not write it to disk or a database.
+- The data the user is editing is kept in the browser's localStorage. In the MVP, the project can be saved as a file.
+- Logs do not record the content of requests and responses (see ADR 0004 and `SECURITY.md`).
 
-## 后果
+## Consequences
 
-- 部署和合规都很简单，服务可以随意扩容。
-- 不能跨设备同步，也不能多人协作。这些放在 M4，到时候写新的 ADR。
-- 请求体会随数据量变大，所以 API 限制了方案数（500）和准则数（200）。
+- Deployment and compliance are simple, and the service can scale freely.
+- There is no cross-device sync and no multi-user collaboration. These are planned for M4, with a new ADR at that time.
+- The request body grows with the amount of data, so the API limits the number of alternatives (500) and criteria (200).

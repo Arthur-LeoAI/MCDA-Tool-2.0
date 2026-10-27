@@ -1,76 +1,78 @@
 # Changelog
 
-本文件记录所有值得注意的改动。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+This file records all notable changes. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version numbers follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
 ### Added
 
-- **网站主页**：`/` 是介绍页（怎么用、功能、适用场景、两种模式、数据和隐私），工具移到 `/app`；中英文；可以从主页直接用示例数据打开引导模式。工具的代码按需加载。
-- **引导模式（M2 S8）**：
-  - 七个步骤：场景 → 导入 → 对应列 → 检查 → 准则 → 权重 → 结论，复用专家模式的部件；
-  - 选场景时可以直接使用模板的示例数据；导入后按所选模板自动对应列；
-  - 引导模式的说明文字使用模板的用词（例如 Amazon 模板把"方案"称为"产品"）；
-  - 页头可以在引导模式和专家模式之间切换，两种模式用同一个项目；新用户默认引导模式，之前的用户保持专家模式。
-- **模板（M2 S7）**：
-  - Amazon 美国站选品：5 个分组、10 个准则（对数销量、利润率、费用占比、竞争、退货率、尺寸、合规、起订量等），建议的硬性条件"利润率 ≥ 20%"，以及虚构的示例数据；
-  - ELT 技术评估：旧版 V7 的 34 个准则和 7 种技术，分为技术、经济、环境三组；Equal、Hier、Econ、Tech、Enviro 五种权重预设，和旧版工作簿的权重和排名一致；
-  - "数据"页可以从模板开始（使用示例数据或只用设置）；导入表格时可以按模板的中英文别名自动对应列；
-  - 新接口：`/api/v1/templates`、`/api/v1/templates/{id}/project`；`/tables/inspect` 和 `/tables/build` 支持模板。
-- **结论页和报告 v2（M2 S6）**：
-  - 结果页最上方用通俗的话写出结论：推荐哪个、得分主要来自哪些准则、和第二名相比的优势和劣势、可靠程度，以及需要注意的事项（并列、缺失值、无区分作用的准则、两两比较不一致、方法之间不一致、被排除的方案）；
-  - 文字由固定模板生成，中英文各一套，不调用大语言模型（ADR 0007）；
-  - Excel 报告新增结论、数据处理说明、权重来源和稳健性分析工作表；
-  - `/api/v1/projects/evaluate` 新增 `conclusion`。
-- **稳健性分析（M2 S5）**：
-  - 蒙特卡洛模拟：在当前权重附近抽样（可调波动幅度），或者在所有权重组合中均匀抽样；可以设置抽样次数和随机种子，结果可复现；
-  - 名次分布、排第一的概率、平均名次、两两胜率热力图，以及当前第一名的可靠程度（高、中、低）；
-  - 新接口：`/api/v1/projects/robustness`。
-- **准则分组和权重方法（M2 S4）**：
-  - 准则可以分为一层分组，最终权重 = 分组的权重 × 组内权重；
-  - 每一层都可以选择直接输入、排序（ROC 或 Rank-Sum，允许并列）或两两比较（AHP，显示一致性比率 CR，并标出最不一致的比较）；
-  - 切换方式时保留每种方式的输入；
-  - 新接口：`/api/v1/projects/weights`。
-- **价值函数和硬性条件（M2 S3）**：
-  - 每个准则可以设置打分方式（线性、对数、目标区间、阈值、分段）、取值范围、分类分数和缺失值处理；
-  - 价值曲线预览，显示每个方案在曲线上的位置；
-  - 硬性条件（≥、≤、>、<、区间、属于）：不满足的方案在打分前被排除，结果页列出原因；
-  - 新接口：`/api/v1/projects/curve`。
-- **导入任意表格（M2 S2）**：
-  - 自动识别工作表、表头行、方案名所在的列和每列的类型（数值、等级、分类、是/否）；
-  - 能读懂"$12.99""15%""1.234,5""(300)"等写法，每一列统一判断小数点；"-""n/a"等占位符按缺失值处理；
-  - 前端新增"对应列"步骤，可以调整类型、方向和等级的顺序；
-  - 数据质量报告：缺失值、常数列、极端值、建议对数曲线、分类分数全部相同；
-  - 新接口：`/api/v1/tables/inspect`、`/api/v1/tables/build`、`/api/v1/projects/quality`。
-- **项目模型 v2（M2 S1）**：
-  - `.mcda.json` 项目文件格式及其 JSON Schema（`backend/project.schema.json`）；
-  - 版本迁移：版本 3 的"问题"格式和浏览器里的旧草稿都会自动升级；
-  - 分析流水线：缺失值的四种处理方式、四种价值函数、等级/分类/是否的分数换算；
-  - `/api/v1/projects/*` 接口：migrate、validate、evaluate、stability、import、report。
-- 前端改为基于项目模型：可以保存和打开项目文件；空单元格允许保留，按"最差"处理；数据表格支持是/否、等级、分类类型的值；加权和按 0–100 分显示。
+- **Website home page**: `/` is an introduction page (how to use it, features, use cases, the two modes, data and privacy), and the tool has moved to `/app`; Chinese and English; guided mode can be opened with sample data directly from the home page. The tool's code is loaded on demand.
+- **Guided mode (M2 S8)**:
+  - Seven steps: scenario → import → map columns → check → criteria → weights → conclusion, reusing the components of expert mode;
+  - When choosing a scenario, the template's sample data can be used directly; after import, columns are mapped automatically according to the selected template;
+  - The explanatory texts in guided mode use the template's terminology (for example, the Amazon template calls "alternatives" "products");
+  - The page header can switch between guided mode and expert mode, and both modes use the same project; new users default to guided mode, existing users stay in expert mode.
+- **Templates (M2 S7)**:
+  - Amazon US product selection: 5 groups, 10 criteria (log sales, profit margin, fee share, competition, return rate, size, compliance, minimum order quantity, etc.), a suggested hard constraint "profit margin ≥ 20%", and fictional sample data;
+  - ELT technology assessment: the 34 criteria and 7 technologies of the old V7, divided into three groups (technical, economic, environmental); five weight presets Equal, Hier, Econ, Tech and Enviro, matching the weights and rankings of the old workbook;
+  - The "Data" page can start from a template (with the sample data or with the settings only); when importing a table, columns can be mapped automatically using the template's Chinese and English aliases;
+  - New endpoints: `/api/v1/templates`, `/api/v1/templates/{id}/project`; `/tables/inspect` and `/tables/build` support templates.
+- **Conclusion page and report v2 (M2 S6)**:
+  - The top of the results page states the conclusion in plain language: which alternative is recommended, which criteria contribute most to its score, its strengths and weaknesses compared with the runner-up, the reliability level, and points to watch out for (ties, missing values, criteria that do not discriminate, inconsistent pairwise comparisons, disagreement between methods, excluded alternatives);
+  - The text is generated from fixed templates, one set each in Chinese and English, without calling a large language model (ADR 0007);
+  - The Excel report has new worksheets for the conclusion, data processing notes, weight sources and the robustness analysis;
+  - `/api/v1/projects/evaluate` adds `conclusion`.
+- **Robustness analysis (M2 S5)**:
+  - Monte Carlo simulation: sampling around the current weights (with adjustable spread), or uniform sampling over all weight combinations; the number of samples and the random seed can be set, so results are reproducible;
+  - Rank distribution, probability of ranking first, mean rank, pairwise win-rate heat map, and the reliability level of the current first place (high, medium, low);
+  - New endpoint: `/api/v1/projects/robustness`.
+- **Criterion groups and weighting methods (M2 S4)**:
+  - Criteria can be organized into one level of groups; final weight = group weight × weight within the group;
+  - Each level can use direct input, ranking (ROC or Rank-Sum, ties allowed) or pairwise comparison (AHP, showing the consistency ratio CR and marking the most inconsistent comparison);
+  - The inputs of each method are kept when switching methods;
+  - New endpoint: `/api/v1/projects/weights`.
+- **Value functions and hard constraints (M2 S3)**:
+  - Each criterion can be given a scoring method (linear, logarithmic, target range, threshold, piecewise), a value range, category scores and missing-value handling;
+  - Value curve preview showing the position of each alternative on the curve;
+  - Hard constraints (≥, ≤, >, <, range, one of): alternatives that do not satisfy them are excluded before scoring, and the results page lists the reasons;
+  - New endpoint: `/api/v1/projects/curve`.
+- **Importing arbitrary tables (M2 S2)**:
+  - Automatically recognizes the worksheet, the header row, the column holding the alternative names, and the type of each column (numeric, ordinal level, categorical, yes/no);
+  - Understands notations such as "$12.99", "15%", "1.234,5" and "(300)", deciding the decimal separator consistently per column; placeholders such as "-" and "n/a" are treated as missing values;
+  - New "map columns" step in the frontend, where type, direction and the order of levels can be adjusted;
+  - Data quality report: missing values, constant columns, extreme values, suggested logarithmic curve, all category scores identical;
+  - New endpoints: `/api/v1/tables/inspect`, `/api/v1/tables/build`, `/api/v1/projects/quality`.
+- **Project model v2 (M2 S1)**:
+  - `.mcda.json` project file format and its JSON Schema (`backend/project.schema.json`);
+  - Version migration: the version 3 "problem" format and old drafts stored in the browser are upgraded automatically;
+  - Analysis pipeline: four ways of handling missing values, four value functions, score conversion for level/category/yes-no values;
+  - `/api/v1/projects/*` endpoints: migrate, validate, evaluate, stability, import, report.
+- The frontend is now based on the project model: project files can be saved and opened; empty cells may be kept and are treated as "worst"; the data table supports values of the yes/no, level and category types; the weighted sum is displayed on a 0–100 scale.
 
-- 计算核心 `mcda_core`：数据模型和校验（效益型/成本型准则）、四种归一化、加权和、TOPSIS、折衷规划、Pareto 分析、权重稳定区间；与 10 个旧版 V7 Excel 工作簿对照验证。
-- 导入导出：标准模板（.xlsx/.csv，支持分号分隔、小数逗号和 Windows 代码页）、旧版 V7 工作簿、Excel 报告。
-- FastAPI 后端：导入、校验、计算、Pareto、敏感性分析、模板和报告导出。
-- React 前端：数据、准则与权重、结果、敏感性分析、导出五个步骤；中英文界面。
-- 工程基础（M0）：
-  - CI（GitHub Actions）：后端在 Python 3.11 和 3.14 上检查和测试、前端检查和构建、API 约定一致性、端到端测试、Docker 镜像冒烟测试。
-  - ruff、pyright、Prettier、oxlint、pre-commit、Dependabot。
-  - Playwright 端到端测试。
-  - Docker 镜像和 `docker compose`。
-  - 请求编号（`X-Request-ID`）和结构化日志（`MCDA_LOG_FORMAT=json`）。
-  - CONTRIBUTING、SECURITY、ADR、Apache-2.0 许可证。
+- Calculation core `mcda_core`: data model and validation (benefit/cost criteria), four normalizations, weighted sum, TOPSIS, compromise programming, Pareto analysis, weight stability intervals; verified against 10 old V7 Excel workbooks.
+- Import and export: standard template (.xlsx/.csv, supporting semicolon separators, decimal commas and Windows code pages), old V7 workbooks, Excel report.
+- FastAPI backend: import, validation, calculation, Pareto, sensitivity analysis, template and report export.
+- React frontend: five steps (data, criteria and weights, results, sensitivity analysis, export); Chinese and English UI.
+- Engineering foundation (M0):
+  - CI (GitHub Actions): backend checks and tests on Python 3.11 and 3.14, frontend checks and build, API contract consistency, end-to-end tests, Docker image smoke test.
+  - ruff, pyright, Prettier, oxlint, pre-commit, Dependabot.
+  - Playwright end-to-end tests.
+  - Docker image and `docker compose`.
+  - Request IDs (`X-Request-ID`) and structured logging (`MCDA_LOG_FORMAT=json`).
+  - CONTRIBUTING, SECURITY, ADRs, Apache-2.0 license.
 
 ### Changed
 
-- 新项目默认只启用加权和（ADR 0005），TOPSIS 和 CP 可以在"结果"页打开。
-- TOPSIS 和 CP 默认在价值分上计算；经典 TOPSIS（原始数据 + 向量归一化）作为可选的计算方式保留。
+- English is the default interface language; Chinese remains available through the language switch, and Chinese column names and values are still recognized on import. Projects and templates default to English.
+- All documentation (README, design documents, ADRs, contributing and security notes) is in English.
+- New projects enable only the weighted sum by default (ADR 0005); TOPSIS and CP can be turned on in the "Results" page.
+- TOPSIS and CP are calculated on value scores by default; classic TOPSIS (raw data + vector normalization) is kept as an optional calculation mode.
 
-- **破坏兼容**：API 路径从 `/api/*` 改为 `/api/v1/*`。
-- **破坏兼容**：错误响应改为 `{code, detail, params, issues, request_id}`。每个问题都有错误代码、参数和结构化的位置，由前端负责翻译。
-- 设置错误（例如归一化方式和数据不匹配）统一抛出带错误代码的 `McdaError`。
-- `DecisionProblem` 接受任意数组形式的矩阵，并按对象身份比较是否相等。
+- **Breaking**: API paths changed from `/api/*` to `/api/v1/*`.
+- **Breaking**: error responses changed to `{code, detail, params, issues, request_id}`. Each issue has an error code, parameters and a structured location, and the frontend is responsible for translation.
+- Configuration errors (for example a normalization that does not fit the data) now uniformly raise `McdaError` with an error code.
+- `DecisionProblem` accepts a matrix in any array form, and compares equality by object identity.
 
 ### Removed
 
-- **破坏兼容**：旧的"问题"接口 `/problems/validate`、`/problems/import`、`/evaluate`、`/pareto`、`/sensitivity/stability`、`/export/problem`、`/export/report`（ADR 0008）。请改用 `/projects/*` 和 `/tables/*`。
+- **Breaking**: the old "problem" endpoints `/problems/validate`, `/problems/import`, `/evaluate`, `/pareto`, `/sensitivity/stability`, `/export/problem`, `/export/report` (ADR 0008). Use `/projects/*` and `/tables/*` instead.

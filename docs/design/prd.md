@@ -1,173 +1,173 @@
-# 需求文档（PRD）：MCDA 工具 MVP（v0.1.0）
+# PRD: MCDA Tool MVP (v0.1.0)
 
-- 状态：已确认（2026-10-23）
-- 日期：2026-10-23
-- 相关文档：[路线图](../ROADMAP.md)、[技术设计](technical-design.md)
+- Status: confirmed (2026-10-23)
+- Date: 2026-10-23
+- Related documents: [Roadmap](../ROADMAP.md), [Technical design](technical-design.md)
 
-## 1. 要解决的问题
+## 1. Problem to solve
 
-人们经常要从多个选项中，按多个互相冲突的标准做选择：选品、选供应商、选技术方案。最常见的做法是在 Excel 里做一张打分表，但这种做法有几个问题：
+People often have to choose among several options against several conflicting criteria: picking products, picking suppliers, picking technical solutions. The most common approach is a scoring sheet in Excel, but this approach has several problems:
 
-1. **数据要先手工处理**：单位不同（美元、天数、百分比）、文字等级（高/中/低）、缺失值、极端值，都要用户自己换算成分数。
-2. **权重难定**：用户能说出"利润比销量重要"，却说不出"利润 0.35、销量 0.25"。
-3. **结论缺乏依据**：算出第一名之后，回答不了"为什么是它""权重稍微变一下还是它吗"。
-4. **难以复现和交接**：打分规则散落在公式里，换个人或过几个月就看不懂了。
+1. **Data has to be processed by hand first**: different units (dollars, days, percentages), text grades (high/medium/low), missing values and outliers all have to be converted into scores by the users themselves.
+2. **Weights are hard to set**: users can say "profit matters more than sales volume", but not "profit 0.35, sales volume 0.25".
+3. **Conclusions lack justification**: once the top-ranked option is computed, the sheet cannot answer "why this one?" or "would it still win if the weights changed slightly?".
+4. **Hard to reproduce and hand over**: the scoring rules are scattered across formulas, and nobody can follow them after a handover or a few months later.
 
-现有的工具（版本 3）已经解决了计算和展示，但要求输入的是**已经处理好的数值矩阵**，所以普通用户用不起来。
+The existing tool (version 3) already handles computation and presentation, but it requires an **already processed numeric matrix** as input, so ordinary users cannot use it.
 
-## 2. 目标和非目标
+## 2. Goals and non-goals
 
-### MVP 的目标
+### MVP goals
 
-- **G1**：用户能直接导入自己手上的表格（原始数据，包括文字、缺失值），在工具里完成数据处理，不需要先在 Excel 里换算。
-- **G2**：不懂 MCDA 的用户通过引导流程，用排序或两两比较的方式得到权重。
-- **G3**：每个结果都附带**用通俗语言写的结论**：推荐谁、为什么、结论有多可靠。
-- **G4**：电商选品（Amazon 美国站）的完整流程打磨好；科研和咨询场景（技术评估）能用同一套工具完成。
-- **G5**：整个分析过程可以保存成项目文件，以后重新打开、复现，或交给别人。
+- **G1**: Users can import the spreadsheets they already have (raw data, including text and missing values) directly and do the data processing inside the tool, without converting it in Excel first.
+- **G2**: Users who do not know MCDA get weights through a guided flow, by ranking or pairwise comparison.
+- **G3**: Every result comes with a **conclusion in plain language**: what is recommended, why, and how reliable the conclusion is.
+- **G4**: The complete e-commerce product selection flow (Amazon US) is polished; the research and consulting scenario (technology assessment) can be done with the same tool.
+- **G5**: The whole analysis can be saved as a project file, to be reopened, reproduced or handed to someone else later.
 
-### 非目标（MVP 不做）
+### Non-goals (not in the MVP)
 
-账号和云端保存、多人协作、多层准则（只做一层分组）、多人打分汇总、多套权重情景对比、熵权法和 CRITIC、VIKOR 和 PROMETHEE、德语界面、Amazon SP-API 等外部数据接入。这些都在路线图的 M3 到 M5 里。
+Accounts and cloud storage, multi-user collaboration, multi-level criteria (only one level of groups), aggregating scores from multiple people, comparing multiple weight scenarios, entropy weighting and CRITIC, VIKOR and PROMETHEE, a German UI, and external data sources such as the Amazon SP-API. These are all in M3 to M5 of the roadmap.
 
-## 3. 用户画像
+## 3. User personas
 
-| 画像 | 典型情况 | 需要什么 | 不需要什么 |
+| Persona | Typical situation | Needs | Does not need |
 |---|---|---|---|
-| **P1 电商选品或运营人员**（主要） | 在 Amazon 美国站卖货，每月评估 10–50 个候选产品；数据来自 Seller Central 报表、第三方选品工具的导出文件和自己的成本估算 | 快速导入、提供合理的默认设置、给出明确推荐和理由、能把报告发给老板 | 方法理论、复杂参数 |
-| **P2 企业分析师** | 供应商选择、软件选型、选址；要向管理层汇报 | 可解释、可追溯、能说明在什么条件下结论会改变 | 学术细节 |
-| **P3 科研和咨询人员** | 技术评估、可持续性评估，例如原来的 ELT 项目；指标多，而且分组 | 方法透明、参数可调、敏感性分析、结果可复现、报告可以引用 | 被引导模式限制 |
+| **P1 E-commerce product selection or operations staff** (primary) | Sells on Amazon US and evaluates 10–50 candidate products a month; data comes from Seller Central reports, exports from third-party product research tools, and their own cost estimates | Fast import, sensible defaults, a clear recommendation with reasons, a report they can send to the boss | Method theory, complex parameters |
+| **P2 Business analyst** | Supplier selection, software selection, site selection; reports to management | Explainable, traceable, able to show under which conditions the conclusion would change | Academic details |
+| **P3 Researchers and consultants** | Technology assessment, sustainability assessment, for example the original ELT project; many indicators, organized in groups | Transparent methods, adjustable parameters, sensitivity analysis, reproducible results, citable reports | Being constrained by guided mode |
 
-P1 和 P2 默认使用**引导模式**，P3 使用**专家模式**（就是版本 3 的五个页面，再加上新功能）。
+P1 and P2 use **guided mode** by default; P3 uses **expert mode** (the five pages of version 3, plus the new features).
 
-## 4. 核心用户流程（旗舰：Amazon 美国站选品）
+## 4. Core user flow (flagship: Amazon US product selection)
 
-1. **选择场景**：首页选"电商选品（Amazon US）"模板，或者"从空白开始"。
-2. **导入数据**：上传 xlsx 或 csv（例如 30 个候选产品，每个有 12 列）。如果文件有多个工作表，选择工作表；表头行会自动识别。
-3. **对应列**：工具根据模板自动把列对应到准则，比如"Est. Monthly Sales"对应"预估月销量"。用户确认或修改，并选出方案名所在的列；不需要的列忽略。
-4. **数据检查**：数据质量报告列出缺失值、极端值、常数列、无法识别的文字，每一项都附带建议的处理方式。
-5. **设置准则**：模板已经预设好方向、价值函数（例如销量用对数曲线，表示"越多越好，但增长放缓"）和硬性条件（例如利润率 ≥ 20%）。用户可以修改，曲线能实时预览。
-6. **设置权重**：拖动准则排出重要性顺序，工具自动算出权重。需要更精细时，可以对少数准则做两两比较，工具会提示判断是否前后一致。
-7. **查看结论**：例如"推荐产品 C。主要因为利润率高、竞争小；它相比第二名产品 A 的优势主要在利润率。在 82% 的合理权重组合下，它都排第一。产品 F、K 因为利润率低于 20% 被排除。"
-8. **深入查看**（可选）：得分构成、排名对比、敏感性分析，也可以切换到专家模式。
-9. **导出和保存**：下载 Excel 报告，或者保存项目文件（`.mcda.json`）。
+1. **Choose a scenario**: on the home page, pick the "E-commerce product selection (Amazon US)" template, or "Start from scratch".
+2. **Import data**: upload an xlsx or csv file (for example 30 candidate products with 12 columns each). If the file has several sheets, choose a sheet; the header row is detected automatically.
+3. **Map columns**: based on the template, the tool automatically maps columns to criteria, for example "Est. Monthly Sales" to "Estimated monthly sales". The user confirms or changes the mapping and picks the column holding the alternative names; unneeded columns are ignored.
+4. **Check data**: the data quality report lists missing values, outliers, constant columns and unrecognized text, each with a suggested fix.
+5. **Set up criteria**: the template presets directions, value functions (for example a logarithmic curve for sales volume, meaning "more is better, but with diminishing returns") and hard constraints (for example profit margin ≥ 20%). The user can change them, with a live curve preview.
+6. **Set weights**: drag the criteria into order of importance, and the tool computes the weights automatically. For finer control, the user can compare a few criteria pairwise, and the tool flags whether the judgments are consistent.
+7. **View the conclusion**: for example, "Product C is recommended, mainly because of its high profit margin and low competition; its advantage over the runner-up, product A, lies mainly in profit margin. It ranks first under 82% of plausible weight combinations. Products F and K were excluded because their profit margin is below 20%."
+8. **Dig deeper** (optional): score breakdown, ranking comparison, sensitivity analysis; the user can also switch to expert mode.
+9. **Export and save**: download the Excel report, or save the project file (`.mcda.json`).
 
-**科研场景（P3）**：选"技术评估"模板，或者直接导入旧版 V7 工作簿；建立准则分组（技术、经济、环境）并设置组权重；切换到专家模式，比较不同方法，查看稳定区间和蒙特卡洛结果，导出带方法说明的报告。
+**Research scenario (P3)**: pick the "Technology assessment" template, or import a legacy V7 workbook directly; create criterion groups (technical, economic, environmental) and set group weights; switch to expert mode to compare different methods, view stability intervals and Monte Carlo results, and export a report with a methods description.
 
-## 5. 功能需求
+## 5. Functional requirements
 
-格式：编号、需求，后面是验收标准。S1–S8 对应路线图里的交付顺序。
+Format: ID and requirement, followed by acceptance criteria. S1–S8 match the delivery order in the roadmap.
 
-### S1 项目模型和文件
+### S1 Project model and files
 
-- **F1.1** 一个"项目"包含：方案、准则（可分组）、原始数据、处理设置、硬性条件、权重设置、分析设置，以及数据来源信息。
-  - 验收：保存项目再打开，所有设置和结果都完全一样。
-- **F1.2** 可以保存为 `.mcda.json` 文件，也可以打开这种文件。浏览器会自动保存当前项目。
-  - 验收：刷新页面不丢失工作；打开旧版本格式的文件时会自动升级。
-- **F1.3** 版本 3 留在浏览器里的草稿会自动迁移成新的项目格式。
+- **F1.1** A "project" contains: alternatives, criteria (optionally grouped), raw data, processing settings, hard constraints, weight settings, analysis settings, and data source information.
+  - Acceptance: after saving and reopening a project, all settings and results are exactly the same.
+- **F1.2** Projects can be saved as `.mcda.json` files, and such files can be opened. The browser saves the current project automatically.
+  - Acceptance: refreshing the page loses no work; opening a file in an older format upgrades it automatically.
+- **F1.3** Drafts left in the browser by version 3 are migrated to the new project format automatically.
 
-### S2 数据准备
+### S2 Data preparation
 
-- **F2.1** 可以导入任意 xlsx 或 csv：选择工作表、表头所在的行、方案名所在的列、作为准则的列，其余列忽略。
-  - 验收：一个有说明行、合并标题或多余列的表格，也能在 1 分钟内对应好。
-- **F2.2** 自动识别每列的类型：数值、等级（有顺序的文字，如低/中/高）、分类（没有顺序的文字）、是/否。
-  - 验收：识别结果可以修改；文字形式的数值能被识别，比如"1,234.5""$12.99""15%"。
-- **F2.3** 等级和分类列可以给每个取值设定分数；等级默认按顺序均匀给分。
-- **F2.4** 每个准则可以选择缺失值的处理方式：按最差处理（默认）、按平均值处理、排除该方案、要求补全。
-- **F2.5** 数据质量报告：每个准则的缺失值数量、极端值、常数列（无法区分方案）、无法解析的值，并给出建议，例如"销量跨越三个数量级，建议使用对数曲线"。
-- **F2.6** 继续支持标准模板和旧版 V7 工作簿的直接导入。
+- **F2.1** Any xlsx or csv file can be imported: choose the sheet, the header row, the column with the alternative names and the columns that serve as criteria; the remaining columns are ignored.
+  - Acceptance: even a spreadsheet with note rows, merged titles or extra columns can be mapped within 1 minute.
+- **F2.2** The type of each column is detected automatically: numeric, ordinal (ordered text, such as low/medium/high), categorical (unordered text), yes/no.
+  - Acceptance: detection results can be changed; numbers written as text are recognized, such as "1,234.5", "$12.99", "15%".
+- **F2.3** For ordinal and categorical columns, a score can be set for each value; ordinal columns get evenly spaced scores by order by default.
+- **F2.4** For each criterion, a missing-value policy can be chosen: treat as worst (default), treat as average, exclude the alternative, require the value to be filled in.
+- **F2.5** Data quality report: for each criterion, the number of missing values, outliers, constant columns (which cannot distinguish alternatives) and unparsable values, with suggestions, for example "sales volume spans three orders of magnitude; a logarithmic curve is recommended".
+- **F2.6** Direct import of the standard template and of legacy V7 workbooks remains supported.
 
-### S3 价值函数和硬性条件
+### S3 Value functions and hard constraints
 
-- **F3.1** 每个数值准则有一个价值函数，把原始值换算成 0–1 的分数。可选类型：
-  - 线性：在数据范围内，或在用户设定的范围内；
-  - 对数：增长递减；
-  - 目标值或目标区间：越接近越好；
-  - 阈值或阶梯：比如超过某个值后才开始得分；
-  - 自定义折线：由若干个点决定。
-  - 验收：可以实时预览曲线，并在曲线上标出各个方案的位置。
-- **F3.2** 硬性条件：数值比较（≥、≤、介于）、属于某些类别、不能缺失。不满足条件的方案在打分前就被排除。
-  - 验收：结论页列出每个被排除的方案，以及它违反了哪一条。
+- **F3.1** Each numeric criterion has a value function that converts raw values into scores from 0 to 1. Available types:
+  - linear: over the data range, or over a user-defined range;
+  - logarithmic: diminishing returns;
+  - target value or target range: the closer, the better;
+  - threshold or step: for example, scoring starts only above a certain value;
+  - custom piecewise linear: defined by a number of points.
+  - Acceptance: the curve can be previewed live, with the position of each alternative marked on it.
+- **F3.2** Hard constraints: numeric comparisons (≥, ≤, between), membership in certain categories, must not be missing. Alternatives that fail a constraint are excluded before scoring.
+  - Acceptance: the conclusion page lists every excluded alternative and the constraint it violated.
 
-### S4 准则分组和权重
+### S4 Criterion groups and weights
 
-- **F4.1** 准则可以分组（一层）。组有组权重，组内有组内权重，最终权重 = 组权重 × 组内权重。
-- **F4.2** 设置权重的三种方式，在每一层都可以选：
-  - **直接输入**：百分比或分数；
-  - **排序**：拖动排出重要性顺序，用 ROC 方法自动换算成权重，也可以选 Rank-Sum 方法；允许并列；
-  - **两两比较（AHP）**：1–9 标度，计算一致性比率 CR；CR > 0.1 时提示判断前后不一致，并指出最不一致的那几对比较。
-  - 验收：每种方式都能看到最终权重。从一种方式切换到另一种时，不会悄悄丢掉用户之前的输入。
+- **F4.1** Criteria can be grouped (one level). Groups have group weights, and criteria have within-group weights; final weight = group weight × within-group weight.
+- **F4.2** Three ways to set weights, selectable at each level:
+  - **Direct input**: percentages or points;
+  - **Ranking**: drag into order of importance, converted to weights automatically with the ROC method, or optionally the Rank-Sum method; ties are allowed;
+  - **Pairwise comparison (AHP)**: 1–9 scale, with the consistency ratio CR computed; when CR > 0.1 the tool warns that the judgments are inconsistent and points out the most inconsistent comparisons.
+  - Acceptance: every method shows the final weights. Switching from one method to another never silently discards the user's earlier input.
 
-### S5 稳健性分析
+### S5 Robustness analysis
 
-- **F5.1** 蒙特卡洛模拟有两种抽样范围：
-  - "在当前权重附近"（默认，可以调整波动幅度）；
-  - "权重完全未知"（在所有可能的权重组合中均匀抽样）。
-- **F5.2** 输出：每个方案排在各个名次的概率、排第一的概率，以及两两比较的胜率（A 胜过 B 的概率）。
-  - 验收：设定随机种子后结果可以复现；默认 5000 次抽样，在 100 个方案 × 20 个准则时 2 秒内完成。
+- **F5.1** Monte Carlo simulation has two sampling ranges:
+  - "Around the current weights" (default, with an adjustable spread);
+  - "Weights completely unknown" (uniform sampling over all possible weight combinations).
+- **F5.2** Output: each alternative's probability of reaching each rank, its probability of ranking first, and pairwise win rates (the probability that A beats B).
+  - Acceptance: results are reproducible once a random seed is set; the default of 5000 samples finishes within 2 seconds for 100 alternatives × 20 criteria.
 
-### S6 结论页和报告
+### S6 Conclusion page and report
 
-- **F6.1** 结论用确定的模板生成，不调用大语言模型。内容包括：
-  - 推荐的方案；
-  - 主要理由：得分贡献最大的准则；
-  - 和第二名相比的优势和劣势；
-  - 可靠程度（高、中、低，并给出排第一的概率）；
-  - 被排除的方案及原因；
-  - 数据方面的提醒，例如缺失值是怎么处理的。
-  - 验收：同样的输入总是得到同样的文字；中英文都有。
-- **F6.2** Excel 报告新增：结论、数据处理说明（类型、价值函数、缺失值处理、硬性条件）、权重的来源（排序、AHP 及一致性比率）、稳健性分析结果。
+- **F6.1** Conclusions are generated from deterministic templates, without calling a large language model. They include:
+  - the recommended alternative;
+  - the main reasons: the criteria contributing most to the score;
+  - strengths and weaknesses compared with the runner-up;
+  - the level of reliability (high, medium, low, with the probability of ranking first);
+  - the excluded alternatives and why;
+  - data caveats, for example how missing values were handled.
+  - Acceptance: the same input always produces the same text; available in both Chinese and English.
+- **F6.2** New content in the Excel report: the conclusion, a description of the data processing (types, value functions, missing-value handling, hard constraints), where the weights came from (ranking, AHP and its consistency ratio), and the robustness analysis results.
 
-### S7 模板
+### S7 Templates
 
-- **F7.1** 模板定义：准则（名称、别名、方向、类型、价值函数、缺失值处理）、分组、建议的硬性条件、建议的重要性排序、界面用词（例如把"方案"称为"产品"）、示例数据，以及中英文说明。
-- **F7.2** 两个内置模板：
-  - **Amazon 美国站选品**：货币为美元。准则包括预估月销量、利润率、竞争强度（头部竞品的评论数）、平台和物流费用占比、尺寸等级、退货率、季节性、合规和认证难度、最小起订量；
-  - **技术评估**：基于旧版 ELT 数据，分技术、经济、环境三组。
-- **F7.3** 导入数据时，按模板里的别名（中英文）自动对应列。
+- **F7.1** A template defines: criteria (name, aliases, direction, type, value function, missing-value handling), groups, suggested hard constraints, a suggested importance ranking, UI wording (for example calling "alternatives" "products"), sample data, and descriptions in Chinese and English.
+- **F7.2** Two built-in templates:
+  - **Amazon US product selection**: currency is US dollars. Criteria include estimated monthly sales, profit margin, competition intensity (review count of the top competitors), platform and fulfillment fee share, size tier, return rate, seasonality, compliance and certification difficulty, and minimum order quantity;
+  - **Technology assessment**: based on the legacy ELT data, in three groups: technical, economic, environmental.
+- **F7.3** On data import, columns are mapped automatically using the template's aliases (Chinese and English).
 
-### S8 引导模式和专家模式
+### S8 Guided mode and expert mode
 
-- **F8.1** 引导模式是一个分步骤的向导：场景 → 导入 → 对应列 → 检查 → 准则 → 权重 → 结论。每一步只展示必要的选项，并配有说明。
-- **F8.2** 专家模式就是现有的五个页面加上新功能：可以选择方法和归一化方式、查看稳定区间、比较不同方法的结果。
-- **F8.3** 两种模式共用同一个项目，可以随时切换，切换时不丢数据。
+- **F8.1** Guided mode is a step-by-step wizard: scenario → import → map columns → check → criteria → weights → conclusion. Each step shows only the necessary options, with explanations.
+- **F8.2** Expert mode is the existing five pages plus the new features: choose the method and normalization, view stability intervals, compare the results of different methods.
+- **F8.3** Both modes share the same project and the user can switch at any time without losing data.
 
-## 6. 非功能需求
+## 6. Non-functional requirements
 
-| 方面 | 要求 |
+| Aspect | Requirement |
 |---|---|
-| 隐私 | 服务器不保存用户数据（ADR 0003），日志不记录业务数据 |
-| 性能 | 100 个方案 × 20 个准则时，计算请求 p95 < 300 ms；蒙特卡洛模拟 5000 次 < 2 s |
-| 规模上限 | 500 个方案、200 个准则、上传文件 5 MB |
-| 语言 | 中文和英文；所有界面文字和错误信息都要翻译 |
-| 浏览器 | Chrome、Edge、Firefox、Safari 的最近两个大版本；桌面优先，平板可用 |
-| 可访问性 | 支持键盘操作，表单有标签，颜色对比度达标（完整的 WCAG 2.1 AA 在 M3） |
-| 可复现 | 同样的项目文件加同样的版本号，结果完全一致 |
-| 质量 | CI 全部通过；计算模块的测试覆盖率 ≥ 90%；旗舰流程有端到端测试 |
+| Privacy | The server stores no user data (ADR 0003), and logs do not record business data |
+| Performance | For 100 alternatives × 20 criteria, computation requests p95 < 300 ms; Monte Carlo simulation with 5000 samples < 2 s |
+| Size limits | 500 alternatives, 200 criteria, 5 MB uploaded file |
+| Languages | Chinese and English; all UI text and error messages must be translated |
+| Browsers | The two latest major versions of Chrome, Edge, Firefox and Safari; desktop first, usable on tablets |
+| Accessibility | Keyboard operation, labeled form fields, sufficient color contrast (full WCAG 2.1 AA in M3) |
+| Reproducibility | The same project file with the same version number gives exactly the same results |
+| Quality | CI passes; test coverage of the computation modules ≥ 90%; the flagship flow has end-to-end tests |
 
-## 7. 成功指标
+## 7. Success metrics
 
-| 指标 | 目标 | 怎么测 |
+| Metric | Target | How it is measured |
 |---|---|---|
-| 得到第一个结论的时间 | 新用户用自己的表格，10 分钟以内 | 找 5 个人做可用性测试并计时 |
-| 任务完成率 | 5 个人中至少 4 个不需要帮助就能走完旗舰流程 | 同上 |
-| 结论可理解 | 测试者能用自己的话复述推荐理由 | 测试后访谈 |
-| 正确性 | 旧版 Excel 对照测试全部通过；各方法的公式有手算或文献例题验证 | CI |
+| Time to first conclusion | Under 10 minutes for a new user with their own spreadsheet | Timed usability tests with 5 people |
+| Task completion rate | At least 4 of 5 people complete the flagship flow without help | Same as above |
+| Understandable conclusion | Testers can restate the reasons for the recommendation in their own words | Post-test interviews |
+| Correctness | All legacy Excel comparison tests pass; each method's formulas are verified by hand calculation or worked examples from the literature | CI |
 
-MVP 阶段不收集使用统计（ADR 0003）。可用性测试由你安排 3–5 位目标用户来做。
+No usage analytics are collected in the MVP (ADR 0003). You arrange the usability tests with 3–5 target users.
 
-## 8. 风险和待定问题
+## 8. Risks and open questions
 
-| 风险或问题 | 应对 |
+| Risk or question | Mitigation |
 |---|---|
-| 自动识别列类型出错 | 识别结果永远可以手动修改；数据质量报告明确标出不确定的识别结果 |
-| 模板里的准则不符合用户的实际业务 | 模板只是起点，所有设置都可以改；收集反馈后再迭代 |
-| 用户误以为工具能预测销量 | 结论页和文档写明：结论取决于输入的数据和判断 |
-| AHP 对普通用户来说太复杂 | 默认用排序，AHP 作为"更精细"的可选项 |
-| 价值函数的概念太抽象 | 默认值由模板和数据自动给出，用曲线预览配合方案所在的位置来解释 |
+| Automatic column type detection gets it wrong | Detection results can always be changed manually; the data quality report clearly flags uncertain detections |
+| The template's criteria do not fit the user's actual business | Templates are only a starting point and every setting can be changed; iterate after collecting feedback |
+| Users mistakenly think the tool can predict sales | The conclusion page and the documentation state that the conclusion depends on the input data and judgments |
+| AHP is too complex for ordinary users | Ranking is the default; AHP is an optional "finer" method |
+| The concept of a value function is too abstract | Defaults come from the template and the data; it is explained through the curve preview together with the positions of the alternatives |
 
-## 9. 参考文献
+## 9. References
 
-- Keeney, R. L. & Raiffa, H. (1976). *Decisions with Multiple Objectives: Preferences and Value Tradeoffs*. Wiley.（价值函数、加性价值模型）
-- Saaty, T. L. (1980). *The Analytic Hierarchy Process*. McGraw-Hill.（AHP、一致性比率）
-- Barron, F. H. & Barrett, B. E. (1996). Decision quality using ranked attribute weights. *Management Science*, 42(11), 1515–1523.（ROC 权重）
-- Lahdelma, R., Hokkanen, J. & Salminen, P. (1998). SMAA – Stochastic multiobjective acceptability analysis. *European Journal of Operational Research*, 106(1), 137–143.（名次概率）
+- Keeney, R. L. & Raiffa, H. (1976). *Decisions with Multiple Objectives: Preferences and Value Tradeoffs*. Wiley. (value functions, additive value model)
+- Saaty, T. L. (1980). *The Analytic Hierarchy Process*. McGraw-Hill. (AHP, consistency ratio)
+- Barron, F. H. & Barrett, B. E. (1996). Decision quality using ranked attribute weights. *Management Science*, 42(11), 1515–1523. (ROC weights)
+- Lahdelma, R., Hokkanen, J. & Salminen, P. (1998). SMAA – Stochastic multiobjective acceptability analysis. *European Journal of Operational Research*, 106(1), 137–143. (rank probabilities)

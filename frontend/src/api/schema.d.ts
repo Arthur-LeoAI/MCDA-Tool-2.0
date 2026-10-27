@@ -796,7 +796,7 @@ export interface components {
             description: string;
             /**
              * Language
-             * @default zh
+             * @default en
              * @enum {string}
              */
             language: "zh" | "en";
@@ -927,7 +927,7 @@ export interface components {
             /**
              * @default {
              *       "description": "",
-             *       "language": "zh",
+             *       "language": "en",
              *       "name": ""
              *     }
              */
@@ -1176,7 +1176,7 @@ export interface components {
             header_row: number;
             /**
              * Language
-             * @default zh
+             * @default en
              * @enum {string}
              */
             language: "zh" | "en";

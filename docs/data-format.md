@@ -1,40 +1,40 @@
-# 输入数据格式
+# Input data format
 
-## 标准模板（`mcda_core.io.read_problem`）
+## Standard template (`mcda_core.io.read_problem`)
 
-支持 `.xlsx` 和 `.csv`。Excel 文件优先读取名为 `Decision` 的工作表，没有的话读取第一个工作表。
+`.xlsx` and `.csv` are supported. For Excel files, the worksheet named `Decision` is read first; if there is none, the first worksheet is read.
 
-| A 列 | B 列 | C 列 | … |
+| Column A | Column B | Column C | … |
 |---|---|---|---|
-| `Criterion` | 准则 1 名称 | 准则 2 名称 | … |
+| `Criterion` | Name of criterion 1 | Name of criterion 2 | … |
 | `Direction` | `benefit` | `cost` | … |
 | `Weight` | 0.6 | 0.4 | … |
-| 方案 1 名称 | 数值 | 数值 | … |
-| 方案 2 名称 | 数值 | 数值 | … |
+| Name of alternative 1 | Value | Value | … |
+| Name of alternative 2 | Value | Value | … |
 
-- `Direction` 填 `benefit`（越大越好）或 `cost`（越小越好），也接受 `max` / `min` 和 `1` / `0`。
-- 权重不能为负，且至少有一个大于 0；权重总和不需要等于 1。
-- 至少要有 2 个方案、1 个准则；方案名和准则名都不能重复。
-- 空行和右侧的空列会被忽略。
-- CSV 支持逗号或分号分隔。分号分隔的文件（德语或欧洲区域设置的 Excel 导出）可以使用小数逗号，例如 `0,6`。
-- 读取时会一次性列出所有问题，每个问题都带单元格位置（如 `C4: value must be a number`）。
+- For `Direction`, enter `benefit` (higher is better) or `cost` (lower is better); `max` / `min` and `1` / `0` are also accepted.
+- Weights must not be negative, and at least one must be greater than 0; the weights do not need to sum to 1.
+- There must be at least 2 alternatives and 1 criterion; alternative names and criterion names must not be duplicated.
+- Empty rows and empty columns on the right are ignored.
+- CSV files may be comma- or semicolon-separated. Semicolon-separated files (Excel exports with German or other European locale settings) may use a decimal comma, for example `0,6`.
+- When reading, all problems are listed at once, each with its cell location (such as `C4: value must be a number`).
 
-可以用 `mcda_core.io.write_problem(problem, "template.xlsx")` 从现有问题生成一份模板。
+You can generate a template from an existing problem with `mcda_core.io.write_problem(problem, "template.xlsx")`.
 
-## 旧版 V7 工作簿（`mcda_core.io.read_legacy_workbook`）
+## Old V7 workbook (`mcda_core.io.read_legacy_workbook`)
 
-工作表名为 "Stability Interval"，标签都在 A 列：
+The worksheet is named "Stability Interval", and all labels are in column A:
 
-| 行 | 内容 |
+| Row | Content |
 |---|---|
-| 1 | 每个准则的目标：1 = 最大化，0 = 最小化 |
-| 2 | 该列是否已缩放到 Max = 100 / Min = 0（1 = 是） |
-| 3 | 表头：`No.`、各准则名称、`Rank` |
-| 4 起 | 每行一个方案，后面接 `Criteria Weight` 行 |
-| 之后 | Excel 计算的权重稳定区间：`Maximum/Minimum Criteria Weight (Full Order)`、`… - Top:1`，以及对应的 `Normalised` 版本 |
+| 1 | Objective of each criterion: 1 = maximize, 0 = minimize |
+| 2 | Whether the column has been scaled to Max = 100 / Min = 0 (1 = yes) |
+| 3 | Header: `No.`, the criterion names, `Rank` |
+| 4 onward | One alternative per row, followed by the `Criteria Weight` row |
+| After that | The weight stability intervals calculated by Excel: `Maximum/Minimum Criteria Weight (Full Order)`, `… - Top:1`, and the corresponding `Normalised` versions |
 
-注意事项：
+Notes:
 
-- `Rank` 列表示的是**排序**，不是每个方案自己的名次：第 k 行的值是排在第 k 位的方案编号。
-- 某个权重可以无限增大时，Excel 有时写空值，有时写一个很大的数（约 4e15）。两种情况在读取时都按无穷大处理。
-- 权重为 0 的准则，Excel 的区间一律写 0/0，表示没有分析，不是计算结果。
+- The `Rank` column represents the **ordering**, not each alternative's own rank: the value in row k is the number of the alternative ranked in position k.
+- When a weight can increase without limit, Excel sometimes writes an empty value and sometimes a very large number (about 4e15). Both cases are treated as infinity when reading.
+- For criteria with a weight of 0, Excel always writes 0/0 for the interval, which means no analysis was done; it is not a calculated result.

@@ -1,59 +1,59 @@
-# S3 设计说明：价值函数和硬性条件
+# S3 design note: value functions and hard constraints
 
-- 状态：已完成
-- 依据：需求文档 F3.1、F3.2；技术设计 §2.2–2.4、§3.1
+- Status: done
+- Based on: PRD F3.1, F3.2; technical design §2.2–2.4, §3.1
 
-## 要解决的问题
+## Problem
 
-S1 已经在后端实现了四种价值函数，但用户在界面上改不了，所有准则都只能用"线性、范围取数据"。硬性条件在数据模型里有，计算时却会报"尚未开放"。S3 要补上这两部分。
+S1 already implemented four value functions in the backend, but users cannot change them in the UI; every criterion can only use "linear, range from data". Hard constraints exist in the data model, but evaluation reports "not yet available". S3 fills in both parts.
 
-## 后端
+## Backend
 
-**硬性条件**（流水线第 2 步，在缺失值处理之前）：
-- 按原始值判断：
-  - `>=` `<=` `>` `<`：数值比较；
-  - `between`：包含两端；
-  - `in`：等级或分类的取值在列表里；
-  - `present`：不能缺失。
-- 值缺失时，如果设置了 `allow_missing` 就算通过，否则不通过。
-- 一个方案可以违反多个条件，全部记录下来。被排除的原因用错误代码表示：
+**Hard constraints** (pipeline step 2, before missing-value handling):
+- Evaluated on raw values:
+  - `>=` `<=` `>` `<`: numeric comparison;
+  - `between`: both ends inclusive;
+  - `in`: the ordinal or categorical value is in the list;
+  - `present`: the value must not be missing.
+- When the value is missing, the constraint passes if `allow_missing` is set, otherwise it fails.
+- An alternative can violate several constraints; all of them are recorded. The exclusion reasons are expressed as error codes:
 
-| 代码 | 含义 |
+| Code | Meaning |
 |---|---|
-| `constraint_failed_compare` | 不满足比较条件，例如"利润率 ≥ 20（实际为 18）" |
-| `constraint_failed_between` | 不在指定区间内 |
-| `constraint_failed_in` | 取值不在允许的列表里 |
-| `constraint_missing` | 条件涉及的值缺失 |
+| `constraint_failed_compare` | Comparison not satisfied, e.g. "Margin ≥ 20 (actual 18)" |
+| `constraint_failed_between` | Not within the given interval |
+| `constraint_failed_in` | Value not in the allowed list |
+| `constraint_missing` | The value the constraint refers to is missing |
 
-- 硬性条件排除的方案和"缺失值处理方式为排除"的方案，合并成同一份"已排除"列表，同一个方案的多个原因放在一起。
-- 数据范围（`bounds: "data"`）只按**合格的方案**计算。也就是说，被排除的方案不会影响其他方案的分数。
+- Alternatives excluded by hard constraints and alternatives excluded because the missing-value handling is "exclude" are merged into one "excluded" list; multiple reasons for the same alternative are grouped together.
+- The data range (`bounds: "data"`) is computed from **eligible alternatives** only. In other words, excluded alternatives do not affect the scores of the others.
 
-**价值曲线**：`POST /api/v1/projects/curve`（参数为项目和准则 id）返回画曲线所需的数据：
-- 横轴范围：同时覆盖数据和价值函数的参数，两端各留 5%；
-- 曲线上均匀分布的 101 个点；
-- 每个合格方案的位置（原始值和价值分），以及被排除方案的原始值。
+**Value curve**: `POST /api/v1/projects/curve` (parameters: project and criterion id) returns the data needed to draw the curve:
+- x-axis range: covers both the data and the value function parameters, with 5% margin at each end;
+- 101 evenly spaced points on the curve;
+- The position of each eligible alternative (raw value and value score), plus the raw values of excluded alternatives.
 
-曲线点由后端计算，前端不重复实现价值函数（ADR 0002）。
+The curve points are computed by the backend; the frontend does not reimplement the value functions (ADR 0002).
 
-## 前端
+## Frontend
 
-"准则与权重"页里，每个准则增加一个**设置**按钮，展开后可以设置：
+On the "Criteria & weights" page, each criterion gets a **Settings** button that expands to show:
 
-- **数值准则**：
-  - 换算方式：线性、对数、目标区间、阈值、自定义折线；
-  - 方向（线性和对数）；
-  - 范围：取数据，或者固定范围；
-  - 目标区间的四个参数；
-  - 阈值：低于"开始得分"的值得 0 分，高于"满分"的值得 1 分，用两个点的折线表示；
-  - 折线的各个点。
-- **曲线预览**：ECharts 画出曲线，并在曲线上标出每个方案的位置。
-- **等级和分类准则**：每个取值的分数（0–1）。
-- **缺失值处理方式**：最差、平均值、排除、要求补全。
-- **硬性条件**：添加或删除。数值准则可以设置比较或区间，等级和分类准则可以勾选允许的取值；还可以要求不能缺失。
+- **Numeric criteria**:
+  - Conversion: linear, logarithmic, target range, threshold, custom piecewise linear;
+  - Direction (linear and logarithmic);
+  - Range: from data, or fixed range;
+  - The four parameters of the target range;
+  - Threshold: values below "start scoring" get 0, values above "full score" get 1; represented as a two-point piecewise line;
+  - The points of the piecewise line.
+- **Curve preview**: ECharts draws the curve and marks each alternative's position on it.
+- **Ordinal and categorical criteria**: the score (0–1) of each value.
+- **Missing-value handling**: worst, mean, exclude, require completion.
+- **Hard constraints**: add or remove. Numeric criteria can use a comparison or an interval; ordinal and categorical criteria can tick the allowed values; a value can also be required to be present.
 
-"结果"页列出每个被排除的方案，以及它违反了哪些条件。
+The "Results" page lists each excluded alternative and the constraints it violated.
 
-## 怎么验证
+## Verification
 
-- 后端：每种条件的通过和不通过，缺失值配合 `allow_missing` 的情况，多个原因合并，数据范围只按合格方案计算，曲线的数据。
-- 端到端测试：设置"利润率 ≥ 20"后，有方案被排除并显示原因；把换算方式改成对数后，曲线和排名都发生变化。
+- Backend: pass and fail for each constraint type, missing values combined with `allow_missing`, merging multiple reasons, data range computed only from eligible alternatives, curve data.
+- End-to-end test: after setting "Margin ≥ 20", alternatives are excluded and the reason is shown; after changing the conversion to logarithmic, both the curve and the ranking change.

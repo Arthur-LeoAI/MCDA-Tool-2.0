@@ -1,77 +1,77 @@
-# S4 设计说明：准则分组和权重方法
+# S4 design note: criterion groups and weighting methods
 
-- 状态：已完成
-- 依据：需求文档 F4.1、F4.2；技术设计 §2.5、§3.2
+- Status: done
+- Based on: PRD F4.1, F4.2; technical design §2.5, §3.2
 
-## 要解决的问题
+## Problem
 
-项目模型 v2 里已经有分组（`groups`、`criterion.group_id`）和三种设权重方式的数据结构（`LevelWeighting`），但计算时会报"尚未开放"，界面上也只能直接输入权重。S4 要把它们全部打通。
+Project model v2 already has data structures for groups (`groups`, `criterion.group_id`) and for three ways to set weights (`LevelWeighting`), but evaluation reports "not yet available", and the UI only allows entering weights directly. S4 connects all of it end to end.
 
-## 层次结构
+## Hierarchy
 
-- 没有分组时只有一层：`within._root`，里面是全部准则。
-- 有分组时有两层：
-  - **上层**（`weighting.groups`）：各个分组之间的权重；
-  - **组内**（`within.<group_id>`）：同一组里各准则之间的权重。
-- 有分组时，没有分到任何组的准则归入一个隐含的"未分组"组，它在上层的 id 是 `_root`，组内权重放在 `within._root`。这样新建第一个分组时，其余准则不会突然没有权重。
-- 没有准则的分组不参加上层的权重计算。
-- 全局权重：w_j = W_g(j) · w_{j|g}。每一层先换算成总和为 1 的局部权重，所以全局权重的总和也是 1。
+- Without groups there is one level: `within._root`, containing all criteria.
+- With groups there are two levels:
+  - **Upper level** (`weighting.groups`): weights between the groups;
+  - **Within a group** (`within.<group_id>`): weights between the criteria of one group.
+- With groups, criteria not assigned to any group belong to an implicit "ungrouped" group. Its id on the upper level is `_root`, and its within-group weights are stored in `within._root`. This way, when the first group is created, the remaining criteria do not suddenly lose their weights.
+- Groups without criteria do not take part in the upper-level weighting.
+- Global weight: w_j = W_g(j) · w_{j|g}. Each level is first converted into local weights that sum to 1, so the global weights also sum to 1.
 
-## 每一层的三种方式
+## Three methods per level
 
-每一层都同时保存三种方式的输入，`method` 决定用哪一种。切换方式不会删除其他方式的输入。
+Each level stores the inputs of all three methods at the same time; `method` decides which one is used. Switching methods does not delete the inputs of the other methods.
 
-| 方式 | 输入 | 换算 |
+| Method | Input | Conversion |
 |---|---|---|
-| `direct` | `weights`：每个对象的分数，缺少的按 0 | 除以总和；全为 0 时这一层的局部权重都是 0 |
-| `rank` | `order`：从最重要到最不重要，内层数组表示并列；`formula`：`roc` 或 `rank_sum` | 公式见技术设计 §3.2，并列时取所占名次的平均值。**没有出现在排序里的对象**视为并列最后，这样新加的准则不会悄悄得到 0 权重 |
-| `ahp` | `comparisons`：`"i\|j": a`，表示 i 比 j 重要 a 倍（1/9 到 9） | 主特征向量（幂迭代），附一致性比率 CR |
+| `direct` | `weights`: a score per item; missing items count as 0 | Divide by the sum; if all are 0, all local weights of this level are 0 |
+| `rank` | `order`: from most to least important, inner arrays mean ties; `formula`: `roc` or `rank_sum` | Formulas in technical design §3.2; ties get the average of the ranks they occupy. **Items not in the order** are treated as tied for last, so newly added criteria do not silently get weight 0 |
+| `ahp` | `comparisons`: `"i\|j": a`, meaning i is a times as important as j (1/9 to 9) | Principal eigenvector (power iteration), with consistency ratio CR |
 
-AHP 的规则：
-- 比较的两个方向都可以写，`"j|i"` 等于 1/a；同一对不能两个方向都写。
-- 一层只有 1 个对象时权重为 1，不需要比较。
-- 每一对都要比较（MVP 不做不完整 AHP）；每层最多 10 个对象。
-- CR > 0.1 时给出提示，并按 |ln(a_ij · w_j / w_i)| 从大到小列出最不一致的 3 对比较，以及按当前权重"应该"是多少。
+AHP rules:
+- Either direction of a comparison may be written; `"j|i"` equals 1/a. The same pair may not be written in both directions.
+- A level with only 1 item has weight 1 and needs no comparison.
+- Every pair must be compared (the MVP does not support incomplete AHP); at most 10 items per level.
+- When CR > 0.1, a warning is shown, listing the 3 most inconsistent comparisons ordered by |ln(a_ij · w_j / w_i)| descending, together with what they "should" be under the current weights.
 
-## 新增的错误代码
+## New error codes
 
-| 代码 | 含义 |
+| Code | Meaning |
 |---|---|
-| `weighting_duplicate` | 同一个对象在排序里出现了不止一次 |
-| `ahp_incomplete` | 缺少某一对比较 |
-| `ahp_too_many_items` | 一层超过 10 个对象 |
-| `ahp_value_invalid` | 比较值不在 1/9 到 9 之间，或者同一对两个方向都写了 |
+| `weighting_duplicate` | The same item appears more than once in the order |
+| `ahp_incomplete` | A pairwise comparison is missing |
+| `ahp_too_many_items` | A level has more than 10 items |
+| `ahp_value_invalid` | A comparison value is not between 1/9 and 9, or the same pair is written in both directions |
 
-这些都是校验问题（一次全部报告），位置是 `field`，指向 `weighting.<层>`。
+These are all validation issues (all reported at once); their location is `field`, pointing to `weighting.<level>`.
 
-## 接口
+## API
 
-`POST /api/v1/projects/weights`（参数为项目）返回：
+`POST /api/v1/projects/weights` (parameter: project) returns:
 
-- `levels`：每一层的 key（`groups` 或 `within.<id>`）、方式、每个对象的局部权重；AHP 层另有 `cr`、`lambda_max`、`consistent` 和最不一致的比较对；
-- `weights`：每个准则的全局权重。
+- `levels`: for each level, the key (`groups` or `within.<id>`), the method, and each item's local weight; AHP levels also include `cr`, `lambda_max`, `consistent` and the most inconsistent comparison pairs;
+- `weights`: the global weight of each criterion.
 
-它只需要权重相关的设置有效，不要求数据完整，因此数据还没填好时也能实时显示权重。技术设计里原计划的 `POST /weights/derive`（只算一层）改为这个接口：前端本来就带着整个项目，一次算出所有层更简单，也和其他 `/projects/*` 接口一致。
+It only requires the weighting settings to be valid, not the data to be complete, so weights can be shown live even before the data is filled in. The `POST /weights/derive` endpoint originally planned in the technical design (one level only) is replaced by this endpoint: the frontend already holds the whole project, so computing all levels at once is simpler and consistent with the other `/projects/*` endpoints.
 
-`/projects/evaluate` 的 `weights` 改为返回全局权重。权重稳定区间仍然按**准则的全局权重**计算：改变一个准则的权重，其他准则按比例缩放。
+`weights` in `/projects/evaluate` now returns the global weights. Weight stability intervals are still computed on the **global weights of the criteria**: when one criterion's weight changes, the other criteria are scaled proportionally.
 
-## 前端
+## Frontend
 
-"准则与权重"页：
+"Criteria & weights" page:
 
-- **分组管理**：新建、重命名、删除分组。删除分组时，组里的准则变为"未分组"。准则的设置面板里可以选择所属分组。
-- 每一层是一张卡片：上层一张（有分组时），每个分组一张，每张卡片里可以切换三种方式：
-  - **直接输入**：滑块和数字，保留"平均分配"和"归一化"；
-  - **排序**：上移、下移，以及"与上一项并列"；可以选择 ROC 或 Rank-Sum。用按钮而不是拖动，键盘也能操作；
-  - **两两比较**：每一对一行，用 9 档到 1 再到 9 档的刻度选择哪一方更重要、重要多少；显示 CR，不一致时标出最不一致的几对。
-- 每个对象旁边显示它的局部权重；准则另外显示全局权重。
-- 右侧的实时排名不变；"与导入时相比"的名次变化改为和导入时的整套权重设置比较。
+- **Group management**: create, rename and delete groups. When a group is deleted, its criteria become "ungrouped". The criterion settings panel lets the user choose the group.
+- Each level is a card: one for the upper level (when there are groups) and one per group. Each card can switch between the three methods:
+  - **Direct input**: sliders and numbers, keeping "distribute evenly" and "normalize";
+  - **Ranking**: move up, move down, and "tie with previous"; ROC or Rank-Sum can be chosen. Buttons are used instead of drag and drop, so it also works with the keyboard;
+  - **Pairwise comparison**: one row per pair, with a scale from 9 through 1 to 9 to choose which side is more important and by how much; CR is shown, and when inconsistent the most inconsistent pairs are highlighted.
+- Each item shows its local weight next to it; criteria also show their global weight.
+- The live ranking on the right is unchanged; the "compared with import" rank change now compares with the full weighting settings at import time.
 
-## 怎么验证
+## Verification
 
-- 后端单元测试：
-  - ROC 和 Rank-Sum 的已知值（n = 3：0.6111、0.2778、0.1111；Rank-Sum：0.5、0.3333、0.1667）、并列、未排序的对象；
-  - AHP：一致矩阵还原权重且 CR = 0；扰动后的矩阵 CR > 0.1 并能找到被改动的那一对；反方向的写法；缺少比较、超过 10 个对象、取值越界；
-  - 两层权重相乘；"未分组"作为上层对象；空分组；
-  - 稳定区间和计算结果使用全局权重。
-- 端到端测试：建两个分组，上层用排序，组内用两两比较，看到全局权重和排名随之变化。
+- Backend unit tests:
+  - Known values for ROC and Rank-Sum (n = 3: 0.6111, 0.2778, 0.1111; Rank-Sum: 0.5, 0.3333, 0.1667), ties, items not in the order;
+  - AHP: a consistent matrix recovers the weights with CR = 0; a perturbed matrix has CR > 0.1 and the changed pair is found; reverse-direction notation; missing comparisons, more than 10 items, out-of-range values;
+  - Multiplying the two levels of weights; "ungrouped" as an upper-level item; empty groups;
+  - Stability intervals and calculation results use the global weights.
+- End-to-end test: create two groups, use ranking on the upper level and pairwise comparison within groups, and see the global weights and ranking change accordingly.

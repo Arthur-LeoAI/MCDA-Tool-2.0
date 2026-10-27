@@ -68,7 +68,7 @@ def list_templates() -> list[TemplateInfo]:
 @router.get("/{template_id}/project", response_model=Project)
 def project_from_template(
     template_id: str,
-    language: Annotated[Language, Query()] = "zh",
+    language: Annotated[Language, Query()] = "en",
     example: Annotated[bool, Query()] = True,
     preset: Annotated[str | None, Query()] = None,
 ) -> Project:

@@ -107,7 +107,7 @@ const storage: StateStorage = {
 export const useStore = create<State>()(
   persist(
     (set) => ({
-      language: 'zh',
+      language: 'en',
       mode: 'guided', // new users start guided; earlier versions migrate to expert below
       step: 'data',
       guidedStep: 'scenario',

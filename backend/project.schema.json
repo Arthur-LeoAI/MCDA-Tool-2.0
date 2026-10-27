@@ -631,7 +631,7 @@
           "type": "string"
         },
         "language": {
-          "default": "zh",
+          "default": "en",
           "enum": [
             "zh",
             "en"
@@ -1112,7 +1112,7 @@
       "default": {
         "created": null,
         "description": "",
-        "language": "zh",
+        "language": "en",
         "modified": null,
         "name": "",
         "template_id": null

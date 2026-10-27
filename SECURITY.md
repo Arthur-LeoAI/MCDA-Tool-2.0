@@ -1,16 +1,16 @@
-# 安全
+# Security
 
-## 报告安全问题
+## Reporting security issues
 
-请不要在公开的 issue 里描述安全漏洞。请通过 GitHub 仓库的 **Security → Report a vulnerability**（私下报告）联系维护者，说明问题、复现步骤和可能的影响。我们会尽快确认并处理。
+Please do not describe security vulnerabilities in public issues. Contact the maintainers via **Security → Report a vulnerability** (private reporting) in the GitHub repository, describing the problem, the steps to reproduce it and its possible impact. We will confirm and address it as soon as possible.
 
-## 数据处理
+## Data handling
 
-- API 是无状态的：上传的文件和提交的数据只在处理请求期间留在内存里，**服务器不保存**。
-- 日志只记录请求的方法、路径、状态码、耗时和请求编号，**不记录**请求和响应的内容。
-- 浏览器端的工作数据保存在用户自己浏览器的 localStorage 里，不会发送给第三方。
-- 上传文件限制类型（`.xlsx`、`.xlsm`、`.csv`）和大小（默认 5 MB）。
+- The API is stateless: uploaded files and submitted data stay in memory only while the request is being processed; **the server does not store them**.
+- The logs record only the request method, path, status code, duration and request ID; they **do not record** the content of requests and responses.
+- Working data on the browser side is stored in the localStorage of the user's own browser and is not sent to third parties.
+- Uploaded files are restricted by type (`.xlsx`, `.xlsm`, `.csv`) and size (5 MB by default).
 
-## 支持的版本
+## Supported versions
 
-在 1.0 之前，只有 `main` 分支上的最新版本会收到安全修复。
+Before 1.0, only the latest version on the `main` branch receives security fixes.

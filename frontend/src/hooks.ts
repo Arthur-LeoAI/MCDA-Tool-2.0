@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { type ApiError, asApiError, postJson } from './api/client'
-import type { Project, ProjectEvaluation, ProjectRobustness } from './api/types'
+import { type ApiError, asApiError, getJson, postJson } from './api/client'
+import type { Project, ProjectEvaluation, ProjectRobustness, TemplateInfo } from './api/types'
 import { conclusionParagraphs } from './i18n/conclusion'
 import { forApi, localIssues } from './lib/project'
 import { useStore } from './store'
@@ -87,4 +87,27 @@ export function useConclusion(project: Project, apiProject: Project | null) {
   const conclusion = evaluation.data?.conclusion
   const paragraphs = conclusion ? conclusionParagraphs(language, conclusion, idNames(project), robustness.data) : []
   return { evaluation, robustness, paragraphs }
+}
+
+let templateList: Promise<TemplateInfo[]> | null = null
+
+/** The built-in templates, fetched once per page load. */
+export function useTemplates(): { templates: TemplateInfo[]; error: ApiError | null } {
+  const [templates, setTemplates] = useState<TemplateInfo[]>([])
+  const [error, setError] = useState<ApiError | null>(null)
+  useEffect(() => {
+    templateList ??= getJson<TemplateInfo[]>('/templates')
+    let active = true
+    templateList.then(
+      (list) => active && setTemplates(list),
+      (err) => {
+        templateList = null // try again next time
+        if (active) setError(asApiError(err))
+      },
+    )
+    return () => {
+      active = false
+    }
+  }, [])
+  return { templates, error }
 }

@@ -4,11 +4,14 @@ import { fileURLToPath } from 'node:url'
 
 const LEGACY_WORKBOOK = fileURLToPath(new URL('../../data/legacy/MCDA ELT V7_Enviro_G_Top1.xlsx', import.meta.url))
 
+// The template cards (S7) have example buttons too; the general one comes first.
+const exampleButton = (page: Page) => page.getByRole('button', { name: '使用示例数据' }).first()
+
 const nav = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name })
 
 async function loadExample(page: Page) {
   await page.goto('/')
-  await page.getByRole('button', { name: '使用示例数据' }).click()
+  await exampleButton(page).click()
   await expect(page.getByText('数据有效')).toBeVisible()
 }
 
@@ -108,7 +111,7 @@ test('save a project file, clear, open it again: same result', async ({ page }) 
   await nav(page, '数据').click()
   page.once('dialog', (dialog) => dialog.accept())
   await page.getByRole('button', { name: '清空' }).click()
-  await expect(page.getByRole('button', { name: '使用示例数据' })).toBeVisible()
+  await expect(exampleButton(page)).toBeVisible()
 
   await page
     .locator('input[type=file]')
@@ -125,7 +128,7 @@ const MESSY_EXPORT = fileURLToPath(new URL('./fixtures/messy-export.xlsx', impor
 test('arbitrary table: match columns, import, data quality', async ({ page }) => {
   await page.goto('/')
   await page.locator('input[type=file]').first().setInputFiles(MESSY_EXPORT)
-  await expect(page.getByText('对应列')).toBeVisible()
+  await expect(page.getByText(/^对应列 ·/)).toBeVisible() // not "按模板对应列"
 
   // The first sheet only holds a note; switch to the data sheet.
   await page.getByRole('combobox', { name: '工作表' }).selectOption('Products')
@@ -246,4 +249,56 @@ test('conclusion: recommendation, reasons and confidence on the results page', a
   await page.getByRole('button', { name: 'English' }).click()
   await expect(card.getByText(/^Recommended: Option [ABC]/)).toBeVisible()
   await expect(card.getByText(/^Confidence: \w+\. In /)).toBeVisible() // the sentence, not the badge
+})
+
+test('templates: Amazon example and ELT preset', async ({ page }) => {
+  await page.goto('/')
+  const amazon = page.getByRole('region', { name: 'Amazon 美国站选品' })
+  await amazon.getByRole('button', { name: '使用示例数据' }).click()
+  await expect(page.getByText('6 个方案 × 10 个准则')).toBeVisible()
+
+  await nav(page, '准则与权重').click()
+  await expect(page.getByRole('heading', { name: '分组之间的权重' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '盈利', exact: true })).toBeVisible()
+
+  // The suggested condition (margin >= 20 %) excludes the yoga mat.
+  await nav(page, '结果').click()
+  await expect(page.getByText(/^Yoga mat: 预估利润率/)).toBeVisible()
+
+  // ELT with the "environmental only" preset ranks like the legacy Enviro workbook.
+  await nav(page, '数据').click()
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: '清空' }).click()
+  const elt = page.getByRole('region', { name: 'ELT 技术评估' })
+  await elt.getByRole('combobox', { name: '权重' }).selectOption({ label: '只看环境' })
+  await elt.getByRole('button', { name: '使用示例数据' }).click()
+  await expect(page.getByText('7 个方案 × 34 个准则')).toBeVisible()
+  await nav(page, '准则与权重').click()
+  await expect(page.locator('section', { hasText: '实时排名' }).locator('ol > li span[title]').first()).toHaveText(
+    'Devulcanisation',
+  )
+})
+
+test('templates: columns are matched by alias when importing a table', async ({ page }) => {
+  await page.goto('/')
+  const csv =
+    '产品,月销量,利润率（%）,尺寸,颜色\nMat,1800,28,standard,red\nLamp,2600,22,oversize,blue\nBox,900,31,standard,green\n'
+  await page
+    .locator('input[type=file]')
+    .first()
+    .setInputFiles({
+      name: 'products.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(csv),
+    })
+  await page.getByRole('combobox', { name: '按模板对应列' }).selectOption({ label: 'Amazon 美国站选品' })
+  await expect(page.getByRole('combobox', { name: '模板准则: 月销量' })).toHaveValue('monthly_sales')
+  await expect(page.getByRole('combobox', { name: '模板准则: 尺寸' })).toHaveValue('size_tier')
+  await expect(page.getByRole('combobox', { name: '模板准则: 颜色' })).toHaveValue('')
+  await page.getByRole('button', { name: /^导入/ }).click()
+  await expect(page.getByText('3 个方案 × 3 个准则')).toBeVisible()
+  // Matched columns take the template's names (shown as text on the weights page) and groups.
+  await nav(page, '准则与权重').click()
+  await expect(page.getByText('预估月销量', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '需求', exact: true })).toBeVisible()
 })

@@ -18,6 +18,7 @@ from .observability import REQUEST_ID_HEADER, configure_logging, install_request
 from .projects import router as projects_router
 from .routes import router
 from .tables import router as tables_router
+from .templates import router as templates_router
 
 
 def _env_list(name: str, default: str) -> list[str]:
@@ -61,6 +62,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(app)
     app.include_router(router)
     app.include_router(projects_router)
+    app.include_router(templates_router)
     app.include_router(tables_router)
     return app
 

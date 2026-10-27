@@ -1,0 +1,1262 @@
+{
+  "id": "elt-technology-assessment",
+  "version": 1,
+  "domain": "research",
+  "name": {
+    "zh": "ELT 技术评估",
+    "en": "ELT technology assessment"
+  },
+  "description": {
+    "zh": "比较 7 种废旧轮胎（ELT）处理技术的技术、经济和环境表现，数据来自旧版 V7 工作簿。所有指标都已换算为 0–100 分，分数越高越好。",
+    "en": "Compare seven end-of-life tyre (ELT) treatment technologies on technical, economic and environmental performance, with the data of the legacy V7 workbooks. Every indicator is already a 0-100 score; higher is better."
+  },
+  "terms": {
+    "alternative": {
+      "zh": "技术",
+      "en": "Technology"
+    }
+  },
+  "groups": [
+    {
+      "id": "technical",
+      "name": {
+        "zh": "技术",
+        "en": "Technical"
+      }
+    },
+    {
+      "id": "economic",
+      "name": {
+        "zh": "经济",
+        "en": "Economic"
+      }
+    },
+    {
+      "id": "environmental",
+      "name": {
+        "zh": "环境",
+        "en": "Environmental"
+      }
+    }
+  ],
+  "criteria": [
+    {
+      "id": "mass_yield",
+      "group_id": "technical",
+      "name": {
+        "zh": "产品总质量收率",
+        "en": "Overall product mass yield"
+      },
+      "aliases": [
+        "Overall product mass yield"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "waste_factor",
+      "group_id": "technical",
+      "name": {
+        "zh": "废物系数",
+        "en": "Waste factor"
+      },
+      "aliases": [
+        "Waste factor"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "energy_consumption",
+      "group_id": "technical",
+      "name": {
+        "zh": "每吨废轮胎处理能耗",
+        "en": "Energy consumption per t ELT treated"
+      },
+      "aliases": [
+        "Eenergy consumption/t-ELT treated",
+        "Energy consumption per t ELT treated"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "energy_efficiency",
+      "group_id": "technical",
+      "name": {
+        "zh": "能源效率",
+        "en": "Energy efficiency"
+      },
+      "aliases": [
+        "Energy efficiency"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "trl",
+      "group_id": "technical",
+      "name": {
+        "zh": "技术成熟度（TRL）",
+        "en": "Technology readiness level (TRL)"
+      },
+      "aliases": [
+        "TRL",
+        "Technology readiness level (TRL)"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "capex",
+      "group_id": "economic",
+      "name": {
+        "zh": "资本支出（Capex）",
+        "en": "Capex"
+      },
+      "aliases": [
+        "Capex"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "opex",
+      "group_id": "economic",
+      "name": {
+        "zh": "运营支出（Opex）",
+        "en": "Opex"
+      },
+      "aliases": [
+        "Opex"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "npv",
+      "group_id": "economic",
+      "name": {
+        "zh": "净现值（NPV）",
+        "en": "NPV"
+      },
+      "aliases": [
+        "NPV"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "irr",
+      "group_id": "economic",
+      "name": {
+        "zh": "内部收益率（IRR）",
+        "en": "Internal rate of return"
+      },
+      "aliases": [
+        "Internal rate of return"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "payback",
+      "group_id": "economic",
+      "name": {
+        "zh": "投资回收期",
+        "en": "Payback period"
+      },
+      "aliases": [
+        "Payback period"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "mpsp",
+      "group_id": "economic",
+      "name": {
+        "zh": "最低产品售价（MPSP）",
+        "en": "MPSP"
+      },
+      "aliases": [
+        "MPSP"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "mpsp_ratio",
+      "group_id": "economic",
+      "name": {
+        "zh": "MPSP 与市场价格之比",
+        "en": "MPSP to market price ratio"
+      },
+      "aliases": [
+        "MPSP to market price ratio"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "mpsp_half_capacity",
+      "group_id": "economic",
+      "name": {
+        "zh": "半产能时 MPSP 的变化",
+        "en": "MPSP variation at half capacity"
+      },
+      "aliases": [
+        "MPSP variation at Half Capacity",
+        "MPSP variation at half capacity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "global_warming",
+      "group_id": "environmental",
+      "name": {
+        "zh": "全球变暖",
+        "en": "Global warming"
+      },
+      "aliases": [
+        "Global warming"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "ozone_depletion",
+      "group_id": "environmental",
+      "name": {
+        "zh": "平流层臭氧消耗",
+        "en": "Stratospheric ozone depletion"
+      },
+      "aliases": [
+        "Stratospheric ozone depletion"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "ionizing_radiation",
+      "group_id": "environmental",
+      "name": {
+        "zh": "电离辐射",
+        "en": "Ionizing radiation"
+      },
+      "aliases": [
+        "Ionizing radiation"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "ozone_human",
+      "group_id": "environmental",
+      "name": {
+        "zh": "臭氧形成（人体健康）",
+        "en": "Ozone formation, human health"
+      },
+      "aliases": [
+        "Ozone formation, Human health",
+        "Ozone formation, human health"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "particulate_matter",
+      "group_id": "environmental",
+      "name": {
+        "zh": "细颗粒物形成",
+        "en": "Fine particulate matter formation"
+      },
+      "aliases": [
+        "Fine particulate matter formation"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "ozone_terrestrial",
+      "group_id": "environmental",
+      "name": {
+        "zh": "臭氧形成（陆地生态系统）",
+        "en": "Ozone formation, terrestrial ecosystems"
+      },
+      "aliases": [
+        "Ozone formation, Terrestrial ecosystems",
+        "Ozone formation, terrestrial ecosystems"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "acidification",
+      "group_id": "environmental",
+      "name": {
+        "zh": "陆地酸化",
+        "en": "Terrestrial acidification"
+      },
+      "aliases": [
+        "Terrestrial acidification"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "freshwater_eutrophication",
+      "group_id": "environmental",
+      "name": {
+        "zh": "淡水富营养化",
+        "en": "Freshwater eutrophication"
+      },
+      "aliases": [
+        "Freshwater eutrophication"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "marine_eutrophication",
+      "group_id": "environmental",
+      "name": {
+        "zh": "海洋富营养化",
+        "en": "Marine eutrophication"
+      },
+      "aliases": [
+        "Marine eutrophication"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "terrestrial_ecotoxicity",
+      "group_id": "environmental",
+      "name": {
+        "zh": "陆地生态毒性",
+        "en": "Terrestrial ecotoxicity"
+      },
+      "aliases": [
+        "Terrestrial ecotoxicity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "freshwater_ecotoxicity",
+      "group_id": "environmental",
+      "name": {
+        "zh": "淡水生态毒性",
+        "en": "Freshwater ecotoxicity"
+      },
+      "aliases": [
+        "Freshwater ecotoxicity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "marine_ecotoxicity",
+      "group_id": "environmental",
+      "name": {
+        "zh": "海洋生态毒性",
+        "en": "Marine ecotoxicity"
+      },
+      "aliases": [
+        "Marine ecotoxicity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "human_carcinogenic",
+      "group_id": "environmental",
+      "name": {
+        "zh": "人体致癌毒性",
+        "en": "Human carcinogenic toxicity"
+      },
+      "aliases": [
+        "Human carcinogenic toxicity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "human_noncarcinogenic",
+      "group_id": "environmental",
+      "name": {
+        "zh": "人体非致癌毒性",
+        "en": "Human non-carcinogenic toxicity"
+      },
+      "aliases": [
+        "Human non-carcinogenic toxicity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "land_use",
+      "group_id": "environmental",
+      "name": {
+        "zh": "土地利用",
+        "en": "Land use"
+      },
+      "aliases": [
+        "Land use"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "mineral_scarcity",
+      "group_id": "environmental",
+      "name": {
+        "zh": "矿产资源稀缺",
+        "en": "Mineral resource scarcity"
+      },
+      "aliases": [
+        "Mineral resource scarcity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "fossil_scarcity",
+      "group_id": "environmental",
+      "name": {
+        "zh": "化石资源稀缺",
+        "en": "Fossil resource scarcity"
+      },
+      "aliases": [
+        "Fossil resource scarcity"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "water_consumption",
+      "group_id": "environmental",
+      "name": {
+        "zh": "水消耗",
+        "en": "Water consumption"
+      },
+      "aliases": [
+        "Water consumption"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "human_health",
+      "group_id": "environmental",
+      "name": {
+        "zh": "人体健康（终点）",
+        "en": "Human health (endpoint)"
+      },
+      "aliases": [
+        "Human health",
+        "Human health (endpoint)"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "ecosystem",
+      "group_id": "environmental",
+      "name": {
+        "zh": "生态系统（终点）",
+        "en": "Ecosystem (endpoint)"
+      },
+      "aliases": [
+        "Ecosystem",
+        "Ecosystem (endpoint)"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    },
+    {
+      "id": "resources",
+      "group_id": "environmental",
+      "name": {
+        "zh": "资源（终点）",
+        "en": "Resources (endpoint)"
+      },
+      "aliases": [
+        "Resources",
+        "Resources (endpoint)"
+      ],
+      "unit": {
+        "zh": "分",
+        "en": "score"
+      },
+      "value_function": {
+        "kind": "linear",
+        "direction": "benefit",
+        "bounds": [
+          0,
+          100
+        ]
+      }
+    }
+  ],
+  "presets": [
+    {
+      "id": "equal",
+      "name": {
+        "zh": "所有准则同等重要",
+        "en": "All criteria equal (Equal)"
+      },
+      "weighting": {
+        "groups": {
+          "method": "direct",
+          "weights": {
+            "technical": 0.147058823529,
+            "economic": 0.235294117647,
+            "environmental": 0.617647058824
+          }
+        }
+      }
+    },
+    {
+      "id": "hier",
+      "name": {
+        "zh": "三组同等重要（默认）",
+        "en": "Groups equal (default) (Hier)"
+      },
+      "weighting": {
+        "groups": {
+          "method": "direct",
+          "weights": {
+            "technical": 0.333333333333,
+            "economic": 0.333333333333,
+            "environmental": 0.333333333333
+          }
+        }
+      }
+    },
+    {
+      "id": "econ",
+      "name": {
+        "zh": "只看经济",
+        "en": "Economic only (Econ)"
+      },
+      "weighting": {
+        "groups": {
+          "method": "direct",
+          "weights": {
+            "technical": 0.0,
+            "economic": 1.0,
+            "environmental": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "tech",
+      "name": {
+        "zh": "只看技术",
+        "en": "Technical only (Tech)"
+      },
+      "weighting": {
+        "groups": {
+          "method": "direct",
+          "weights": {
+            "technical": 1.0,
+            "economic": 0.0,
+            "environmental": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "enviro",
+      "name": {
+        "zh": "只看环境",
+        "en": "Environmental only (Enviro)"
+      },
+      "weighting": {
+        "groups": {
+          "method": "direct",
+          "weights": {
+            "technical": 0.0,
+            "economic": 0.0,
+            "environmental": 1.0
+          }
+        }
+      }
+    }
+  ],
+  "default_preset": "hier",
+  "example": {
+    "alternatives": [
+      {
+        "id": "t1",
+        "name": "Crumb rubber-1"
+      },
+      {
+        "id": "t2",
+        "name": "Crumb rubber-2"
+      },
+      {
+        "id": "t3",
+        "name": "Devulcanisation"
+      },
+      {
+        "id": "t4",
+        "name": "rCB from Pyrolysis"
+      },
+      {
+        "id": "t5",
+        "name": "SAF from Pyrolysis"
+      },
+      {
+        "id": "t6",
+        "name": "ELT in Power Plant"
+      },
+      {
+        "id": "t7",
+        "name": "ELT in Cement kiln"
+      }
+    ],
+    "data": {
+      "mass_yield": {
+        "t1": 93.2,
+        "t2": 93.2,
+        "t3": 89.4,
+        "t4": 92.6,
+        "t5": 92.6,
+        "t6": 98.0,
+        "t7": 98.0
+      },
+      "waste_factor": {
+        "t1": 88.7893129258551,
+        "t2": 88.7893129258551,
+        "t3": 82.1686302151512,
+        "t4": 0.0,
+        "t5": 5.65065619440808,
+        "t6": 96.6435068640285,
+        "t7": 96.6435068640285
+      },
+      "energy_consumption": {
+        "t1": 65.5660632261551,
+        "t2": 65.5660632261551,
+        "t3": 0.0,
+        "t4": 54.6906241556336,
+        "t5": 46.4415022966766,
+        "t6": 86.1291542826263,
+        "t7": 86.1291542826263
+      },
+      "energy_efficiency": {
+        "t1": 73.5,
+        "t2": 73.5,
+        "t3": 65.1,
+        "t4": 65.7,
+        "t5": 52.6,
+        "t6": 88.7364455719126,
+        "t7": 88.7364455719126
+      },
+      "trl": {
+        "t1": 75.0,
+        "t2": 50.0,
+        "t3": 50.0,
+        "t4": 75.0,
+        "t5": 37.5,
+        "t6": 100.0,
+        "t7": 100.0
+      },
+      "capex": {
+        "t1": 75.6016321092514,
+        "t2": 75.6016321092514,
+        "t3": 0.0,
+        "t4": 39.2538929136481,
+        "t5": 42.2682987759181,
+        "t6": 94.4541593804647,
+        "t7": 94.4541593804647
+      },
+      "opex": {
+        "t1": 60.2791878172589,
+        "t2": 60.2791878172589,
+        "t3": 17.5126903553299,
+        "t4": 51.7766497461929,
+        "t5": 0.0,
+        "t6": 80.5329949238579,
+        "t7": 80.5329949238579
+      },
+      "npv": {
+        "t1": 25.0383762578885,
+        "t2": 25.0383762578885,
+        "t3": 100.0,
+        "t4": 34.2913184376599,
+        "t5": 19.0346239126727,
+        "t6": 10.5747910625959,
+        "t7": 10.5747910625959
+      },
+      "irr": {
+        "t1": 25.0,
+        "t2": 25.0,
+        "t3": 27.0,
+        "t4": 19.0,
+        "t5": 15.0,
+        "t6": 33.0,
+        "t7": 33.0
+      },
+      "payback": {
+        "t1": 82.6,
+        "t2": 82.6,
+        "t3": 82.1666666666667,
+        "t4": 76.1333333333333,
+        "t5": 69.5666666666666,
+        "t6": 85.3,
+        "t7": 85.3
+      },
+      "mpsp": {
+        "t1": 88.9614267767778,
+        "t2": 88.9614267767778,
+        "t3": 61.5898840537925,
+        "t4": 74.0774759560928,
+        "t5": 0.0,
+        "t6": 95.4115781452726,
+        "t7": 95.4115781452726
+      },
+      "mpsp_ratio": {
+        "t1": 23.4285714285714,
+        "t2": 23.4285714285714,
+        "t3": 37.8306666666667,
+        "t4": 37.064,
+        "t5": 12.2886560693642,
+        "t6": 25.7333333333333,
+        "t7": 25.7333333333333
+      },
+      "mpsp_half_capacity": {
+        "t1": 88.3694029850746,
+        "t2": 88.3694029850746,
+        "t3": 59.0655628712977,
+        "t4": 76.7096733189271,
+        "t5": 83.9013942377,
+        "t6": 77.2351885098743,
+        "t7": 77.2351885098743
+      },
+      "global_warming": {
+        "t1": 0.04113211263,
+        "t2": 0.01691390158,
+        "t3": 0.2110096381,
+        "t4": 0.09311047272,
+        "t5": 0.07311665028,
+        "t6": 0.02946651988,
+        "t7": 0.06209646076
+      },
+      "ozone_depletion": {
+        "t1": 0.00284274,
+        "t2": 0.0,
+        "t3": 0.034,
+        "t4": 0.00757284,
+        "t5": 0.00273218,
+        "t6": 0.0199265,
+        "t7": 0.013169
+      },
+      "ionizing_radiation": {
+        "t1": 0.0,
+        "t2": 0.0,
+        "t3": 0.01809663802,
+        "t4": 0.0,
+        "t5": 0.0,
+        "t6": 0.001332553683,
+        "t7": 0.001439961263
+      },
+      "ozone_human": {
+        "t1": 0.000367865835,
+        "t2": 3.84672025e-05,
+        "t3": 0.0004867644101,
+        "t4": 0.0002422489584,
+        "t5": 0.0001743707438,
+        "t6": 8.36165073e-05,
+        "t7": 0.0001807575114
+      },
+      "particulate_matter": {
+        "t1": 5.1242304e-05,
+        "t2": 2.39672789e-05,
+        "t3": 0.0002750710211,
+        "t4": 0.0001379351278,
+        "t5": 5.99579606e-05,
+        "t6": 2.36232608e-05,
+        "t7": 7.42458654e-05
+      },
+      "ozone_terrestrial": {
+        "t1": 0.0005462860226,
+        "t2": 3.81386311e-05,
+        "t3": 0.0005719195805,
+        "t4": 0.000289320051,
+        "t5": 0.0002142133649,
+        "t6": 9.33867525e-05,
+        "t7": 0.0002220433786
+      },
+      "acidification": {
+        "t1": 9.49624475e-05,
+        "t2": 3.08536327e-05,
+        "t3": 0.0005812606176,
+        "t4": 0.0002512514596,
+        "t5": 0.0001040162659,
+        "t6": 5.35227879e-05,
+        "t7": 0.0001931689946
+      },
+      "freshwater_eutrophication": {
+        "t1": 9.6447136e-06,
+        "t2": 4.0598849e-06,
+        "t3": 7.32838109e-05,
+        "t4": 4.4180223e-06,
+        "t5": 0.0,
+        "t6": 4.1183988e-06,
+        "t7": 6.1359981e-06
+      },
+      "marine_eutrophication": {
+        "t1": 4.826963e-07,
+        "t2": 0.0,
+        "t3": 6.0786901e-06,
+        "t4": 1.251509e-06,
+        "t5": 3.342076e-07,
+        "t6": 5.0980652e-06,
+        "t7": 1.6222308e-06
+      },
+      "terrestrial_ecotoxicity": {
+        "t1": 0.007273984034,
+        "t2": 0.006850238284,
+        "t3": 0.008960944204,
+        "t4": 0.00751735347,
+        "t5": 0.01582175518,
+        "t6": 0.0004476340973,
+        "t7": 0.0005938641232
+      },
+      "freshwater_ecotoxicity": {
+        "t1": 0.002599046875,
+        "t2": 0.002008256992,
+        "t3": 0.0131756801,
+        "t4": 0.00347561998,
+        "t5": 0.0,
+        "t6": 0.003284127971,
+        "t7": 0.003377770977
+      },
+      "marine_ecotoxicity": {
+        "t1": 0.01131548838,
+        "t2": 0.01013784259,
+        "t3": 0.02673061856,
+        "t4": 0.01277314372,
+        "t5": 0.0,
+        "t6": 0.005608484054,
+        "t7": 0.005739561717
+      },
+      "human_carcinogenic": {
+        "t1": 0.05115753836,
+        "t2": 0.04779369615,
+        "t3": 0.08669452667,
+        "t4": 0.05922499171,
+        "t5": 0.09477552031,
+        "t6": 0.2622079066,
+        "t7": 0.2638917255
+      },
+      "human_noncarcinogenic": {
+        "t1": 0.0232499195,
+        "t2": 0.009666676476,
+        "t3": 0.2804704863,
+        "t4": 0.03052444526,
+        "t5": 0.0,
+        "t6": 0.01064279511,
+        "t7": 0.0150843653
+      },
+      "land_use": {
+        "t1": 0.0006995045706,
+        "t2": 0.0002474506317,
+        "t3": 0.00766896404,
+        "t4": 0.002019480521,
+        "t5": 0.0,
+        "t6": 0.0005672930512,
+        "t7": 0.001662236262
+      },
+      "mineral_scarcity": {
+        "t1": 0.0009651157962,
+        "t2": 0.0009124902379,
+        "t3": 0.001917369588,
+        "t4": 0.001114746332,
+        "t5": 0.0,
+        "t6": 8.78826955e-05,
+        "t7": 0.0001069786417
+      },
+      "fossil_scarcity": {
+        "t1": 0.02343048198,
+        "t2": 0.001391848506,
+        "t3": 0.1193275057,
+        "t4": 0.09863261268,
+        "t5": 0.0785151298,
+        "t6": 0.077927194,
+        "t7": 0.07952361386
+      },
+      "water_consumption": {
+        "t1": 0.0001283300102,
+        "t2": 1.24101817e-05,
+        "t3": 0.003286199263,
+        "t4": 0.0,
+        "t5": 0.0,
+        "t6": 0.0,
+        "t7": 0.0
+      },
+      "human_health": {
+        "t1": 0.2460754,
+        "t2": 0.1917491,
+        "t3": 0.7271673,
+        "t4": 0.3769342,
+        "t5": 0.3503565,
+        "t6": 0.91503,
+        "t7": 0.9838072
+      },
+      "ecosystem": {
+        "t1": 0.0306556,
+        "t2": 0.014543,
+        "t3": 0.105636,
+        "t4": 0.0463247,
+        "t5": 0.0385424,
+        "t6": 0.0120408,
+        "t7": 0.0271238
+      },
+      "resources": {
+        "t1": 0.008958549481,
+        "t2": 0.0,
+        "t3": 0.04679665789,
+        "t4": 0.04309898707,
+        "t5": 0.03258613539,
+        "t6": 0.02790908253,
+        "t7": 0.03554899622
+      }
+    }
+  }
+}

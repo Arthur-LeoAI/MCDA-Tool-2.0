@@ -252,7 +252,7 @@ export interface paths {
         put?: never;
         /**
          * Build Table Project
-         * @description Build a project from an inspected table and the user's column choices.
+         * @description Build a project from an inspected table and the user's column choices (optionally matched to a template).
          */
         post: operations["build_table_project_api_v1_tables_build_post"];
         delete?: never;
@@ -294,6 +294,43 @@ export interface paths {
          * @description An example input file in the standard template layout.
          */
         get: operations["template_api_v1_template_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Templates */
+        get: operations["list_templates_api_v1_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}/project": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Project From Template
+         * @description A new project from a template: with the example data, or only criteria, groups, weights and conditions.
+         */
+        get: operations["project_from_template_api_v1_templates__template_id__project_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -789,6 +826,15 @@ export interface components {
             };
         };
         /**
+         * NamedInfo
+         * @description A group or weight preset.
+         */
+        NamedInfo: {
+            /** Id */
+            id: string;
+            name: components["schemas"]["Text"];
+        };
+        /**
          * PiecewiseValueFunction
          * @description Straight lines between (x, value) points; constant beyond the first and last point.
          */
@@ -1128,12 +1174,20 @@ export interface components {
             filename?: string | null;
             /** Header Row */
             header_row: number;
+            /**
+             * Language
+             * @default zh
+             * @enum {string}
+             */
+            language: "zh" | "en";
             /** Name Column */
             name_column: number;
             /** Rows */
             rows: (boolean | number | string | null)[][];
             /** Sheet */
             sheet?: string | null;
+            /** Template Id */
+            template_id?: string | null;
         };
         /** TableColumn */
         TableColumn: {
@@ -1156,6 +1210,8 @@ export interface components {
             percent: boolean;
             /** Present */
             present: number;
+            /** Template Criterion */
+            template_criterion?: string | null;
         };
         /** TableColumnSpec */
         TableColumnSpec: {
@@ -1167,6 +1223,8 @@ export interface components {
             index: number;
             /** Name */
             name?: string | null;
+            /** Template Criterion */
+            template_criterion?: string | null;
             /**
              * Type
              * @enum {string}
@@ -1231,6 +1289,51 @@ export interface components {
             lower: number;
             /** Upper */
             upper: number;
+        };
+        /** TemplateCriterionInfo */
+        TemplateCriterionInfo: {
+            /** Group Id */
+            group_id: string | null;
+            /** Id */
+            id: string;
+            name: components["schemas"]["Text"];
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "numeric" | "ordinal" | "categorical" | "boolean";
+        };
+        /** TemplateInfo */
+        TemplateInfo: {
+            /** Criteria */
+            criteria: components["schemas"]["TemplateCriterionInfo"][];
+            /** Currency */
+            currency: string | null;
+            /** Default Preset */
+            default_preset: string | null;
+            description: components["schemas"]["Text"];
+            /** Domain */
+            domain: string;
+            /** Groups */
+            groups: components["schemas"]["NamedInfo"][];
+            /** Has Example */
+            has_example: boolean;
+            /** Id */
+            id: string;
+            name: components["schemas"]["Text"];
+            /** Presets */
+            presets: components["schemas"]["NamedInfo"][];
+            /** Terms */
+            terms: {
+                [key: string]: components["schemas"]["Text"];
+            };
+        };
+        /** Text */
+        Text: {
+            /** En */
+            en: string;
+            /** Zh */
+            zh: string;
         };
         /** TopsisMethod */
         TopsisMethod: {
@@ -1746,6 +1849,7 @@ export interface operations {
             query?: {
                 sheet?: string | null;
                 header_row?: number | null;
+                template_id?: string | null;
             };
             header?: never;
             path?: never;
@@ -1814,6 +1918,70 @@ export interface operations {
                 content: {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
                     "text/csv": unknown;
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_templates_api_v1_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateInfo"][];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    project_from_template_api_v1_templates__template_id__project_get: {
+        parameters: {
+            query?: {
+                language?: "zh" | "en";
+                example?: boolean;
+                preset?: string | null;
+            };
+            header?: never;
+            path: {
+                template_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
                 };
             };
             /** @description Unprocessable Content */

@@ -82,6 +82,9 @@ MESSAGES: dict[str, str] = {
     "caveat_ahp_inconsistent_groups": "the pairwise comparisons between groups are not very consistent (CR = {cr})",
     "caveat_ahp_inconsistent_criteria": "the pairwise comparisons of the criteria are not very consistent (CR = {cr})",
     "caveat_methods_disagree": "{methods} rank another alternative first",
+    # templates (S7)
+    "template_unknown": "there is no template {id!r}",
+    "template_preset_unknown": "the template has no weight preset {preset!r}",
     # arbitrary tables (S2)
     "table_no_criteria": "choose at least one column as a criterion",
     "table_column_invalid": "column {index} does not exist in the table",

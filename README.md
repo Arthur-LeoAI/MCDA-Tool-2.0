@@ -4,13 +4,23 @@
 
 所有计算都只在 Python 计算核心 `mcda_core` 里实现一次，后端 API 和前端只调用它，不再像旧版那样在 JS 和 Python 里各写一套。
 
+界面有两种模式，用同一个项目，随时可以切换：
+
+- **引导模式**（新用户默认）：场景 → 导入 → 对应列 → 检查 → 准则 → 权重 → 结论，每一步只展示必要的选项；
+- **专家模式**：数据、准则与权重、结果、敏感性分析、导出五个页面，可以选择方法、查看稳定区间和稳健性分析。
+
+内置两个模板：Amazon 美国站选品、ELT 技术评估（来自旧版 V7 工作簿）。
+
 ## 目录结构
 
 ```
 backend/              Python 后端
   src/mcda_api/       FastAPI 服务（HTTP 接口）
     main.py           应用入口、配置（CORS、上传大小、日志）
-    routes.py         接口实现（/api/v1）
+    routes.py         通用接口（/api/v1：health、methods、template）和上传处理
+    projects.py       项目接口（/api/v1/projects/*）
+    tables.py         任意表格的识别和转换（/api/v1/tables/*）
+    templates.py      内置模板（/api/v1/templates/*）
     schemas.py        请求/响应数据结构
     errors.py         统一的错误格式（错误代码 + 参数 + 位置）
     observability.py  请求编号和结构化日志
@@ -25,6 +35,11 @@ backend/              Python 后端
     io/template.py    标准模板导入导出（.xlsx / .csv）
     io/legacy.py      读取旧版 "MCDA ELT V7" 工作簿
     io/report.py      Excel 报告导出
+    project/          项目模型 v2：校验、迁移、分析流水线、价值函数、硬性条件、权重、
+                      稳健性分析、结论要点、报告 v2 的工作表
+    tables/           任意表格：读取、识别表头和列类型、转换成项目
+    templates/        内置模板（*.json）及按别名对应列
+  scripts/            make_elt_template.py：从旧版工作簿生成 ELT 模板
   tests/              单元测试、API 测试，以及与旧版 Excel 结果的对照测试
   openapi.json        API 约定（自动生成，前端类型由它生成）
 frontend/             前端：React + TypeScript + Vite + ECharts（见 frontend/README.md）

@@ -55,25 +55,36 @@ export function ColumnMapper({
   file,
   filename,
   initial,
+  initialTemplate,
   onDone,
   onCancel,
 }: {
   file: Blob
   filename: string
+  /** Inspected with ``initialTemplate`` when one is given. */
   initial: TableInspection
+  /** Template chosen beforehand (guided mode, S8). */
+  initialTemplate?: string | null
   onDone: (project: Project) => void
   onCancel: () => void
 }) {
   const t = useT()
   const language = useStore((s) => s.language)
   const { templates } = useTemplates()
-  const [templateId, setTemplateId] = useState('')
+  const [templateId, setTemplateId] = useState(initialTemplate ?? '')
   const template = templates.find((tpl) => tpl.id === templateId)
   const [inspection, setInspection] = useState(initial)
   const [nameColumn, setNameColumn] = useState(initial.name_column ?? 0)
   const [choices, setChoices] = useState(() => initialChoices(initial))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
+  // The template list arrives after the first render: apply its suggestions once it is there
+  // (adjusting state while rendering, as React recommends instead of an effect).
+  const [applied, setApplied] = useState(!initialTemplate)
+  if (!applied && template) {
+    setApplied(true)
+    setChoices(initialChoices(initial, template))
+  }
 
   /** Read the file again; without `header_row` the server detects it (e.g. for a newly chosen sheet). */
   const reinspect = async (params: { sheet?: string | null; header_row?: number; template?: string }) => {

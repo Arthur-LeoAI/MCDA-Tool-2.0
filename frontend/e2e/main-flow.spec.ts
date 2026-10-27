@@ -4,6 +4,15 @@ import { fileURLToPath } from 'node:url'
 
 const LEGACY_WORKBOOK = fileURLToPath(new URL('../../data/legacy/MCDA ELT V7_Enviro_G_Top1.xlsx', import.meta.url))
 
+// These tests drive the expert pages; new users would start in the guided mode (S8).
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem('mcda-workspace')) {
+      localStorage.setItem('mcda-workspace', JSON.stringify({ state: { mode: 'expert' }, version: 4 }))
+    }
+  })
+})
+
 // The template cards (S7) have example buttons too; the general one comes first.
 const exampleButton = (page: Page) => page.getByRole('button', { name: '使用示例数据' }).first()
 

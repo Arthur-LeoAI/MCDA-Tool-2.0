@@ -196,6 +196,18 @@ export function addGroup(project: Project, id: string, name: string): Project {
   return { ...project, groups: [...(project.groups ?? []), { id, name }] }
 }
 
+/** Add a group named "<baseName> n" with the first free n. */
+export function withNewGroup(project: Project, baseName: string): Project {
+  const existing = project.groups ?? []
+  const names = existing.map((g) => g.name)
+  let n = existing.length + 1
+  while (names.includes(`${baseName} ${n}`)) n++
+  const ids = new Set(existing.map((g) => g.id))
+  let k = existing.length + 1
+  while (ids.has(`g${k}`)) k++
+  return addGroup(project, `g${k}`, `${baseName} ${n}`)
+}
+
 export const renameGroup = (project: Project, id: string, name: string): Project => ({
   ...project,
   groups: (project.groups ?? []).map((g) => (g.id === id ? { ...g, name } : g)),

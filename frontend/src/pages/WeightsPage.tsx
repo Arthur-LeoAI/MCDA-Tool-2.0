@@ -1,25 +1,16 @@
-import {
-  ArrowDown,
-  ArrowRight,
-  ArrowUp,
-  ChevronUp,
-  FolderPlus,
-  RotateCcw,
-  Search,
-  Settings2,
-  Trash2,
-} from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUp, ChevronUp, FolderPlus, RotateCcw, Search, Settings2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import type { Criterion, Direction, Project, ProjectEvaluation, ProjectWeights } from '../api/types'
+import type { Criterion, Direction, Project, ProjectEvaluation } from '../api/types'
 import { CriterionSettings } from '../components/CriterionSettings'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
-import { WeightLevel, type LevelItem } from '../components/WeightLevel'
+import type { LevelItem } from '../components/WeightLevel'
+import { WeightLevels } from '../components/WeightLevels'
 import { Button, Card, PageHeader, Segmented, Spinner } from '../components/ui'
 import { useApiPost, useCheckedProject } from '../hooks'
 import { useT } from '../i18n/useT'
 import { formatResultScore } from '../lib/methods'
-import { directionOf, newId, setDirection } from '../lib/project'
-import { GROUPS, ROOT, addGroup, levelOf, removeGroup, renameGroup, setLevel, structure } from '../lib/weighting'
+import { directionOf, setDirection } from '../lib/project'
+import { withNewGroup } from '../lib/weighting'
 import { useStore } from '../store'
 
 export function WeightsPage() {
@@ -31,20 +22,9 @@ export function WeightsPage() {
   const [openId, setOpenId] = useState<string | null>(null)
 
   const { project } = checked
-  const weights = useApiPost<ProjectWeights>('/projects/weights', checked.apiProject, 150)
-  const { upper, lower } = structure(project)
-  const groups = project.groups ?? []
   const criteria = new Map(project.criteria.map((c) => [c.id, c]))
-  const resultOf = (key: string) => weights.data?.levels.find((l) => l.key === key)
-  const groupName = (id: string) =>
-    id === ROOT ? t('groups.ungrouped') : (groups.find((g) => g.id === id)?.name ?? id)
-  const emptyGroups = groups.filter((g) => !(g.id in lower))
-
-  const criterionItems = (ids: string[]): LevelItem[] =>
-    ids.map((id) => ({ id, name: criteria.get(id)!.name, global: upper ? weights.data?.weights[id] : undefined }))
-  const matches = (item: LevelItem) =>
-    item.name.toLowerCase().includes(query.trim().toLowerCase()) &&
-    (!hideZero || (weights.data?.weights[item.id] ?? 1) > 0)
+  const matches = (item: LevelItem, overall: Record<string, number> | undefined) =>
+    item.name.toLowerCase().includes(query.trim().toLowerCase()) && (!hideZero || (overall?.[item.id] ?? 1) > 0)
 
   const criterionControls = (id: string) => (
     <CriterionControls
@@ -64,39 +44,6 @@ export function WeightsPage() {
       />
     )
 
-  const addNewGroup = () =>
-    updateProject((p) => {
-      const existing = p.groups ?? []
-      const names = existing.map((g) => g.name)
-      let n = existing.length + 1
-      while (names.includes(`${t('groups.newName')} ${n}`)) n++
-      const id = newId(
-        'g',
-        existing.map((g) => g.id),
-      )
-      return addGroup(p, id, `${t('groups.newName')} ${n}`)
-    })
-
-  const groupActions = (id: string) =>
-    id !== ROOT && (
-      <>
-        <input
-          value={groupName(id)}
-          aria-label={`${t('groups.rename')}: ${groupName(id)}`}
-          onChange={(e) => updateProject((p) => renameGroup(p, id, e.target.value))}
-          className="focus:border-accent-500 w-40 rounded-md border border-slate-300 px-2 py-1 text-sm focus:outline-none"
-        />
-        <Button
-          variant="danger"
-          className="!p-1.5"
-          aria-label={`${t('groups.remove')}: ${groupName(id)}`}
-          title={t('groups.remove')}
-          icon={<Trash2 className="size-4" />}
-          onClick={() => updateProject((p) => removeGroup(p, id))}
-        />
-      </>
-    )
-
   return (
     <div>
       <PageHeader
@@ -104,7 +51,10 @@ export function WeightsPage() {
         intro={t('weights.intro')}
         actions={
           <>
-            <Button icon={<FolderPlus className="size-4" />} onClick={addNewGroup}>
+            <Button
+              icon={<FolderPlus className="size-4" />}
+              onClick={() => updateProject((p) => withNewGroup(p, t('groups.newName')))}
+            >
               {t('groups.add')}
             </Button>
             {importedWeighting && (
@@ -122,11 +72,6 @@ export function WeightsPage() {
       {checked.issues.length > 0 && (
         <div className="mb-4">
           <IssueList issues={checked.issues} project={project} />
-        </div>
-      )}
-      {weights.error && (
-        <div className="mb-4">
-          <ApiErrorBox error={weights.error} project={project} />
         </div>
       )}
 
@@ -154,36 +99,14 @@ export function WeightsPage() {
             </label>
           </div>
 
-          {upper && (
-            <WeightLevel
-              title={t('groups.upper')}
-              items={upper.map((id) => ({ id, name: groupName(id) }))}
-              level={levelOf(project, GROUPS, upper)}
-              result={resultOf(GROUPS)}
-              onChange={(level) => updateProject((p) => setLevel(p, GROUPS, level))}
-            />
-          )}
-
-          {Object.entries(lower).map(([key, ids]) => (
-            <WeightLevel
-              key={key}
-              title={upper ? groupName(key) : t('weights.criteria')}
-              actions={upper && groupActions(key)}
-              items={criterionItems(ids)}
-              level={levelOf(project, key, ids)}
-              result={resultOf(`within.${key}`)}
-              onChange={(level) => updateProject((p) => setLevel(p, key, level))}
-              visible={matches}
-              controls={criterionControls}
-              details={criterionDetails}
-            />
-          ))}
-
-          {emptyGroups.map((g) => (
-            <Card key={g.id} title={g.name} actions={groupActions(g.id)}>
-              <p className="text-sm text-slate-500">{t('groups.empty')}</p>
-            </Card>
-          ))}
+          <WeightLevels
+            project={project}
+            apiProject={checked.apiProject}
+            update={updateProject}
+            visible={matches}
+            controls={criterionControls}
+            details={criterionDetails}
+          />
         </div>
 
         <div className="xl:sticky xl:top-20 xl:self-start">

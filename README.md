@@ -98,7 +98,7 @@ API 是**无状态**的：前端在每次请求里带上完整的项目数据，
 | 接口 | 作用 |
 |---|---|
 | `POST /api/v1/projects/migrate` | 把任意受支持版本的项目文件（或版本 3 的问题格式）升级为当前版本 |
-| `POST /api/v1/tables/inspect` | 上传任意 `.xlsx` / `.csv`：标准模板和旧版工作簿直接返回项目，其他表格返回识别出的结构 |
+| `POST /api/v1/tables/inspect` | 上传任意 `.xlsx` / `.csv`：标准模板和旧版工作簿直接返回项目，其他表格返回识别出的结构；带 `template_id` 时按别名匹配模板准则 |
 | `POST /api/v1/tables/build` | 按用户选择的列对应关系，把表格转换成项目 |
 | `POST /api/v1/projects/quality` | 数据质量报告（缺失值、常数列、极端值等） |
 | `POST /api/v1/projects/import` | 上传标准模板或旧版 V7 工作簿，转换成项目 |
@@ -109,6 +109,8 @@ API 是**无状态**的：前端在每次请求里带上完整的项目数据，
 | `POST /api/v1/projects/robustness` | 蒙特卡洛稳健性分析：名次分布、排第一的概率、两两胜率、可靠程度 |
 | `POST /api/v1/projects/stability` | 权重稳定区间（基于价值分上的加权和） |
 | `POST /api/v1/projects/report` | Excel 报告：结论、结果、数据处理说明、权重来源、稳定区间、Pareto、稳健性，以及可重新导入的原始数据 |
+| `GET /api/v1/templates` | 内置模板列表（Amazon 美国站选品、ELT 技术评估） |
+| `GET /api/v1/templates/{id}/project` | 从模板生成项目（可选示例数据和权重预设） |
 | `GET /api/v1/health` | 健康检查 |
 | `GET /api/v1/methods` | 可用方法、可选的归一化方式和默认参数 |
 | `GET /api/v1/template` | 下载示例模板（xlsx / csv） |

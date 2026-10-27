@@ -81,6 +81,12 @@ export function CriterionSettings({
   return (
     <div className="mt-3 grid gap-5 rounded-lg border border-slate-200 bg-slate-50/60 p-4 lg:grid-cols-2">
       <div className="space-y-5">
+        {criterion.note && (
+          <section>
+            <h4 className="mb-1 text-xs font-semibold text-slate-600">{t('settings.note')}</h4>
+            <p className="text-xs leading-relaxed text-slate-600">{criterion.note}</p>
+          </section>
+        )}
         {criterion.type === 'numeric' && criterion.value_function && (
           <ValueFunctionEditor
             criterion={criterion}

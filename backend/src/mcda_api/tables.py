@@ -19,6 +19,7 @@ from mcda_core.io import looks_like_legacy, parse_legacy_rows, parse_rows, read_
 from mcda_core.model import Direction
 from mcda_core.project import Project
 from mcda_core.tables import ColumnSpec, build_project, describe_columns, guess_header_row, guess_name_column
+from mcda_core.templates import Language, apply_template, get_template, match_columns
 
 from .errors import ApiError
 from .projects import project_from_upload
@@ -42,6 +43,8 @@ class TableColumn(BaseModel):
     percent: bool
     categories: list[str]
     examples: list[str]
+    template_criterion: str | None = None
+    """With ``template_id``: the template criterion this column matches by name or alias."""
 
 
 class TableInspection(BaseModel):
@@ -67,6 +70,8 @@ class TableColumnSpec(BaseModel):
     direction: Direction = Direction.BENEFIT
     categories: Annotated[list[Annotated[str, Field(max_length=500)]], Field(max_length=100)] | None = None
     """Ordinal: worst first."""
+    template_criterion: str | None = None
+    """Take the settings of this criterion of the request's template (its type overrides ``type``)."""
 
 
 class TableBuildRequest(BaseModel):
@@ -76,6 +81,8 @@ class TableBuildRequest(BaseModel):
     columns: Annotated[list[TableColumnSpec], Field(min_length=1, max_length=MAX_COLUMNS)]
     filename: str | None = None
     sheet: str | None = None
+    template_id: str | None = None
+    language: Language = "zh"
 
 
 def _json_cell(value: object) -> Cell:
@@ -98,6 +105,7 @@ def inspect_table(
     file: Annotated[UploadFile, File()],
     sheet: Annotated[str | None, Query()] = None,
     header_row: Annotated[int | None, Query(ge=0)] = None,
+    template_id: Annotated[str | None, Query()] = None,
 ) -> TableInspection:
     """Read any spreadsheet. Templates and legacy workbooks come back as projects;
     other tables come back with detected structure for the user to confirm."""
@@ -134,6 +142,7 @@ def inspect_table(
     limit = header + 1 + MAX_BODY_ROWS
     kept = [[_json_cell(v) for v in row[:MAX_COLUMNS]] for row in rows[:limit]]
     columns = describe_columns(kept, header)
+    matched = match_columns(get_template(template_id), {c.index: c.header for c in columns}) if template_id else {}
     body_rows = len([r for r in kept[header + 1 :] if any(v is not None for v in r)])
     return TableInspection(
         filename=received.filename,
@@ -152,6 +161,7 @@ def inspect_table(
                 percent=c.percent,
                 categories=list(c.categories),
                 examples=list(c.examples),
+                template_criterion=matched.get(c.index),
             )
             for c in columns
         ],
@@ -162,18 +172,21 @@ def inspect_table(
 
 @router.post("/build", response_model=Project)
 def build_table_project(request: TableBuildRequest) -> Project:
-    """Build a project from an inspected table and the user's column choices."""
-    specs = [
-        ColumnSpec(index=c.index, type=c.type, name=c.name, direction=c.direction, categories=c.categories)
-        for c in request.columns
-    ]
-    return compute(
-        lambda: build_project(
-            request.rows,
-            request.header_row,
-            request.name_column,
-            specs,
-            filename=request.filename,
-            sheet=request.sheet,
+    """Build a project from an inspected table and the user's column choices (optionally matched to a template)."""
+    template = get_template(request.template_id) if request.template_id else None
+    specs: list[ColumnSpec] = []
+    mapping: dict[str, str] = {}
+    for j, c in enumerate(request.columns):
+        kind = c.type
+        if template is not None and c.template_criterion is not None:
+            kind = template.criterion(c.template_criterion).type
+            mapping[f"c{j + 1}"] = c.template_criterion  # build_project numbers criteria in column order
+        specs.append(ColumnSpec(index=c.index, type=kind, name=c.name, direction=c.direction, categories=c.categories))
+
+    def build() -> Project:
+        project = build_project(
+            request.rows, request.header_row, request.name_column, specs, filename=request.filename, sheet=request.sheet
         )
-    )
+        return apply_template(project, template, request.language, mapping) if template is not None else project
+
+    return compute(build)

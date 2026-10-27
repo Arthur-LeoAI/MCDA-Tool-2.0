@@ -1243,6 +1243,24 @@
         "title": "MethodInfo",
         "type": "object"
       },
+      "NamedInfo": {
+        "description": "A group or weight preset.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Text"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "NamedInfo",
+        "type": "object"
+      },
       "PiecewiseValueFunction": {
         "additionalProperties": false,
         "description": "Straight lines between (x, value) points; constant beyond the first and last point.",
@@ -2131,6 +2149,15 @@
             "title": "Header Row",
             "type": "integer"
           },
+          "language": {
+            "default": "zh",
+            "enum": [
+              "zh",
+              "en"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
           "name_column": {
             "minimum": 0.0,
             "title": "Name Column",
@@ -2171,6 +2198,17 @@
               }
             ],
             "title": "Sheet"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
           }
         },
         "required": [
@@ -2229,6 +2267,17 @@
           "present": {
             "title": "Present",
             "type": "integer"
+          },
+          "template_criterion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Criterion"
           }
         },
         "required": [
@@ -2282,6 +2331,17 @@
               }
             ],
             "title": "Name"
+          },
+          "template_criterion": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Criterion"
           },
           "type": {
             "enum": [
@@ -2440,6 +2500,152 @@
           "upper"
         ],
         "title": "TargetValueFunction",
+        "type": "object"
+      },
+      "TemplateCriterionInfo": {
+        "properties": {
+          "group_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Text"
+          },
+          "type": {
+            "enum": [
+              "numeric",
+              "ordinal",
+              "categorical",
+              "boolean"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "type",
+          "group_id"
+        ],
+        "title": "TemplateCriterionInfo",
+        "type": "object"
+      },
+      "TemplateInfo": {
+        "properties": {
+          "criteria": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateCriterionInfo"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "default_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Preset"
+          },
+          "description": {
+            "$ref": "#/components/schemas/Text"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/NamedInfo"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "has_example": {
+            "title": "Has Example",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/Text"
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/NamedInfo"
+            },
+            "title": "Presets",
+            "type": "array"
+          },
+          "terms": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Text"
+            },
+            "title": "Terms",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "domain",
+          "name",
+          "description",
+          "terms",
+          "currency",
+          "groups",
+          "criteria",
+          "presets",
+          "default_preset",
+          "has_example"
+        ],
+        "title": "TemplateInfo",
+        "type": "object"
+      },
+      "Text": {
+        "additionalProperties": false,
+        "properties": {
+          "en": {
+            "title": "En",
+            "type": "string"
+          },
+          "zh": {
+            "title": "Zh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "zh",
+          "en"
+        ],
+        "title": "Text",
         "type": "object"
       },
       "TopsisMethod": {
@@ -3070,7 +3276,7 @@
     },
     "/api/v1/tables/build": {
       "post": {
-        "description": "Build a project from an inspected table and the user's column choices.",
+        "description": "Build a project from an inspected table and the user's column choices (optionally matched to a template).",
         "operationId": "build_table_project_api_v1_tables_build_post",
         "requestBody": {
           "content": {
@@ -3146,6 +3352,22 @@
                 }
               ],
               "title": "Header Row"
+            }
+          },
+          {
+            "in": "query",
+            "name": "template_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Template Id"
             }
           }
         ],
@@ -3249,6 +3471,124 @@
         "summary": "Template",
         "tags": [
           "files"
+        ]
+      }
+    },
+    "/api/v1/templates": {
+      "get": {
+        "operationId": "list_templates_api_v1_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TemplateInfo"
+                  },
+                  "title": "Response List Templates Api V1 Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "List Templates",
+        "tags": [
+          "templates"
+        ]
+      }
+    },
+    "/api/v1/templates/{template_id}/project": {
+      "get": {
+        "description": "A new project from a template: with the example data, or only criteria, groups, weights and conditions.",
+        "operationId": "project_from_template_api_v1_templates__template_id__project_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "template_id",
+            "required": true,
+            "schema": {
+              "title": "Template Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "language",
+            "required": false,
+            "schema": {
+              "default": "zh",
+              "enum": [
+                "zh",
+                "en"
+              ],
+              "title": "Language",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "example",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Example",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preset",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Preset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Project From Template",
+        "tags": [
+          "templates"
         ]
       }
     }

@@ -3,6 +3,7 @@ import { useRef, useState } from 'react'
 import { ApiError, asApiError, downloadFile, getBlob, uploadFile } from '../api/client'
 import type { TableInspection } from '../api/types'
 import { ColumnMapper } from '../components/ColumnMapper'
+import { TemplateGallery } from '../components/TemplateGallery'
 import { QualityPanel } from '../components/QualityPanel'
 import { DataGrid } from '../components/DataGrid'
 import { FileDrop } from '../components/FileDrop'
@@ -129,6 +130,7 @@ export function DataPage() {
             </div>
           )}
         </Card>
+        <TemplateGallery onProject={loadProject} />
       </div>
     )
   }

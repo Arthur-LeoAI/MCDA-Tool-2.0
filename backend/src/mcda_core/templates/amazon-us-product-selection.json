@@ -1,0 +1,188 @@
+{
+  "id": "amazon-us-product-selection",
+  "version": 1,
+  "domain": "ecommerce",
+  "name": { "zh": "Amazon 美国站选品", "en": "Amazon US product selection" },
+  "description": {
+    "zh": "比较候选产品的需求、盈利、竞争、风险和运营条件。金额以美元计，所有数值由你填写，模板不内置任何费用标准。示例数据是虚构的，仅用于演示。",
+    "en": "Compare candidate products on demand, profit, competition, risk and operations. Amounts are in USD; you enter all values, the template contains no fee schedules. The example data are made up for demonstration only."
+  },
+  "terms": { "alternative": { "zh": "产品", "en": "Product" } },
+  "currency": "USD",
+  "groups": [
+    { "id": "demand", "name": { "zh": "需求", "en": "Demand" } },
+    { "id": "profit", "name": { "zh": "盈利", "en": "Profit" } },
+    { "id": "competition", "name": { "zh": "竞争", "en": "Competition" } },
+    { "id": "risk", "name": { "zh": "风险", "en": "Risk" } },
+    { "id": "operations", "name": { "zh": "运营", "en": "Operations" } }
+  ],
+  "criteria": [
+    {
+      "id": "monthly_sales",
+      "group_id": "demand",
+      "name": { "zh": "预估月销量", "en": "Est. monthly sales" },
+      "aliases": ["monthly sales", "estimated monthly sales", "monthly units", "units per month", "月销量", "销量", "预计月销量"],
+      "unit": { "zh": "件", "en": "units" },
+      "value_function": { "kind": "log", "direction": "benefit", "bounds": "data" },
+      "help": {
+        "zh": "这类产品每月大约能卖出多少件，通常来自选品工具的估算。用对数换算：从 100 到 1000 的提升比从 10000 到 10900 更重要。",
+        "en": "Roughly how many units sell per month, usually an estimate from a research tool. Log scoring: going from 100 to 1,000 matters more than from 10,000 to 10,900."
+      }
+    },
+    {
+      "id": "seasonality",
+      "group_id": "demand",
+      "name": { "zh": "季节性", "en": "Seasonality" },
+      "aliases": ["season", "seasonal", "季节"],
+      "type": "ordinal",
+      "categories": [
+        { "label": { "zh": "强季节性", "en": "strongly seasonal" }, "score": 0, "aliases": ["strong", "high", "强"] },
+        { "label": { "zh": "一般", "en": "moderate" }, "score": 0.5, "aliases": ["medium", "some", "中", "中等"] },
+        { "label": { "zh": "全年稳定", "en": "stable all year" }, "score": 1, "aliases": ["stable", "none", "low", "稳定", "无"] }
+      ],
+      "help": { "zh": "销量是否集中在某几个月。", "en": "Whether sales concentrate in a few months." }
+    },
+    {
+      "id": "margin",
+      "group_id": "profit",
+      "name": { "zh": "预估利润率", "en": "Est. profit margin" },
+      "aliases": ["margin", "profit margin", "net margin", "利润率", "净利润率"],
+      "unit": { "zh": "%", "en": "%" },
+      "value_function": { "kind": "linear", "direction": "benefit", "bounds": "data" },
+      "help": {
+        "zh": "扣除采购、头程、平台和物流费用、广告等之后的利润占售价的比例。建议的硬性条件：至少 20%，可以在设置里修改或删除。",
+        "en": "Profit after product cost, inbound shipping, platform and fulfilment fees, advertising etc., as a share of the price. Suggested condition: at least 20 %, which you can change or remove in the settings."
+      }
+    },
+    {
+      "id": "fee_share",
+      "group_id": "profit",
+      "name": { "zh": "平台和物流费用占比", "en": "Platform and fulfilment fees" },
+      "aliases": ["fees", "fee share", "fees %", "amazon fees", "fba fees", "fee ratio", "费用占比", "平台费用占比", "佣金和配送费占比"],
+      "unit": { "zh": "% 售价", "en": "% of price" },
+      "value_function": { "kind": "linear", "direction": "cost", "bounds": "data" },
+      "help": {
+        "zh": "销售佣金、配送费等平台和物流费用合计占售价的比例。请按当前的费用标准自己计算。",
+        "en": "Referral, fulfilment and other platform fees together as a share of the price. Calculate them from the current fee schedules."
+      }
+    },
+    {
+      "id": "top_reviews",
+      "group_id": "competition",
+      "name": { "zh": "头部竞品平均评论数", "en": "Avg. reviews of top competitors" },
+      "aliases": ["reviews", "review count", "avg reviews", "top reviews", "competitor reviews", "评论数", "竞品评论数"],
+      "value_function": { "kind": "log", "direction": "cost", "bounds": "data" },
+      "help": {
+        "zh": "搜索结果前几名竞品的平均评论数。评论越多，新产品越难进入。用对数换算。",
+        "en": "Average review count of the top search results. The more reviews, the harder it is for a new product to break in. Log scoring."
+      }
+    },
+    {
+      "id": "top_rating",
+      "group_id": "competition",
+      "name": { "zh": "头部竞品平均评分", "en": "Avg. rating of top competitors" },
+      "aliases": ["rating", "avg rating", "star rating", "stars", "竞品评分", "评分"],
+      "unit": { "zh": "星", "en": "stars" },
+      "value_function": { "kind": "linear", "direction": "cost", "bounds": "data" },
+      "help": {
+        "zh": "评分越低，说明现有产品越有改进空间，所以按越小越好处理。",
+        "en": "Lower ratings leave more room to improve on existing products, so lower is better here."
+      }
+    },
+    {
+      "id": "return_rate",
+      "group_id": "risk",
+      "name": { "zh": "预估退货率", "en": "Est. return rate" },
+      "aliases": ["returns", "return rate", "returns %", "退货率"],
+      "unit": { "zh": "%", "en": "%" },
+      "value_function": { "kind": "linear", "direction": "cost", "bounds": "data" }
+    },
+    {
+      "id": "size_tier",
+      "group_id": "risk",
+      "name": { "zh": "尺寸等级", "en": "Size tier" },
+      "aliases": ["size", "size tier", "尺寸", "尺寸分段"],
+      "type": "ordinal",
+      "categories": [
+        { "label": { "zh": "大件", "en": "oversize" }, "score": 0, "aliases": ["large", "large bulky", "大号", "超大"] },
+        { "label": { "zh": "标准尺寸", "en": "standard" }, "score": 1, "aliases": ["standard size", "small", "标准"] }
+      ],
+      "help": {
+        "zh": "大件的仓储和配送成本通常更高，也更容易出问题。",
+        "en": "Oversize items usually cost more to store and ship and run into more problems."
+      }
+    },
+    {
+      "id": "compliance",
+      "group_id": "risk",
+      "name": { "zh": "合规和认证难度", "en": "Compliance and certification" },
+      "aliases": ["compliance", "certification", "certifications", "合规", "认证", "认证难度"],
+      "type": "ordinal",
+      "categories": [
+        { "label": { "zh": "需认证", "en": "certification required" }, "score": 0, "aliases": ["required", "high", "需要认证", "高"] },
+        { "label": { "zh": "一般", "en": "some requirements" }, "score": 0.5, "aliases": ["some", "medium", "中"] },
+        { "label": { "zh": "无", "en": "none" }, "score": 1, "aliases": ["no", "low", "无要求", "低"] }
+      ],
+      "help": {
+        "zh": "上架前需要的认证和文件，例如部分电子产品需要 FCC 认证，儿童产品需要儿童产品证书（CPC）。具体要求请以官方规定为准。",
+        "en": "Certificates and documents needed before listing, for example FCC authorisation for some electronics or a Children's Product Certificate (CPC) for children's products. Check the official requirements."
+      }
+    },
+    {
+      "id": "moq",
+      "group_id": "operations",
+      "name": { "zh": "最小起订量", "en": "Minimum order quantity" },
+      "aliases": ["moq", "min order", "minimum order", "起订量", "最低起订量"],
+      "unit": { "zh": "件", "en": "units" },
+      "value_function": { "kind": "log", "direction": "cost", "bounds": "data" },
+      "help": {
+        "zh": "供应商要求的最小起订量，越小，首批投入的资金和库存风险越小。",
+        "en": "The supplier's minimum order quantity; the smaller, the less money and stock risk in the first order."
+      }
+    }
+  ],
+  "constraints": [{ "criterion_id": "margin", "op": ">=", "value": 20 }],
+  "weighting": {
+    "groups": {
+      "method": "rank",
+      "order": [["profit"], ["demand"], ["competition"], ["risk"], ["operations"]],
+      "formula": "roc"
+    }
+  },
+  "example": {
+    "alternatives": [
+      { "id": "p1", "name": "Silicone baking mat" },
+      { "id": "p2", "name": "LED desk lamp" },
+      { "id": "p3", "name": "Bamboo storage box" },
+      { "id": "p4", "name": "Pet grooming brush" },
+      { "id": "p5", "name": "Yoga mat" },
+      { "id": "p6", "name": "Kids' building blocks" }
+    ],
+    "data": {
+      "monthly_sales": { "p1": 1800, "p2": 2600, "p3": 900, "p4": 1500, "p5": 3200, "p6": 1200 },
+      "seasonality": {
+        "p1": "moderate",
+        "p2": "stable all year",
+        "p3": "stable all year",
+        "p4": "stable all year",
+        "p5": "moderate",
+        "p6": "strongly seasonal"
+      },
+      "margin": { "p1": 28, "p2": 22, "p3": 31, "p4": 35, "p5": 18, "p6": 26 },
+      "fee_share": { "p1": 34, "p2": 30, "p3": 41, "p4": 33, "p5": 38, "p6": 32 },
+      "top_reviews": { "p1": 4200, "p2": 9800, "p3": 650, "p4": 2300, "p5": 15000, "p6": 3100 },
+      "top_rating": { "p1": 4.5, "p2": 4.4, "p3": 4.1, "p4": 4.3, "p5": 4.6, "p6": 4.5 },
+      "return_rate": { "p1": 3, "p2": 6, "p3": 4, "p4": 2.5, "p5": 5, "p6": 4 },
+      "size_tier": { "p1": "standard", "p2": "standard", "p3": "oversize", "p4": "standard", "p5": "oversize", "p6": "standard" },
+      "compliance": {
+        "p1": "some requirements",
+        "p2": "certification required",
+        "p3": "none",
+        "p4": "none",
+        "p5": "none",
+        "p6": "certification required"
+      },
+      "moq": { "p1": 500, "p2": 1000, "p3": 300, "p4": 500, "p5": 200, "p6": 1000 }
+    }
+  }
+}

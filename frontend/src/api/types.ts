@@ -47,6 +47,10 @@ export type TableColumn = Schemas['TableColumn']
 export type TableColumnSpec = Schemas['TableColumnSpec']
 export type TableCell = TableInspection['rows'][number][number]
 
+// Templates (S7)
+export type TemplateInfo = Schemas['TemplateInfo']
+export type LocalText = TemplateInfo['name']
+
 // Errors
 export type Issue = Schemas['IssueModel']
 export type Location = Schemas['LocationModel']

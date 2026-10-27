@@ -38,6 +38,8 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+# Full-width brackets, colons and commas, and the en dash in ranges, are correct in Chinese text.
+allowed-confusables = ["（", "）", "：", "，", "–"]
 
 [tool.pyright]
 include = ["src", "tests"]

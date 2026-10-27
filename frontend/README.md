@@ -1,42 +1,42 @@
-# 前端
+# Frontend
 
-React + TypeScript + Vite + Tailwind CSS，图表用 ECharts。界面支持中文和英文。
+React + TypeScript + Vite + Tailwind CSS, with charts by ECharts. The UI supports Chinese and English.
 
-## 开发
+## Development
 
-先启动后端（见根目录 README），再运行：
+Start the backend first (see the root README), then run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-打开 http://localhost:5173 。开发服务器会把 `/api` 请求转发到 `http://127.0.0.1:8000`，所以不需要配置跨域。
+Open http://localhost:5173 . The dev server forwards `/api` requests to `http://127.0.0.1:8000`, so no CORS configuration is needed.
 
-| 命令                              | 作用                                                                                                                               |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev`                     | 开发服务器                                                                                                                         |
-| `npm test`                        | 单元测试（Vitest）                                                                                                                 |
-| `npm run test:e2e`                | 端到端测试（Playwright）：构建后的前端加真实后端，自动启动所需的服务                                                               |
-| `npm run lint`                    | 代码检查（oxlint）                                                                                                                 |
-| `npm run format` / `format:check` | 格式化 / 检查格式（Prettier）                                                                                                      |
-| `npm run typecheck`               | 类型检查                                                                                                                           |
-| `npm run build`                   | 类型检查加生产构建，输出到 `dist/`                                                                                                 |
-| `npm run gen:api`                 | 从后端代码导出 `backend/openapi.json`，并重新生成 `src/api/schema.d.ts`（不需要启动后端）。后端接口改动后运行；如果忘了，CI 会报错 |
+| Command                           | Purpose                                                                                                                                                                                                         |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`                     | Dev server                                                                                                                                                                                                      |
+| `npm test`                        | Unit tests (Vitest)                                                                                                                                                                                             |
+| `npm run test:e2e`                | End-to-end tests (Playwright): the built frontend plus the real backend; the required services are started automatically                                                                                        |
+| `npm run lint`                    | Linting (oxlint)                                                                                                                                                                                                |
+| `npm run format` / `format:check` | Format / check formatting (Prettier)                                                                                                                                                                            |
+| `npm run typecheck`               | Type checking                                                                                                                                                                                                   |
+| `npm run build`                   | Type checking plus production build, output to `dist/`                                                                                                                                                          |
+| `npm run gen:api`                 | Exports `backend/openapi.json` from the backend code and regenerates `src/api/schema.d.ts` (the backend does not need to be running). Run it after changing the backend API; if you forget, CI reports an error |
 
-如果前端和 API 不在同一个域名下部署，构建时用 `VITE_API_BASE` 指定 API 地址，并在后端的 `MCDA_CORS_ORIGINS` 里加上前端的地址。
+If the frontend and the API are not deployed under the same domain, set the API address with `VITE_API_BASE` at build time, and add the frontend's address to `MCDA_CORS_ORIGINS` in the backend.
 
-## 结构
+## Structure
 
 ```
 src/
-  api/          API 客户端；schema.d.ts 由 OpenAPI 自动生成，types.ts 给常用类型起了简短的名字
-  components/   通用组件（数据表格、数字输入框、图表封装、错误列表等）
-  pages/        五个步骤页面：数据、准则与权重、结果、敏感性分析、导出
-  lib/          不依赖 React 的纯函数：数据编辑、图表配置、数字解析
-  i18n/         中英文文本
-  store.ts      全局状态（zustand），保存在浏览器的 localStorage 里，刷新页面不会丢失
-  hooks.ts      防抖的 API 请求、本地数据检查
+  api/          API client; schema.d.ts is generated automatically from OpenAPI, types.ts gives short names to commonly used types
+  components/   Shared components (data table, number input, chart wrappers, error list, etc.)
+  pages/        The five step pages: data, criteria and weights, results, sensitivity analysis, export
+  lib/          Pure functions that do not depend on React: data editing, chart configuration, number parsing
+  i18n/         Chinese and English texts
+  store.ts      Global state (zustand), saved in the browser's localStorage so it survives a page reload
+  hooks.ts      Debounced API requests, local data checks
 ```
 
-所有计算都由后端完成，前端只负责编辑数据和展示结果。
+All calculations are done by the backend; the frontend only edits data and displays results.

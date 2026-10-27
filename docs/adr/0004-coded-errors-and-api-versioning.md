@@ -1,24 +1,24 @@
-# 0004 带版本号的 API，错误用代码表示
+# 0004 Versioned API, errors expressed as codes
 
-- 状态：已采纳
-- 日期：2026-10-23
+- Status: Accepted
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-最初的 API 直接返回英文错误句子，前端没法翻译成中文或德文；路径也没有版本号，以后改接口会直接影响已有的客户端。前端的类型是从运行中的服务器生成的，容易忘记更新。
+The original API returned English error sentences directly, which the frontend could not translate into Chinese or German. The paths also had no version number, so later interface changes would directly affect existing clients. The frontend types were generated from a running server and were easy to forget to update.
 
-## 决定
+## Decision
 
-1. **版本号**：所有接口都在 `/api/v1` 下。有破坏兼容的改动时，新增 `/api/v2`，旧版本保留一段过渡期。
-2. **错误格式**：所有错误都返回 `{code, detail, params, issues, request_id}`。
-   - 每个问题包括 `code`、`params`、结构化的 `location`（`cell`、`alternative`、`criterion`、`value`、`row`、`field`）和英文 `message`；
-   - 错误代码统一列在 `mcda_core/errors.py` 里，客户端按代码翻译；
-   - 前端有一个测试，保证每个错误代码都有中英文翻译。
-3. **API 约定文件**：`backend/openapi.json` 直接由应用代码导出，不需要启动服务器；前端的 TypeScript 类型由它生成。CI 会检查两者都是最新的。
-4. **请求编号**：每个请求都有 `X-Request-ID`，响应头、错误响应和日志里都带上它。日志里不记录业务数据。
+1. **Version number**: all endpoints are under `/api/v1`. For breaking changes, a new `/api/v2` is added, and the old version is kept for a transition period.
+2. **Error format**: all errors return `{code, detail, params, issues, request_id}`.
+   - Each issue contains `code`, `params`, a structured `location` (`cell`, `alternative`, `criterion`, `value`, `row`, `field`) and an English `message`;
+   - Error codes are listed centrally in `mcda_core/errors.py`, and clients translate by code;
+   - A frontend test ensures that every error code has a Chinese and an English translation.
+3. **API contract file**: `backend/openapi.json` is exported directly from the application code, without starting the server; the frontend TypeScript types are generated from it. CI checks that both are up to date.
+4. **Request ID**: every request has an `X-Request-ID`, which is included in the response headers, error responses and logs. Logs do not record business data.
 
-## 后果
+## Consequences
 
-- 新增一种错误需要改两处：后端的错误代码和前端的翻译。漏改的话测试会失败。
-- 错误代码一旦发布就要保持稳定，相当于公开接口的一部分。
-- 前端和后端的数据结构不会悄悄对不上。
+- Adding a new error requires changes in two places: the backend error code and the frontend translation. If one is missed, the tests fail.
+- Once released, error codes must stay stable; they are effectively part of the public interface.
+- Frontend and backend data structures cannot silently drift apart.

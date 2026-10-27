@@ -1,158 +1,158 @@
-# 路线图
+# Roadmap
 
-> 状态：已确认。M0、M1 已完成；M2 的 S1–S8 已完成，接下来是发布 v0.1.0 前的检查和可用性测试。
-> 最后更新：2026-10-23
+> Status: confirmed. M0 and M1 are done; S1–S8 of M2 are done. Next come the pre-release checks and usability testing before v0.1.0.
+> Last updated: 2026-10-23
 
-## 目标
+## Goal
 
-做一个**通用的多准则决策工具**：电商团队、企业决策者、科研和咨询人员都能用，**优先打磨电商场景**。
+Build a **general-purpose multi-criteria decision tool** that e-commerce teams, business decision-makers, and researchers and consultants can all use, **polishing the e-commerce scenario first**.
 
-做法是一个通用计算核心，加上场景模板，再加上两种使用模式：
+The approach is one general computation core, plus scenario templates, plus two usage modes:
 
-- **引导模式**：面向不熟悉 MCDA 的用户；
-- **专家模式**：面向科研和咨询人员。
+- **Guided mode**: for users who are not familiar with MCDA;
+- **Expert mode**: for researchers and consultants.
 
-## 开发原则
+## Development principles
 
-参考 Google 公开的工程实践（《Software Engineering at Google》，O'Reilly 2020；以及 [google.github.io/eng-practices](https://google.github.io/eng-practices/)），按一个小团队的规模取用：
+Based on Google's published engineering practices (*Software Engineering at Google*, O'Reilly 2020; and [google.github.io/eng-practices](https://google.github.io/eng-practices/)), adopted at the scale of a small team:
 
-1. **先设计后编码**：每个里程碑先写设计文档，确认后再实现。重要的取舍记录成 ADR（架构决策记录）。
-2. **小步提交，每次都审查**：一个改动只做一件事；每个改动都走分支和 Pull Request，CI 全部通过并审查后才合并。
-3. **主干开发**：`main` 始终保持可用。分支只存在很短时间；没做完的功能用功能开关（feature flag）隐藏起来。
-4. **测试金字塔**：大量单元测试，适量接口测试，少量端到端测试覆盖关键用户流程。
-5. **一次做通一个完整功能**：每个功能都从计算核心、API、界面到测试全部做完，不按"先写完所有后端，再写所有前端"的方式推进。
-6. **可衡量**：每个里程碑都有明确的完成标准。
-
----
-
-## 第一个问题：前三个阶段要不要先完善？
-
-**需要补的是工程基础和数据模型，不是界面美化。** 原因有三个：
-
-- **缺少质量保障**：没有 CI，Python 代码没有静态检查和类型检查，也没有端到端测试。功能越多，回归问题越难发现。
-- **数据模型要升级**：阶段 4 的功能需要准则类型、价值函数、准则分组、硬性条件和多套权重情景。现在的"矩阵 + 权重"模型装不下这些，必须先设计好 v2 模型。否则每加一个功能都要返工。
-- **API 需要定型**：
-  - 要加版本号 `/api/v1`；
-  - 错误信息要改为"错误代码 + 参数"，由前端翻译（现在服务器直接返回英文句子）；
-  - 项目文件需要有格式版本号，以后才能自动迁移旧文件。
-
-界面美化、落地页这类工作放到 M4。
+1. **Design before code**: each milestone starts with a design document, and implementation begins only after it is confirmed. Important trade-offs are recorded as ADRs (Architecture Decision Records).
+2. **Small commits, every one reviewed**: one change does one thing; every change goes through a branch and a Pull Request, and is merged only after CI passes and it has been reviewed.
+3. **Trunk-based development**: `main` always stays usable. Branches live only briefly; unfinished features are hidden behind feature flags.
+4. **Test pyramid**: many unit tests, a moderate number of API tests, and a few end-to-end tests covering the key user flows.
+5. **Build one complete feature at a time**: each feature is finished end to end, from the computation core and API to the UI and tests, rather than "write all the backend first, then all the frontend".
+6. **Measurable**: every milestone has clear completion criteria.
 
 ---
 
-## 里程碑
+## First question: should the first three phases be improved first?
 
-| 里程碑 | 内容 | 结果 |
+**What needs work is the engineering foundation and the data model, not UI polish.** There are three reasons:
+
+- **No quality safeguards**: there is no CI, no static analysis or type checking for the Python code, and no end-to-end tests. The more features there are, the harder regressions become to catch.
+- **The data model needs an upgrade**: the phase 4 features need criterion types, value functions, criterion groups, hard constraints and multiple weight scenarios. The current "matrix + weights" model cannot hold these, so the v2 model must be designed first. Otherwise every new feature means rework.
+- **The API needs to be settled**:
+  - add the version prefix `/api/v1`;
+  - change error messages to "error code + parameters", translated by the frontend (currently the server returns English sentences directly);
+  - project files need a format version so old files can be migrated automatically later.
+
+UI polish, the landing page and similar work go into M4.
+
+---
+
+## Milestones
+
+| Milestone | Content | Outcome |
 |---|---|---|
-| **M0** ✅ | 工程基础 | CI、代码规范、API v1、错误代码化、端到端测试 |
-| **M1** ✅ | 设计 | 需求文档、技术设计文档、ADR，经你确认 |
-| **M2** | **MVP** | 电商选品的完整流程可用，打标签 v0.1.0，**推送到 GitHub** |
-| **M3** | 功能扩展 | 其余所有扩展功能，逐个发布 v0.2、v0.3 …… |
-| **M4** | 产品化和上线 | 账号、云端部署、落地页、合规（在验证有价值之后再做） |
-| **M5** | 外部集成（可选） | Amazon SP-API、Google Sheets 等 |
+| **M0** ✅ | Engineering foundation | CI, code conventions, API v1, error codes, end-to-end tests |
+| **M1** ✅ | Design | PRD, technical design document, ADRs, confirmed by you |
+| **M2** | **MVP** | The complete e-commerce product selection flow works; tag v0.1.0 and **push to GitHub** |
+| **M3** | Feature expansion | All remaining extended features, released one by one as v0.2, v0.3 … |
+| **M4** | Productization and launch | Accounts, cloud deployment, landing page, compliance (only after the value is validated) |
+| **M5** | External integrations (optional) | Amazon SP-API, Google Sheets, etc. |
 
 ---
 
-### M0 工程基础
+### M0 Engineering foundation
 
-| 项目 | 内容 |
+| Item | Content |
 |---|---|
-| Git 流程 | 功能分支加 Pull Request；采用 Conventional Commits 提交规范；用 SemVer 版本号打标签；维护 `CHANGELOG.md` |
-| 后端质量 | ruff（代码检查和格式化）、pyright（类型检查）、pytest 覆盖率报告 |
-| 前端质量 | 现有的 oxlint、tsc、Vitest，再加上 Prettier 格式化 |
-| 端到端测试 | Playwright：导入 → 设置权重 → 查看结果 → 导出，跑在真实的前后端上 |
-| CI | GitHub Actions：每个 Pull Request 跑后端检查、前端检查、端到端测试，并检查 API 类型是否和后端一致（OpenAPI 生成的类型不能过期） |
-| 提交前检查 | pre-commit 钩子，在本地提前拦截格式和静态检查问题 |
-| API | 前缀改为 `/api/v1`；错误统一为 `{code, params, location}`，由前端负责翻译；每个请求带请求 ID；结构化日志 |
-| 依赖管理 | 用 Dependabot 自动提出依赖升级 |
-| 开发环境 | `docker compose up` 一条命令启动前后端，也为以后部署做准备 |
-| 仓库文档 | LICENSE、CONTRIBUTING、SECURITY、`docs/adr/` |
+| Git workflow | Feature branches plus Pull Requests; Conventional Commits for commit messages; SemVer version tags; maintain `CHANGELOG.md` |
+| Backend quality | ruff (linting and formatting), pyright (type checking), pytest coverage reports |
+| Frontend quality | The existing oxlint, tsc and Vitest, plus Prettier formatting |
+| End-to-end tests | Playwright: import → set weights → view results → export, running against the real frontend and backend |
+| CI | GitHub Actions: every Pull Request runs the backend checks, frontend checks and end-to-end tests, and checks that the API types match the backend (types generated from OpenAPI must not be stale) |
+| Pre-commit checks | pre-commit hooks that catch formatting and static analysis issues locally ahead of time |
+| API | Prefix changed to `/api/v1`; errors unified as `{code, params, location}`, translated by the frontend; every request carries a request ID; structured logging |
+| Dependency management | Dependabot proposes dependency upgrades automatically |
+| Development environment | `docker compose up` starts the frontend and backend with one command, which also prepares for later deployment |
+| Repository docs | LICENSE, CONTRIBUTING, SECURITY, `docs/adr/` |
 
-**完成标准**：CI 全部通过；任何会破坏现有功能的改动，在 Pull Request 阶段就会被 CI 拦下来。
+**Completion criteria**: CI passes; any change that would break existing functionality is stopped by CI at the Pull Request stage.
 
-### M1 设计文档（先确认，再写代码）
+### M1 Design documents (confirm first, then write code)
 
-1. **需求文档（PRD）**
-   - **用户画像**：电商运营或选品人员、企业分析师、科研和咨询人员
-   - **核心用户流程**：以电商选品为主
-   - **MVP 范围**，以及明确不做的内容
-   - **成功指标**：例如新用户用自己的表格，在 10 分钟内得到第一个可解释的结论
-2. **技术设计文档**
-   - **v2 领域模型**：
-     - 项目包括：方案、准则、准则分组、硬性条件、权重情景、分析设置；
-     - 每个准则包括：类型（数值、等级、是/否、分类）、单位、方向、价值函数、缺失值策略、所属分组。
-   - **分析流水线**：原始数据 → 清洗 → 硬性筛选 → 价值函数 → 加权和聚合 → 稳健性分析 → 结论
-   - **项目文件格式**：JSON，带格式版本号；能自动迁移旧版本文件，包括现在浏览器里保存的草稿
-   - **API v1 的接口约定**
-   - **隐私**：MVP 阶段服务器不保存任何用户数据。这样在 GDPR 方面最简单
-3. **ADR**：记录关键决策，例如"MVP 不做账号系统""结论文字用确定的模板生成，不调用大语言模型"等
+1. **PRD**
+   - **User personas**: e-commerce operations or product selection staff, business analysts, researchers and consultants
+   - **Core user flow**: centered on e-commerce product selection
+   - **MVP scope**, and what is explicitly out of scope
+   - **Success metrics**: for example, a new user gets a first explainable conclusion from their own spreadsheet within 10 minutes
+2. **Technical design document**
+   - **v2 domain model**:
+     - a project contains: alternatives, criteria, criterion groups, hard constraints, weight scenarios, analysis settings;
+     - each criterion has: a type (numeric, ordinal, yes/no, categorical), unit, direction, value function, missing-value policy, and group.
+   - **Analysis pipeline**: raw data → cleaning → hard-constraint screening → value functions → weighted-sum aggregation → robustness analysis → conclusion
+   - **Project file format**: JSON with a format version; old-version files can be migrated automatically, including the drafts currently saved in the browser
+   - **API v1 interface contract**
+   - **Privacy**: in the MVP the server stores no user data. This is the simplest option with regard to GDPR
+3. **ADRs**: record key decisions, for example "no account system in the MVP" and "conclusion text is generated from deterministic templates, without calling a large language model"
 
-**完成标准**：你审阅并确认这两份文档。
+**Completion criteria**: you review and confirm both documents.
 
-### M2 MVP（v0.1.0）
+### M2 MVP (v0.1.0)
 
-按完整功能逐个交付，每个都包括计算核心、API、界面和测试：
+Delivered one complete feature at a time, each including the computation core, API, UI and tests:
 
-| 编号 | 功能 | 说明 |
+| ID | Feature | Description |
 |---|---|---|
-| S1 | 项目模型 v2 | 新的数据结构；可以保存和打开项目文件；自动迁移旧草稿 |
-| S2 | 数据准备 | 导入任意 xlsx/csv：选择工作表和表头行；指定哪一列是方案名、哪些是准则、哪些忽略；自动识别数据类型；把文字等级映射成分数；设置缺失值策略；生成**数据质量报告**（缺失值、极端值、常数列） |
-| S3 | 价值函数和硬性条件 | 价值函数支持线性、目标区间、阈值和阶梯、对数，并实时预览曲线。硬性条件（如评分 ≥ 4.0）在打分前筛掉方案，并说明每个方案被排除的原因 |
-| S4 | 准则分组和权重引导 | 一层准则分组；三种设权重的方式：直接输入、按重要性排序后自动换算（ROC 或 Rank-Sum 方法）、两两比较（AHP，附一致性检查） |
-| S5 | 稳健性分析 | 蒙特卡洛模拟：在当前权重附近或整个权重空间里抽样，得出每个方案排在各个名次的概率，以及它排第一的概率 |
-| S6 | 结论页和报告 v2 | 用通俗语言写结论（按确定的模板生成），包括推荐哪个、为什么、比第二名强在哪里、结论有多可靠。报告里记录完整的数据处理和设置过程 |
-| S7 | 模板系统 | 模板文件格式，以及两个内置模板：**Amazon 选品**（旗舰场景）、**技术评估**（基于旧版 ELT 数据） |
-| S8 | 引导模式和专家模式 | 新增引导式向导；现有的五个页面作为专家模式保留 |
+| S1 | Project model v2 | New data structure; project files can be saved and opened; old drafts are migrated automatically |
+| S2 | Data preparation | Import any xlsx/csv: choose the sheet and header row; specify which column holds the alternative names, which are criteria and which are ignored; detect data types automatically; map text grades to scores; set missing-value policies; generate a **data quality report** (missing values, outliers, constant columns) |
+| S3 | Value functions and hard constraints | Value functions support linear, target range, threshold and step, and logarithmic, with a live curve preview. Hard constraints (such as rating ≥ 4.0) screen out alternatives before scoring and explain why each alternative was excluded |
+| S4 | Criterion groups and weight guidance | One level of criterion groups; three ways to set weights: direct input, rank by importance and convert automatically (ROC or Rank-Sum method), and pairwise comparison (AHP, with a consistency check) |
+| S5 | Robustness analysis | Monte Carlo simulation: sample around the current weights or across the whole weight space, giving each alternative's probability of reaching each rank and its probability of ranking first |
+| S6 | Conclusion page and report v2 | Conclusions in plain language (generated from deterministic templates): which alternative is recommended, why, where it beats the runner-up, and how reliable the conclusion is. The report records the full data processing and settings |
+| S7 | Template system | Template file format, plus two built-in templates: **Amazon product selection** (flagship scenario) and **technology assessment** (based on the legacy ELT data) |
+| S8 | Guided mode and expert mode | New guided wizard; the existing five pages are kept as expert mode |
 
-**完成标准**：
-- 旗舰场景"Amazon 选品"有端到端测试覆盖；
-- 一个没用过的人，按照文档能独立走完整个流程；
-- 文档已更新；
-- 打标签 v0.1.0 后推送到 GitHub。**推送前会再确认一次。**
+**Completion criteria**:
+- The flagship scenario "Amazon product selection" is covered by end-to-end tests;
+- Someone who has never used the tool can complete the whole flow on their own by following the documentation;
+- The documentation is updated;
+- Tag v0.1.0 and push to GitHub. **There will be one more confirmation before pushing.**
 
-### M3 功能扩展（v0.2 起，每项单独发布）
+### M3 Feature expansion (from v0.2, each released separately)
 
-| 功能 | 说明 |
+| Feature | Description |
 |---|---|
-| 情景对比 | 多套权重（比如老板版、运营版）并排比较，突出显示排名差异 |
-| 多人决策 | 多人分别给权重或打分，然后汇总（例如对 AHP 结果取几何平均），并展示分歧在哪里 |
-| 客观赋权 | 熵权法、CRITIC。界面上明确说明：这类权重反映的是数据的差异程度，不代表重要性 |
-| 更多方法（专家模式） | VIKOR、PROMETHEE II；比较不同方法的排名，并计算它们的相关系数（Kendall τ、Spearman） |
-| 多层准则 | 准则分组可以有多层；对旧版 Hier 层级权重情景提供完整支持 |
-| 模板库 | 新增模板：供应商选择、SKU 优先级、物流方式、站点扩张、软件选型、选址、项目优先级、可持续性评估；用户可以自定义模板，并导入导出 |
-| 可复现性 | 导出一个"复现包"（数据、设置、版本号）；报告附带方法说明和参考文献 |
-| 多语言 | 加入德语；服务器返回的消息全部翻译 |
-| 可访问性 | 达到 WCAG 2.1 AA 标准；深色模式 |
+| Scenario comparison | Compare multiple weight sets (for example a boss version and an operations version) side by side, highlighting ranking differences |
+| Group decisions | Several people each give weights or scores, which are then aggregated (for example by taking the geometric mean of AHP results), showing where they disagree |
+| Objective weighting | Entropy weighting, CRITIC. The UI states clearly that such weights reflect how much the data varies, not importance |
+| More methods (expert mode) | VIKOR, PROMETHEE II; compare the rankings of different methods and compute their correlation coefficients (Kendall τ, Spearman) |
+| Multi-level criteria | Criterion groups can have multiple levels; full support for the legacy Hier hierarchical weight scenarios |
+| Template library | New templates: supplier selection, SKU prioritization, shipping method, marketplace expansion, software selection, site selection, project prioritization, sustainability assessment; users can define their own templates and import and export them |
+| Reproducibility | Export a "reproducibility package" (data, settings, version numbers); reports include a methods description and references |
+| Multiple languages | Add German; translate all messages returned by the server |
+| Accessibility | Meet WCAG 2.1 AA; dark mode |
 
-### M4 产品化和上线（验证有价值之后再做）
+### M4 Productization and launch (only after the value is validated)
 
-- **账号和协作**：账号系统、在服务器上保存项目（PostgreSQL）、分享链接、团队和权限
-- **对外展示**：落地页、统一的设计规范、文档站、案例库
-- **部署**：Docker、欧盟区域的云服务器、HTTPS、备份、监控、错误追踪、尊重隐私的访问统计
-- **合规（德国）**：Impressum（依据《数字服务法》DDG）；隐私声明；如果替企业客户处理数据，需要签订数据处理协议（AVV）
-- **分阶段上线**：先自己内部使用 → 小范围邀请测试 → 正式公开
+- **Accounts and collaboration**: account system, saving projects on the server (PostgreSQL), share links, teams and permissions
+- **Public presence**: landing page, a unified design system, documentation site, case library
+- **Deployment**: Docker, cloud servers in an EU region, HTTPS, backups, monitoring, error tracking, privacy-respecting analytics
+- **Compliance (Germany)**: Impressum (under the Digital Services Act, DDG); privacy policy; a data processing agreement (AVV) is required if processing data on behalf of business customers
+- **Staged launch**: internal use first → small invite-only beta → public release
 
-### M5 外部集成（可选）
+### M5 External integrations (optional)
 
-- Amazon SP-API：导入自己店铺的销售数据和费用数据。需要先注册为开发者
-- Google Sheets 导入导出
-- 提供带 API 密钥的公开接口，方便其他程序调用
+- Amazon SP-API: import sales and fee data from one's own store. Requires registering as a developer first
+- Google Sheets import and export
+- A public API with API keys, so other programs can call it
 
 ---
 
-## 每个功能的开发流程
+## Development process for each feature
 
-1. 写一页设计说明：要解决什么问题、怎么做、考虑过哪些替代方案
-2. 测试和代码一起写
-3. 拆成小的 Pull Request，CI 全部通过
-4. 审查：我先自查一遍，再请你确认
-5. 合并到 `main`；没做完的部分用功能开关隐藏
-6. 更新 CHANGELOG 和文档
+1. Write a one-page design note: what problem it solves, how, and which alternatives were considered
+2. Write tests together with the code
+3. Split into small Pull Requests, with CI passing
+4. Review: I review it myself first, then ask you to confirm
+5. Merge into `main`; unfinished parts are hidden behind feature flags
+6. Update the CHANGELOG and documentation
 
-## 待你决定的事项
+## Open decisions for you
 
-| 事项 | 选项 | 需要决定的时间 |
+| Item | Options | Decide by |
 |---|---|---|
-| ~~许可证~~ | **已决定：Apache-2.0** | M0 |
-| ~~GitHub 仓库~~ | **已决定：新代码替换 MCDA-Tool-2.0 的内容，旧代码保留在标签 `v1-legacy` 上** | M2 推送前 |
-| MVP 是否包含德语 | 是，或者放到 M3 | M1 |
+| ~~License~~ | **Decided: Apache-2.0** | M0 |
+| ~~GitHub repository~~ | **Decided: the new code replaces the contents of MCDA-Tool-2.0; the old code stays at tag `v1-legacy`** | Before the M2 push |
+| Whether the MVP includes German | Yes, or move it to M3 | M1 |

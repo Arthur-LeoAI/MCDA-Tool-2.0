@@ -5,7 +5,7 @@ import { translate } from '../i18n/useT'
 
 /**
  * What an alternative is called in running text: the template's term
- * (e.g. "产品" / "product") or the general word. English is lower-cased
+ * (e.g. the Amazon template's word for products) or the general word. English is lower-cased
  * because the templates use sentences like "one row per {alt}".
  */
 export function alternativeTerm(

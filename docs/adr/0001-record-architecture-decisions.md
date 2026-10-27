@@ -1,19 +1,19 @@
-# 0001 记录架构决策
+# 0001 Record architecture decisions
 
-- 状态：已采纳
-- 日期：2026-10-23
+- Status: Accepted
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-项目会持续好几个里程碑。如果只看代码，看不出某个设计为什么这样做、当时考虑过哪些替代方案，以后修改时容易重复讨论，或者无意中推翻了已有的取舍。
+The project will run over several milestones. The code alone does not show why a design was chosen or which alternatives were considered at the time. Later changes then easily reopen old discussions or unintentionally overturn existing trade-offs.
 
-## 决定
+## Decision
 
-重要的架构决策用 ADR（架构决策记录）记在 `docs/adr/` 里，按顺序编号，每个决策一个文件。格式是：背景、决定、后果。
+Important architecture decisions are recorded as ADRs (architecture decision records) in `docs/adr/`, numbered sequentially, one file per decision. The format is: Context, Decision, Consequences.
 
-已采纳的 ADR 不再修改内容。决策改变时，写一个新的 ADR，并把旧的状态改为"被 NNNN 取代"。
+The content of an accepted ADR is not changed anymore. When a decision changes, a new ADR is written and the status of the old one is changed to "Superseded by NNNN".
 
-## 后果
+## Consequences
 
-- 新成员能看懂过去的取舍。
-- 写 ADR 有少量额外工作，所以只记录影响面大、不容易回退的决定。
+- New team members can understand past trade-offs.
+- Writing ADRs takes a little extra work, so only decisions with a broad impact that are hard to reverse are recorded.

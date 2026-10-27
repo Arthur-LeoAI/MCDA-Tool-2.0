@@ -1,23 +1,23 @@
-# 0006 项目文件格式：带版本号的 JSON，不保存计算结果
+# 0006 Project file format: versioned JSON, without calculation results
 
-- 状态：已采纳
-- 日期：2026-10-23
+- Status: Accepted
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-服务器不保存数据（ADR 0003），所以用户的工作只能保存在浏览器里或者文件里。这个文件要能长期打开，能交给别人，并且能完全复现当时的结果。
+The server does not store data (ADR 0003), so users can only save their work in the browser or in a file. This file must remain openable over the long term, be shareable with others, and fully reproduce the results obtained at the time.
 
-## 决定
+## Decision
 
-- 格式为 UTF-8 JSON，扩展名 `.mcda.json`，最上层是 `{"format": "mcda-project", "version": N, ...}`。
-- 方案、准则、分组、硬性条件都用稳定的 `id` 互相引用，名称可以随意修改。
-- 原始数据按原样保存（数字、文字、是/否、空值），处理设置单独保存。所以修改设置不会丢失原始数据。
-- **文件里不保存计算结果**。打开项目时重新计算，保证结果只取决于"数据 + 设置 + 程序版本"。文件里记录 `app_version`，方便核对。
-- 格式升级时，在 `mcda_core.project.migrate` 里加一步迁移（v1 → v2 → …）。旧版本的文件必须永远能打开。版本 3 留在浏览器里的草稿算作 v1。
-- 由 Pydantic 模型导出 JSON Schema（`backend/project.schema.json`），CI 检查它是否最新。
+- The format is UTF-8 JSON with the extension `.mcda.json`; the top level is `{"format": "mcda-project", "version": N, ...}`.
+- Alternatives, criteria, groups and hard constraints reference each other by stable `id`s, so names can be changed freely.
+- Raw data is stored as is (numbers, text, yes/no, empty values), and processing settings are stored separately. Changing settings therefore does not lose raw data.
+- **The file does not store calculation results**. Results are recalculated when a project is opened, which ensures they depend only on "data + settings + program version". The file records `app_version` for verification.
+- When the format is upgraded, a migration step is added in `mcda_core.project.migrate` (v1 → v2 → …). Files of older versions must always remain openable. Drafts left in the browser by version 3 count as v1.
+- A JSON Schema (`backend/project.schema.json`) is exported from the Pydantic models, and CI checks that it is up to date.
 
-## 后果
+## Consequences
 
-- 文件可以用文本编辑器打开，也适合用 Git 管理。
-- 打开大项目时需要重新计算，但在 MVP 的规模下很快（PRD 的性能要求）。
-- 每次修改格式都要写迁移代码和测试。
+- Files can be opened in a text editor and are well suited for Git.
+- Opening a large project requires recalculation, but at MVP scale this is fast (the PRD's performance requirements).
+- Every format change requires migration code and tests.

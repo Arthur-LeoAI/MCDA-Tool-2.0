@@ -82,7 +82,7 @@ class TableBuildRequest(BaseModel):
     filename: str | None = None
     sheet: str | None = None
     template_id: str | None = None
-    language: Language = "zh"
+    language: Language = "en"
 
 
 def _json_cell(value: object) -> Cell:

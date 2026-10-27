@@ -1,20 +1,20 @@
-# 0008 第一个正式版本发布前，/api/v1 允许不兼容的修改
+# 0008 /api/v1 allows breaking changes until the first official release
 
-- 状态：已采纳
-- 日期：2026-10-23
+- Status: Accepted
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-ADR 0004 规定有破坏兼容的改动时要新增 `/api/v2`。但 MVP 会大幅改变接口（从"问题"模型改为"项目"模型），而现在只有我们自己的前端在用这个 API。
+ADR 0004 requires adding `/api/v2` for breaking changes. However, the MVP will change the interface substantially (from the "problem" model to the "project" model), and currently only our own frontend uses this API.
 
-## 决定
+## Decision
 
-- 在发布 v0.1.0 之前，`/api/v1` 可以有不兼容的修改。前端、`openapi.json` 和生成的类型都在同一个仓库里同时更新，CI 会检查它们是否一致。
-- 旧接口（`/problems/*`、`/evaluate`、`/pareto`、`/sensitivity/stability`、`/export/*`）在前端迁移完成后、发布 v0.1.0 之前删除。
-- 从 v0.1.0 开始，`/api/v1` 冻结，只允许兼容的修改（新增字段、新增接口）。不兼容的修改走 `/api/v2`。
-- 错误代码一旦随 v0.1.0 发布，就不再改名或删除。
+- Before v0.1.0 is released, `/api/v1` may have breaking changes. The frontend, `openapi.json` and the generated types are all updated together in the same repository, and CI checks that they are consistent.
+- The old endpoints (`/problems/*`, `/evaluate`, `/pareto`, `/sensitivity/stability`, `/export/*`) are removed after the frontend migration is complete and before v0.1.0 is released.
+- From v0.1.0 on, `/api/v1` is frozen and allows only compatible changes (new fields, new endpoints). Breaking changes go to `/api/v2`.
+- Once released with v0.1.0, error codes are no longer renamed or removed.
 
-## 后果
+## Consequences
 
-- 不用在 MVP 期间同时维护两套接口。
-- v0.1.0 之前，任何外部用户都不应该依赖这个 API。README 里会写明这一点。
+- There is no need to maintain two sets of interfaces during the MVP.
+- Before v0.1.0, no external user should depend on this API. The README will state this.

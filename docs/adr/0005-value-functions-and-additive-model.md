@@ -1,22 +1,22 @@
-# 0005 用价值函数统一数据处理，引导模式使用加性价值模型
+# 0005 Value functions unify data processing; guided mode uses the additive value model
 
-- 状态：已采纳
-- 日期：2026-10-23
+- Status: Accepted
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-真实数据里有数值（单位各不相同）、文字等级、是/否和缺失值，而且用户的偏好往往不是线性的，比如"发货 2 天内都差不多"。现有的做法只有几种归一化方式（min_max、fixed_range、vector、none），只能处理数值，表达不了非线性偏好，各方法之间的处理也不一致。
+Real data contains numbers (in varying units), text grades, yes/no values and missing values, and user preferences are often nonlinear, for example "delivery within 2 days is all about the same". The existing approach offered only a few normalization methods (min_max, fixed_range, vector, none), which handle only numbers, cannot express nonlinear preferences, and are handled inconsistently across methods.
 
-## 决定
+## Decision
 
-1. 每个准则都有一个**价值函数**，把原始值换算成 0–1 的价值分（多属性价值理论，Keeney & Raiffa, 1976）。等级和分类按设定的分数换算，是/否换算成 0 或 1，数值则用线性、对数、目标区间或折线计算。
-2. 现有的归一化方式都是价值函数的特例：`min_max` 等于线性加数据范围，`fixed_range` 等于线性加固定范围，`none`（旧版 0–100 数据）等于线性加固定范围 [0, 100]。
-3. 所有方法（加权和、TOPSIS、CP）、稳定区间、Pareto 分析和蒙特卡洛模拟都在同一个价值矩阵上计算。
-4. **引导模式只用加权和**（加性价值模型）：它可以精确拆分成每个准则的贡献，结论能写成"因为 A 准则，所以……"。专家模式可以选用其他方法。经典 TOPSIS（原始数据加向量归一化）只在专家模式提供，并且要求所有准则都是数值类型、都用线性价值函数。
+1. Every criterion has a **value function** that converts the raw value into a value score between 0 and 1 (multi-attribute value theory, Keeney & Raiffa, 1976). Grades and categories are converted by assigned scores, yes/no is converted to 0 or 1, and numbers are calculated with a linear, logarithmic, target-range or piecewise-linear function.
+2. The existing normalization methods are special cases of value functions: `min_max` equals linear with the data range, `fixed_range` equals linear with a fixed range, and `none` (old 0–100 data) equals linear with the fixed range [0, 100].
+3. All methods (weighted sum, TOPSIS, CP), stability intervals, Pareto analysis and Monte Carlo simulation are calculated on the same value matrix.
+4. **Guided mode uses only the weighted sum** (additive value model): it can be split exactly into the contribution of each criterion, so conclusions can be phrased as "because of criterion A, ...". Expert mode can choose other methods. Classic TOPSIS (raw data with vector normalization) is offered only in expert mode and requires all criteria to be numeric and to use linear value functions.
 
-## 后果
+## Consequences
 
-- 数据处理只在一个地方实现，每一步都能单独测试和解释。
-- 旧版 Excel 对照测试仍然成立：固定范围 [0, 100] 等于把所有准则按同一比例缩放，排名和稳定区间都不变。
-- TOPSIS 和 CP 在价值分上计算，结果会和"原始数据加向量归一化"的经典定义不同。这一点在专家模式和文档里写明。
-- 加性模型假设各准则之间偏好独立（例如价格好坏不会影响对质量的偏好）。这个假设在帮助文字里说明。
+- Data processing is implemented in one place, and each step can be tested and explained on its own.
+- The comparison tests against the old Excel files still hold: the fixed range [0, 100] scales all criteria by the same factor, so rankings and stability intervals do not change.
+- TOPSIS and CP are calculated on value scores, so their results differ from the classic definition of "raw data with vector normalization". This is stated in expert mode and in the documentation.
+- The additive model assumes preference independence between criteria (for example, whether the price is good or bad does not affect the preference for quality). This assumption is explained in the help text.

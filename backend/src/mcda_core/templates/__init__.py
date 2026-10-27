@@ -177,7 +177,7 @@ def _localized_label(t: TemplateCriterion, value: RawValue, language: Language) 
 
 
 def template_project(
-    template: Template, language: Language = "zh", *, example: bool = True, preset: str | None = None
+    template: Template, language: Language = "en", *, example: bool = True, preset: str | None = None
 ) -> Project:
     """A project with the template's criteria, groups, weights and constraints; with or without example data."""
     criteria = [_criterion(c, language) for c in template.criteria]

@@ -1163,7 +1163,7 @@
             "type": "string"
           },
           "language": {
-            "default": "zh",
+            "default": "en",
             "enum": [
               "zh",
               "en"
@@ -1488,7 +1488,7 @@
             "$ref": "#/components/schemas/Meta",
             "default": {
               "description": "",
-              "language": "zh",
+              "language": "en",
               "name": ""
             }
           },
@@ -2150,7 +2150,7 @@
             "type": "integer"
           },
           "language": {
-            "default": "zh",
+            "default": "en",
             "enum": [
               "zh",
               "en"
@@ -3528,7 +3528,7 @@
             "name": "language",
             "required": false,
             "schema": {
-              "default": "zh",
+              "default": "en",
               "enum": [
                 "zh",
                 "en"

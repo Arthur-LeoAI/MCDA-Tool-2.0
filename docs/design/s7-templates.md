@@ -1,70 +1,70 @@
-# S7 设计说明：模板
+# S7 design note: templates
 
-- 状态：已完成
-- 依据：需求文档 F7.1–F7.3；技术设计 §7
+- Status: done
+- Based on: PRD F7.1–F7.3; technical design §7
 
-## 要解决的问题
+## Problem
 
-现在每个项目都要从零开始设置准则、换算方式、分组和权重。对常见的决策场景，这些设置大体是固定的。S7 提供两个内置模板，用户可以直接从模板开始，或者导入自己的表格时按模板自动对应列。
+Currently every project has to set up criteria, conversions, groups and weights from scratch. For common decision scenarios these settings are largely fixed. S7 provides two built-in templates: users can start directly from a template, or have columns mapped automatically by a template when importing their own table.
 
-## 模板格式
+## Template format
 
-模板是 `backend/src/mcda_core/templates/*.json`，启动时用 Pydantic 模型校验。和技术设计 §7 相比有三处细化：
+Templates are `backend/src/mcda_core/templates/*.json`, validated with a Pydantic model at startup. Compared with technical design §7 there are three refinements:
 
-- **分类和等级的取值**也带中英文名称和别名：
-  - 项目里的取值用所选语言的名称；
-  - 导入表格时，表格里的取值和任一语言的名称或别名一致（不区分大小写）就算匹配。
-- **权重预设**（`presets`）：每个预设是一套完整的 `weighting`。没有预设时使用 `weighting`。
-- **硬性条件**：模板里的条件都是"建议的条件"，创建项目时加上，用户可以在准则设置里删掉。技术设计里的 `optional` 字段因此去掉。
+- **Categorical and ordinal values** also have Chinese and English names and aliases:
+  - Values in the project use the name in the selected language;
+  - When importing a table, a value in the table matches if it equals the name or an alias in either language (case-insensitive).
+- **Weight presets** (`presets`): each preset is a complete `weighting`. Without presets, `weighting` is used.
+- **Hard constraints**: the constraints in a template are all "suggested constraints"; they are added when the project is created, and the user can delete them in the criterion settings. The `optional` field from the technical design is therefore dropped.
 
-**界面用词**（`terms`，例如把"方案"称为"产品"）先只保存在模板里；在界面上替换用词放到 S8 引导模式。
+**UI terms** (`terms`, for example calling alternatives "products") are only stored in the template for now; replacing the terms in the UI is deferred to S8 guided mode.
 
-## 两个内置模板
+## The two built-in templates
 
-**Amazon 美国站选品**（`amazon-us-product-selection`），按技术设计 §7 的表：
-- 5 个分组（需求、盈利、竞争、风险、运营），10 个准则；
-- 货币为美元；
-- 建议的硬性条件：利润率 ≥ 20%；
-- 组权重：按重要性排序 盈利 > 需求 > 竞争 > 风险 > 运营（ROC），组内平均。
-- 所有数值都由用户填写，模板不内置任何费用标准。
-- 示例数据是 6 个虚构的产品，只用于演示，描述里会写明这一点。
+**Amazon US product selection** (`amazon-us-product-selection`), following the table in technical design §7:
+- 5 groups (demand, profitability, competition, risk, operations), 10 criteria;
+- Currency is US dollars;
+- Suggested hard constraint: profit margin ≥ 20%;
+- Group weights: ranked by importance profitability > demand > competition > risk > operations (ROC), equal within groups.
+- All numbers are entered by the user; the template contains no built-in fee schedules.
+- The example data is 6 fictional products, for demonstration only; the description says so.
 
-**ELT 技术评估**（`elt-technology-assessment`）：
-- 来自旧版 V7 工作簿（`data/legacy/MCDA ELT V7_*_G_Top1.xlsx`）的 34 个准则和 7 种废旧轮胎处理技术；
-- 旧版数据已经换算为 0–100 分，分数越高越好，所以每个准则都是线性价值函数、固定范围 [0, 100]、越大越好。
-- 三个分组：技术（第 1–5 个准则）、经济（第 6–13 个）、环境（第 14–34 个）。分组不是凭猜测：旧版五种情景的权重正好对应这三组：
-  - Econ、Tech、Enviro：只有对应的那一组有权重，组内平均；
-  - Hier：三组各占 1/3，组内平均；
-  - Equal：34 个准则权重相同。
-- 五种情景作为权重预设，默认是 Hier。示例数据取自 Hier_G 工作簿。
-- 模板文件由 `backend/scripts/make_elt_template.py` 从旧版工作簿生成，准则的中文名称写在这个脚本里。
-- 测试检查：用 Enviro 预设和示例数据算出的排名，和旧版 Enviro_G 工作簿记录的排名一致。
+**ELT technology assessment** (`elt-technology-assessment`):
+- The 34 criteria and 7 end-of-life tire treatment technologies from the legacy V7 workbook (`data/legacy/MCDA ELT V7_*_G_Top1.xlsx`);
+- The legacy data is already converted to 0–100 scores, higher is better, so every criterion is a linear value function with fixed range [0, 100], higher is better.
+- Three groups: technical (criteria 1–5), economic (criteria 6–13), environmental (criteria 14–34). The groups are not guessed: the weights of the five legacy scenarios correspond exactly to these three groups:
+  - Econ, Tech, Enviro: only the corresponding group has weight, equal within the group;
+  - Hier: each of the three groups gets 1/3, equal within groups;
+  - Equal: all 34 criteria have the same weight.
+- The five scenarios are weight presets; the default is Hier. The example data comes from the Hier_G workbook.
+- The template file is generated from the legacy workbooks by `backend/scripts/make_elt_template.py`; the Chinese names of the criteria are written in this script.
+- Test check: the ranking computed with the Enviro preset and the example data matches the ranking recorded in the legacy Enviro_G workbook.
 
-## 接口
+## API
 
-| 接口 | 作用 |
+| Endpoint | Purpose |
 |---|---|
-| `GET /api/v1/templates` | 模板列表：id、领域、名称、说明、准则数量、预设 |
-| `GET /api/v1/templates/{id}/project?language=zh&example=true&preset=hier` | 从模板生成项目。`example=false` 时只有准则、分组、权重和条件，没有方案 |
-| `POST /api/v1/tables/inspect?template_id=…` | 额外为每一列给出按别名匹配到的模板准则（`template_criterion`） |
-| `POST /api/v1/tables/build` | 新增 `template_id`、`language`，每一列可以指定 `template_criterion` |
+| `GET /api/v1/templates` | Template list: id, domain, name, description, number of criteria, presets |
+| `GET /api/v1/templates/{id}/project?language=zh&example=true&preset=hier` | Generates a project from a template. With `example=false` there are only criteria, groups, weights and constraints, with no alternatives |
+| `POST /api/v1/tables/inspect?template_id=…` | Additionally returns, for each column, the template criterion matched by alias (`template_criterion`) |
+| `POST /api/v1/tables/build` | New `template_id` and `language`; each column can specify `template_criterion` |
 
-**按模板建表**时：
-- 对应到模板准则的列，使用模板准则的 id、名称、类型、单位、换算方式、分组和说明；
-- 分类和等级的取值：表格里的取值全部能和模板取值对上时使用模板的分数，否则使用这一列自己的取值顺序；
-- 没有对应到模板的列按普通准则处理，不属于任何分组；
-- 分组、权重和硬性条件只保留和实际出现的准则有关的部分；
-- `meta.template_id` 记录来源模板。
+When **building a table with a template**:
+- Columns mapped to a template criterion use that criterion's id, name, type, unit, conversion, group and note;
+- Categorical and ordinal values: if all values in the table match template values, the template's scores are used; otherwise the column's own value order is used;
+- Columns not mapped to the template are treated as ordinary criteria and belong to no group;
+- Groups, weights and hard constraints keep only the parts related to the criteria actually present;
+- `meta.template_id` records the source template.
 
-**列名匹配**：列名和别名都先统一成小写，去掉首尾空格、多余空格和标点（括号、%、$、#、:），然后完全相同才算匹配。每个模板准则最多匹配一列（第一个匹配的列）。
+**Column name matching**: column names and aliases are both normalized first: lowercased, leading and trailing spaces and extra spaces removed, and punctuation removed (parentheses, %, $, #, :). They match only if they are then identical. Each template criterion matches at most one column (the first matching column).
 
-## 前端
+## Frontend
 
-- "数据"页的开始界面新增"从模板开始"：每个模板一张卡片，可以"使用示例数据"或"只用准则（空白）"。ELT 模板可以选择权重预设。
-- "对应列"步骤顶部可以选择模板。选择后重新识别，匹配到的列显示对应的模板准则，也可以手动更改或取消。
-- 准则的说明（`note`）在准则设置里显示。
+- The start screen of the "Data" page gets a new "Start from a template" option: one card per template, with "Use example data" or "Criteria only (blank)". The ELT template lets the user choose a weight preset.
+- At the top of the "Map columns" step a template can be chosen. After choosing, detection runs again, and matched columns show the corresponding template criterion, which can also be changed or cleared manually.
+- The criterion note (`note`) is shown in the criterion settings.
 
-## 怎么验证
+## Verification
 
-- 后端：两个模板都通过校验；示例数据能完整跑通一遍分析（evaluate、robustness、report）；ELT 的 Enviro 预设和旧版排名一致；Equal 和 Hier 预设得到的全局权重和旧版工作簿一致；列名匹配（中英文、标点、大小写）；分类取值匹配和不匹配的情况；按模板建表只保留出现的准则。
-- 端到端测试：从 Amazon 模板开始（示例数据），看到分组和结论；导入一个列名为中文别名的表格，选择 Amazon 模板后列被自动对应。
+- Backend: both templates pass validation; the example data runs through a complete analysis (evaluate, robustness, report); the ELT Enviro preset matches the legacy ranking; the global weights of the Equal and Hier presets match the legacy workbooks; column name matching (Chinese and English, punctuation, case); matching and non-matching categorical values; building a table with a template keeps only the criteria present.
+- End-to-end test: start from the Amazon template (example data) and see the groups and the conclusion; import a table whose column names are Chinese aliases, choose the Amazon template, and the columns are mapped automatically.

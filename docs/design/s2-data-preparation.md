@@ -1,72 +1,72 @@
-# S2 设计说明：数据准备
+# S2 design note: data preparation
 
-- 状态：已完成
-- 依据：需求文档 F2.1–F2.6；技术设计 §3 第 1 步、§5
+- Status: done
+- Based on: PRD F2.1–F2.6; technical design §3 step 1, §5
 
-## 要解决的问题
+## Problem
 
-现在只能导入标准模板，或者旧版 V7 工作簿。用户手上的表格往往是第三方选品工具、Seller Central 报表或自己做的 Excel，常见情况有：
-- 前面有说明行；
-- 有多余的列；
-- 数字写成"$12.99""15%""1.234,5"这样的文字；
-- 有文字等级（低/中/高）和是/否；
-- 有缺失值。
+Currently only the standard template or a legacy V7 workbook can be imported. The tables users actually have usually come from third-party product research tools, Seller Central reports or their own Excel files. Common situations:
+- There are note rows at the top;
+- There are extra columns;
+- Numbers are written as text such as "$12.99""15%""1.234,5";
+- There are text levels (低/中/高, i.e. low/medium/high) and yes/no values;
+- There are missing values.
 
-S2 要让这类表格**直接导入**，并且在导入后告诉用户数据有什么问题。
+S2 makes such tables **importable directly** and, after import, tells the user what is wrong with the data.
 
-## 流程
+## Flow
 
-1. **上传**：`POST /api/v1/tables/inspect`（上传文件，可以带 `sheet` 和 `header_row` 参数）。
-   - 如果识别为**标准模板或旧版工作簿**，直接返回转换好的项目，和以前一样。
-   - 否则返回**表格信息**：所有工作表、猜测的表头行、每列的识别结果，以及单元格内容（表头以下最多 500 行、200 列）。
-2. **对应列**（前端）：用户选择工作表和表头行，指定方案名所在的列；其他每一列选"准则"或"忽略"，确认类型和方向；等级列可以调整取值的顺序。
-3. **生成项目**：`POST /api/v1/tables/build`。把表格和列对应关系转换成项目：
-   - 文字形式的数字解析成数值；
-   - 等级默认按顺序均匀给分（排在最后的为 1）；
-   - 分类默认全部给 1 分（不区分），由用户自己设定；
-   - 是/否转换为 true/false；
-   - 所有权重默认为 1。
-4. **数据质量报告**：`POST /api/v1/projects/quality`。导入后在"数据"页显示。
+1. **Upload**: `POST /api/v1/tables/inspect` (file upload, optionally with `sheet` and `header_row` parameters).
+   - If the file is recognized as a **standard template or legacy workbook**, the converted project is returned directly, as before.
+   - Otherwise **table information** is returned: all sheets, the guessed header row, the detected type of each column, and the cell contents (at most 500 rows below the header and 200 columns).
+2. **Map columns** (frontend): the user picks the sheet and header row and names the column that holds the alternative names; every other column is set to "criterion" or "ignore", with type and direction confirmed; for ordinal columns the order of the values can be adjusted.
+3. **Build the project**: `POST /api/v1/tables/build`. Converts the table and the column mapping into a project:
+   - Numbers written as text are parsed into numeric values;
+   - Ordinal levels get evenly spaced scores by default, following their order (the last one gets 1);
+   - Categories all get a score of 1 by default (no distinction); the user sets them;
+   - Yes/no is converted to true/false;
+   - All weights default to 1.
+4. **Data quality report**: `POST /api/v1/projects/quality`. Shown on the "Data" page after import.
 
-## 识别规则
+## Detection rules
 
-**文字形式的数字**：
-- 去掉空格（包括不换行空格）、货币符号（$ € £ ¥）和百分号；"15%"读作 15，并把单位记为 %。
-- 会计格式的负数 "(1,234)" 读作 −1234。
-- 千分位和小数点：
-  - 同时出现 `.` 和 `,` 时，最后出现的那个是小数点；
-  - 只有 `,` 时，形如 `1,234` / `12,345,678` 的是千分位，否则是小数点（`12,5`）；
-  - 只有 `.` 时，形如 `1.234.567`（两组以上）的是千分位，否则是小数点。
-- **同一列统一判断**：只要这一列里有一个值能明确看出小数点是哪个符号（比如 `1.234,5`），整列都按这个规则解析。这样 `1.234` 在欧洲格式的列里会读作 1234。
+**Numbers written as text**:
+- Remove spaces (including non-breaking spaces), currency symbols ($ € £ ¥) and percent signs; "15%" is read as 15 and the unit is recorded as %.
+- Accounting-style negatives "(1,234)" are read as −1234.
+- Thousands separators and decimal points:
+  - When both `.` and `,` appear, the last one is the decimal point;
+  - When only `,` appears, forms like `1,234` / `12,345,678` are thousands separators; otherwise it is a decimal point (`12,5`);
+  - When only `.` appears, forms like `1.234.567` (two or more groups) are thousands separators; otherwise it is a decimal point.
+- **One decision per column**: as soon as one value in the column clearly shows which symbol is the decimal point (e.g. `1.234,5`), the whole column is parsed with that rule. So `1.234` in a European-format column is read as 1234.
 
-**列类型**（只看非空值）：
-- 90% 以上能解析成数字 → 数值；
-- 全部是 是/否、yes/no、true/false、ja/nein、1/0 → 是/否；
-- 不同取值 ≤ 10 个，而且全部属于一组已知的顺序词（低/中/高、low/medium/high、小/中/大、差/一般/好 等）→ 等级，按词表的顺序排列；
-- 不同取值 ≤ 10 个的其他情况 → 分类；
-- 其余 → 文本，默认"忽略"。
+**Column type** (non-empty values only):
+- More than 90% parse as numbers → numeric;
+- All values are 是/否, yes/no, true/false, ja/nein, 1/0 → yes/no;
+- At most 10 distinct values, all belonging to one known set of ordered words (低/中/高, low/medium/high, 小/中/大, 差/一般/好, etc.) → ordinal, ordered as in the word list;
+- Other cases with at most 10 distinct values → categorical;
+- Everything else → text, "ignore" by default.
 
-**方案名所在的列**：大部分是文字、取值基本不重复的第一列。
+**Column with the alternative names**: the first column that is mostly text and has nearly no repeated values.
 
-**表头行**：前 10 行中，第一个"非空单元格占一半以上、而且都是文字"、并且下一行含有数字的行；找不到时用第 1 行。
+**Header row**: among the first 10 rows, the first row in which "more than half of the cells are non-empty and all of them are text" and whose next row contains numbers; if none is found, row 1 is used.
 
-## 数据质量报告
+## Data quality report
 
-按准则列出以下问题（都有错误代码，前端负责翻译）：
+Lists the following issues per criterion (all have error codes; the frontend translates them):
 
-| 代码 | 含义 |
+| Code | Meaning |
 |---|---|
-| `quality_missing` | 有 N 个缺失值，以及按什么规则处理 |
-| `quality_constant` | 所有方案取值相同，这个准则无法区分方案 |
-| `quality_outliers` | 有极端值（超出四分位距 1.5 倍的范围），并列出是哪些方案 |
-| `quality_suggest_log` | 数值跨越两个数量级以上（最大值 / 最小值 > 100），建议使用对数曲线 |
-| `quality_categories_equal` | 分类的分数全部相同，这个准则不起作用 |
+| `quality_missing` | There are N missing values, and the rule used to handle them |
+| `quality_constant` | All alternatives have the same value; this criterion cannot distinguish alternatives |
+| `quality_outliers` | There are extreme values (outside 1.5 times the interquartile range), with the alternatives listed |
+| `quality_suggest_log` | The values span more than two orders of magnitude (maximum / minimum > 100); a logarithmic curve is suggested |
+| `quality_categories_equal` | All category scores are the same; this criterion has no effect |
 
-## 不做（后续步骤）
+## Not done (later steps)
 
-价值函数编辑器（S3）、模板别名自动对应列（S7）。
+Value function editor (S3), automatic column mapping by template aliases (S7).
 
-## 怎么验证
+## Verification
 
-- 解析和识别规则：单元测试覆盖上面列出的每一种写法。
-- 端到端测试：导入一个"脏"的 xlsx（有说明行、货币、百分比、欧洲格式、等级、是/否、缺失值、多余列）→ 对应列 → 得到正确的项目和数据质量报告。
+- Parsing and detection rules: unit tests cover every notation listed above.
+- End-to-end test: import a "dirty" xlsx (note rows, currency, percentages, European format, ordinal levels, yes/no, missing values, extra columns) → map columns → get the correct project and data quality report.

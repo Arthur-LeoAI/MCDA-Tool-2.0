@@ -211,7 +211,7 @@ class Meta(_Model):
     name: Text = ""
     description: LongText = ""
     template_id: Id | None = None
-    language: Literal["zh", "en"] = "zh"
+    language: Literal["zh", "en"] = "en"
     created: str | None = None
     modified: str | None = None
 

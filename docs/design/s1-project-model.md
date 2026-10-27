@@ -1,66 +1,66 @@
-# S1 设计说明：项目模型
+# S1 design note: project model
 
-- 状态：已完成
-- 依据：[技术设计](technical-design.md) §2、§4、§5，ADR 0005、0006、0008
+- Status: done
+- Based on: [technical design](technical-design.md) §2, §4, §5; ADR 0005, 0006, 0008
 
-## 要解决的问题
+## Problem
 
-前端和 API 现在用的是"问题"模型：一个矩阵加上权重。它装不下 M2 后面要做的东西：准则类型、价值函数、缺失值处理、硬性条件、分组、多种设权重方式。S1 要把整个应用换到**项目模型 v2** 上，同时保证所有现有功能不变。
+The frontend and the API currently use a "problem" model: one matrix plus weights. It cannot hold what the later M2 steps need: criterion types, value functions, missing-value handling, hard constraints, groups, and several ways to set weights. S1 moves the whole application to **project model v2** while keeping all existing features unchanged.
 
-## 范围
+## Scope
 
-**S1 要做的：**
+**What S1 does:**
 
-1. **项目模型 v2**：`mcda_core/project/`，用 Pydantic 定义。字段和技术设计 §2 完全一致，导出 JSON Schema（`backend/project.schema.json`），CI 检查它是否最新。
-2. **语义校验**：id 唯一、引用的对象存在、准则类型和配置相符、价值函数参数有效、数据值和准则类型相符。所有问题都用错误代码表示，并带有位置。
-3. **版本迁移** `migrate(document)`：
-   - v1 → v2。v1 指版本 3 的"问题"JSON：alternatives、criteria、matrix，可以带当时的设置。
-   - 当前版本：校验后原样返回。
-   - 版本号高于当前程序支持的：返回 `project_version_unsupported`。
-4. **最小分析流水线**（技术设计 §3 的第 3、4、5、6 步）：
-   - 价值函数：四种都实现，因为都是纯数学函数，实现和测试的成本很低；
-   - 等级、分类、是/否的分数换算；
-   - 缺失值的四种处理方式；
-   - 直接输入的权重（只有一层）；
-   - 各计算方法、Pareto 分析和稳定区间，都在价值矩阵上计算。
-5. **API**：`/projects/migrate`、`/projects/validate`、`/projects/evaluate`、`/projects/stability`、`/projects/import`、`/projects/report`。
-6. **前端**：
-   - store v2 保存项目，旧的浏览器草稿通过 `/projects/migrate` 自动升级；
-   - 所有页面都改为基于项目模型；
-   - 可以保存和打开 `.mcda.json` 文件。
+1. **Project model v2**: `mcda_core/project/`, defined with Pydantic. The fields match technical design §2 exactly. A JSON Schema is exported (`backend/project.schema.json`), and CI checks that it is up to date.
+2. **Semantic validation**: unique ids, referenced objects exist, criterion type matches its configuration, value function parameters are valid, data values match the criterion type. Every problem is expressed as an error code with a location.
+3. **Version migration** `migrate(document)`:
+   - v1 → v2. v1 means the "problem" JSON of version 3: alternatives, criteria, matrix, optionally with the settings of that time.
+   - Current version: validated and returned unchanged.
+   - Version higher than the program supports: returns `project_version_unsupported`.
+4. **Minimal analysis pipeline** (steps 3, 4, 5 and 6 of technical design §3):
+   - Value functions: all four are implemented, because they are pure math functions and cheap to implement and test;
+   - Score conversion for ordinal, categorical and yes/no criteria;
+   - The four missing-value handling options;
+   - Directly entered weights (one level only);
+   - The calculation methods, Pareto analysis and stability intervals, all computed on the value matrix.
+5. **API**: `/projects/migrate`, `/projects/validate`, `/projects/evaluate`, `/projects/stability`, `/projects/import`, `/projects/report`.
+6. **Frontend**:
+   - Store v2 holds the project; old browser drafts are upgraded automatically through `/projects/migrate`;
+   - All pages are switched to the project model;
+   - `.mcda.json` files can be saved and opened.
 
-**S1 不做**（后续步骤）：
+**What S1 does not do** (later steps):
 
-| 功能 | 在哪一步 | 如果项目里已经用到会怎样 |
+| Feature | Step | What happens if a project already uses it |
 |---|---|---|
-| 硬性条件 | S3 | 计算时返回 `feature_not_available`，不会悄悄忽略 |
-| 分组、排序权重、AHP | S4 | 同上 |
-| 文字形式的数值解析（如"$12.99"）、列对应、数据质量报告 | S2 | 数值类型的准则必须直接给出数字 |
-| 稳健性分析、结论要点 | S5、S6 | — |
-| 价值函数编辑器界面 | S3 | 新建准则默认为线性、范围取数据；导入时按来源设置 |
+| Hard constraints | S3 | Evaluation returns `feature_not_available`; they are not silently ignored |
+| Groups, rank weights, AHP | S4 | Same as above |
+| Parsing numbers written as text (e.g. "$12.99"), column mapping, data quality report | S2 | Numeric criteria must be given as numbers directly |
+| Robustness analysis, conclusion points | S5, S6 | — |
+| Value function editor UI | S3 | New criteria default to linear with data range; imports set them according to the source |
 
-"返回明确的错误，而不是悄悄忽略"是刻意的选择：如果项目里写了硬性条件，结果却没有执行它，用户会被误导。
+"Return a clear error instead of silently ignoring" is a deliberate choice: if a project defines a hard constraint and the result does not apply it, the user would be misled.
 
-## 关键规则
+## Key rules
 
-**旧设置的迁移**：版本 3 里，加权和的归一化方式决定了实时排名和稳定区间。所以迁移时，把它换算成每个准则的线性价值函数：
+**Migrating old settings**: In version 3, the normalization of the weighted sum determined the live ranking and the stability intervals. So migration converts it into a linear value function per criterion:
 
-| 旧的归一化 | 新的价值函数 |
+| Old normalization | New value function |
 |---|---|
-| `min_max` | 线性，范围取数据 |
-| `fixed_range` [a, b] | 线性，固定范围 [a, b] |
-| `none` | 线性，所有准则使用同一个固定范围 [min(0, 全局最小值), 全局最大值]。所有准则按同一比例缩放，加权和的排名和稳定区间都不变；旧版 V7 数据的这个范围正好是 [0, 100] |
+| `min_max` | Linear, range from data |
+| `fixed_range` [a, b] | Linear, fixed range [a, b] |
+| `none` | Linear, all criteria use the same fixed range [min(0, global minimum), global maximum]. All criteria are scaled by the same factor, so the weighted-sum ranking and the stability intervals stay the same; for legacy V7 data this range is exactly [0, 100] |
 
-旧的 TOPSIS 设置：向量归一化对应 `basis: "raw"`（经典 TOPSIS）；其他归一化方式对应在价值分上计算，理想点取数据或取固定值。CP 同理。
+Old TOPSIS settings: vector normalization maps to `basis: "raw"` (classic TOPSIS); the other normalizations map to computing on value scores, with the ideal point taken from the data or from fixed values. The same applies to CP.
 
-**导入的文件**：
-- 标准模板：线性，范围取数据；
-- 旧版 V7 工作簿：线性，固定范围 [0, 100]。这样不再需要像以前那样把加权和设成"不归一化"。
+**Imported files**:
+- Standard template: linear, range from data;
+- Legacy V7 workbook: linear, fixed range [0, 100]. This removes the earlier need to set the weighted sum to "no normalization".
 
-**计算结果**用 id 标识方案和准则，同时附带名称，方便前端显示。
+**Calculation results** identify alternatives and criteria by id and also include their names for display in the frontend.
 
-## 怎么验证
+## Verification
 
-- 现有的旧版 Excel 对照测试改为走"导入 → 项目 → 流水线"这条路径，结果必须和以前一样（稳定区间误差 < 1e-9）。
-- v1 → v2 迁移之后的计算结果，要和用旧模型计算的结果一致：排名完全相同；`min_max` 和 `fixed_range` 的得分误差 < 1e-12。`none` 因为统一缩放，得分会变，但排名不变。
-- 端到端测试：现有的 4 个继续通过，并新增"保存项目 → 清空 → 打开 → 结果相同"。
+- The existing legacy Excel comparison tests now go through the "import → project → pipeline" path, and the results must match the previous ones (stability interval error < 1e-9).
+- Results after v1 → v2 migration must match the results computed with the old model: identical rankings; score error < 1e-12 for `min_max` and `fixed_range`. With `none` the scores change because of the uniform scaling, but the ranking does not.
+- End-to-end tests: the existing 4 still pass, plus a new one: "save project → clear → open → same results".

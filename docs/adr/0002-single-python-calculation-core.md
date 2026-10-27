@@ -1,20 +1,20 @@
-# 0002 计算只在 Python 核心里实现一次
+# 0002 Calculations are implemented only once, in the Python core
 
-- 状态：已采纳
-- 日期：2026-10-23
+- Status: Accepted
+- Date: 2026-10-23
 
-## 背景
+## Context
 
-旧版工具的 JavaScript 前端和 Python 脚本各自解析 Excel、各自计算，而且使用的行号约定不一致，结果可能对不上。
+In the old tool, the JavaScript frontend and the Python scripts each parsed Excel and calculated on their own, and they used inconsistent row-number conventions, so the results could disagree.
 
-## 决定
+## Decision
 
-所有计算（归一化、各种方法、排名、Pareto、敏感性分析）和数据解析，只在 Python 包 `mcda_core` 里实现。`mcda_core` 不依赖 Web 框架。API（`mcda_api`）和前端只调用它，不重复实现。
+All calculations (normalization, the various methods, ranking, Pareto, sensitivity analysis) and data parsing are implemented only in the Python package `mcda_core`. `mcda_core` does not depend on a web framework. The API (`mcda_api`) and the frontend only call it and do not reimplement anything.
 
-前端需要的派生数据（例如加权和每个准则的得分贡献）由 API 返回，前端不自己算。
+Derived data the frontend needs (for example the weighted sum and the score contribution of each criterion) is returned by the API; the frontend does not calculate it itself.
 
-## 后果
+## Consequences
 
-- 结果只有一个来源。计算可以用单元测试和参考数据（旧版 Excel）严格验证。
-- 每次调整权重都要请求一次 API。数据量在几百个方案以内时，响应很快，可以接受。
-- 将来如果需要离线计算，可以考虑把核心编译成 WebAssembly，但不能在前端另写一套。
+- Results have a single source. Calculations can be strictly verified with unit tests and reference data (the old Excel files).
+- Every weight adjustment requires an API request. With up to a few hundred alternatives, responses are fast, which is acceptable.
+- If offline calculation is needed in the future, compiling the core to WebAssembly can be considered, but a second implementation must not be written in the frontend.

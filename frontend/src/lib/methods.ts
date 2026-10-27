@@ -2,7 +2,7 @@ import type { MethodResult, ProjectMethod } from '../api/types'
 import type { Translate } from '../i18n/useT'
 import { formatScore } from './format'
 
-/** Short, translated name of a method with its settings, e.g. "CP p=2 · 取自数据". */
+/** Short, translated name of a method with its settings, e.g. "CP p=2 · from data". */
 export function methodLabel(t: Translate, spec: ProjectMethod): string {
   if (spec.method === 'weighted_sum') return t('method.weighted_sum')
   if (spec.method === 'topsis') {

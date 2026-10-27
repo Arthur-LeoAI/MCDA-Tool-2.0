@@ -5,7 +5,7 @@ const next = (page: Page) => page.getByRole('button', { name: '下一步' })
 const step = (page: Page, name: string) => page.getByRole('navigation', { name: '引导' }).getByRole('button', { name })
 
 test('guided: Amazon scenario, import with aliases, ranking, conclusion, then expert mode', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app')
   await expect(page.getByRole('heading', { name: '你要做什么样的决策？' })).toBeVisible()
   await page.getByRole('region', { name: 'Amazon 美国站选品' }).getByRole('button', { name: '选这个场景' }).click()
 
@@ -53,7 +53,7 @@ test('guided: Amazon scenario, import with aliases, ranking, conclusion, then ex
 })
 
 test('guided: example data goes straight to the check step', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app')
   const elt = page.getByRole('region', { name: 'ELT 技术评估' })
   await elt.getByRole('button', { name: '使用示例数据' }).click()
   await expect(page.getByText('7 个技术，34 个准则')).toBeVisible()

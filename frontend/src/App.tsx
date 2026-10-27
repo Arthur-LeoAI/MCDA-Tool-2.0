@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect } from 'react'
 import { Segmented, Spinner } from './components/ui'
 import { useMigratePendingDraft } from './hooks'
 import { saveProjectFile } from './lib/projectFile'
+import { navigate } from './router'
 import type { MessageKey } from './i18n/messages'
 import { useT } from './i18n/useT'
 import { DataPage } from './pages/DataPage'
@@ -47,13 +48,20 @@ export default function App() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4">
-          <div className="flex items-center gap-2.5">
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault()
+              navigate('/')
+            }}
+            className="flex items-center gap-2.5"
+          >
             <img src="/favicon.svg" alt="" className="size-7" />
             <div className="leading-tight">
               <div className="text-sm font-semibold text-slate-900">{t('app.title')}</div>
               <div className="text-xs text-slate-500">{t('app.subtitle')}</div>
             </div>
-          </div>
+          </a>
           <div className="flex items-center gap-2">
             <Segmented<Mode>
               size="sm"

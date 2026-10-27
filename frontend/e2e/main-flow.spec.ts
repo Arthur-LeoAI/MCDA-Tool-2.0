@@ -19,7 +19,7 @@ const exampleButton = (page: Page) => page.getByRole('button', { name: '使用�
 const nav = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name })
 
 async function loadExample(page: Page) {
-  await page.goto('/')
+  await page.goto('/app')
   await exampleButton(page).click()
   await expect(page.getByText('数据有效')).toBeVisible()
 }
@@ -59,7 +59,7 @@ test('example data: from import to report', async ({ page }) => {
 })
 
 test('legacy workbook reproduces the Excel ranking', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app')
   await page.locator('input[type=file]').first().setInputFiles(LEGACY_WORKBOOK)
   await expect(page.getByText('已识别为旧版 V7 工作簿')).toBeVisible()
   await expect(page.getByText('7 个方案 × 34 个准则')).toBeVisible()
@@ -135,7 +135,7 @@ test('save a project file, clear, open it again: same result', async ({ page }) 
 const MESSY_EXPORT = fileURLToPath(new URL('./fixtures/messy-export.xlsx', import.meta.url))
 
 test('arbitrary table: match columns, import, data quality', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app')
   await page.locator('input[type=file]').first().setInputFiles(MESSY_EXPORT)
   await expect(page.getByText(/^对应列 ·/)).toBeVisible() // not "按模板对应列"
 
@@ -261,7 +261,7 @@ test('conclusion: recommendation, reasons and confidence on the results page', a
 })
 
 test('templates: Amazon example and ELT preset', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app')
   const amazon = page.getByRole('region', { name: 'Amazon 美国站选品' })
   await amazon.getByRole('button', { name: '使用示例数据' }).click()
   await expect(page.getByText('6 个方案 × 10 个准则')).toBeVisible()
@@ -289,7 +289,7 @@ test('templates: Amazon example and ELT preset', async ({ page }) => {
 })
 
 test('templates: columns are matched by alias when importing a table', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/app')
   const csv =
     '产品,月销量,利润率（%）,尺寸,颜色\nMat,1800,28,standard,red\nLamp,2600,22,oversize,blue\nBox,900,31,standard,green\n'
   await page

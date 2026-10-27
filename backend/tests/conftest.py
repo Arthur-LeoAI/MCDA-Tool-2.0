@@ -33,6 +33,17 @@ def client():
 
 @pytest.fixture
 def cars_json(cars) -> dict:
-    from mcda_api.schemas import ProblemModel
+    """The cars problem in the v1 JSON layout (input of ``/projects/migrate``)."""
+    return {
+        "alternatives": list(cars.alternatives),
+        "criteria": [{"name": c.name, "direction": c.direction.value, "weight": c.weight} for c in cars.criteria],
+        "matrix": cars.matrix.tolist(),
+    }
 
-    return ProblemModel.from_domain(cars).model_dump(mode="json")
+
+@pytest.fixture
+def cars_project(cars) -> dict:
+    """The cars problem as a v2 project document."""
+    from mcda_core.project import project_from_problem
+
+    return project_from_problem(cars).model_dump(mode="json")

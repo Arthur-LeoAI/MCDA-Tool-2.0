@@ -31,6 +31,7 @@ export type ProjectImport = Schemas['ProjectImport']
 export type ProjectWeights = Schemas['WeightsModel']
 export type LevelWeights = Schemas['LevelModel']
 export type ProjectRobustness = Schemas['RobustnessModel']
+export type Conclusion = Schemas['ConclusionModel']
 export type RobustnessSettings = Schemas['RobustnessSettings']
 
 export type Constraint = Project['constraints'][number]

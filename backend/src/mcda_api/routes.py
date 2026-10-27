@@ -1,4 +1,7 @@
-"""HTTP endpoints. The API is stateless: clients send the problem with each request."""
+"""Meta and template endpoints, plus the upload and calculation helpers shared by the routers.
+
+The API is stateless: clients send the whole project with each request.
+"""
 
 from __future__ import annotations
 
@@ -6,24 +9,17 @@ import io
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import PurePath
-from typing import Annotated, Any, Literal, TypeVar, get_args
+from typing import Any, Literal, TypeVar, get_args
 
-from fastapi import APIRouter, File, Query, Request, UploadFile
+from fastapi import APIRouter, Query, Request, UploadFile
 from fastapi.responses import Response
 
 from mcda_core import (
     Criterion,
     DecisionProblem,
     Direction,
-    Location,
     McdaError,
-    Normalization,
     ProblemValidationError,
-    StabilityScope,
-    ValidationIssue,
-    pareto_analysis,
-    pareto_front,
-    weight_stability_intervals,
 )
 from mcda_core.io import (
     TEMPLATE_SHEET,
@@ -34,30 +30,12 @@ from mcda_core.io import (
     read_problem,
     read_xlsx_rows,
     write_problem,
-    write_report,
 )
 
 from . import __version__
 from .errors import ApiError
 from .observability import logger
-from .schemas import (
-    METHOD_SPECS,
-    DominanceModel,
-    ErrorResponse,
-    EvaluateRequest,
-    EvaluateResponse,
-    ImportResponse,
-    IntervalModel,
-    LegacyInfo,
-    MethodInfo,
-    MethodResultModel,
-    ParetoRequest,
-    ParetoResponse,
-    ProblemModel,
-    ReportRequest,
-    StabilityRequest,
-    StabilityResponse,
-)
+from .schemas import METHOD_SPECS, ErrorResponse, MethodInfo
 
 XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 UPLOAD_SUFFIXES = (".xlsx", ".xlsm", ".csv")
@@ -106,74 +84,7 @@ def methods() -> list[MethodInfo]:
     return infos
 
 
-# --- Calculations ------------------------------------------------------------
-
-
-@router.post("/problems/validate", tags=["analysis"], response_model=ProblemModel)
-def validate_problem(problem: ProblemModel) -> ProblemModel:
-    """Check a problem; returns it unchanged if valid, else 422 with all issues."""
-    problem.to_domain()
-    return problem
-
-
-@router.post("/evaluate", tags=["analysis"], response_model=EvaluateResponse)
-def evaluate(request: EvaluateRequest) -> EvaluateResponse:
-    problem = request.problem.to_domain()
-    return EvaluateResponse(
-        results=[
-            MethodResultModel.build(spec, compute(lambda spec=spec: spec.run(problem))) for spec in request.methods
-        ]
-    )
-
-
-@router.post("/pareto", tags=["analysis"], response_model=ParetoResponse)
-def pareto(request: ParetoRequest) -> ParetoResponse:
-    problem = request.problem.to_domain()
-    if request.criteria is not None:
-        unknown = [name for name in request.criteria if name not in problem.criterion_names]
-        if unknown or not request.criteria:
-            issues = [ValidationIssue("unknown_criterion", location=Location("criterion", name=n)) for n in unknown]
-            raise ApiError(422, "invalid_criteria_selection", issues=issues or [ValidationIssue("empty_selection")])
-    return ParetoResponse(
-        front=list(pareto_front(problem, request.criteria)),
-        alternatives=[DominanceModel.build(info) for info in pareto_analysis(problem, request.criteria)],
-    )
-
-
-@router.post("/sensitivity/stability", tags=["analysis"], response_model=StabilityResponse)
-def stability(request: StabilityRequest) -> StabilityResponse:
-    problem = request.problem.to_domain()
-    intervals = compute(
-        lambda: weight_stability_intervals(problem, request.scope, Normalization(request.normalization), request.bounds)
-    )
-    return StabilityResponse(
-        scope=request.scope,
-        normalization=request.normalization,
-        intervals=[IntervalModel.build(i) for i in intervals],
-    )
-
-
-# --- Import ------------------------------------------------------------------
-
-
-@router.post(
-    "/problems/import",
-    tags=["files"],
-    response_model=ImportResponse,
-    responses={413: {"model": ErrorResponse}, 415: {"model": ErrorResponse}},
-)
-def import_problem(http_request: Request, file: Annotated[UploadFile, File()]) -> ImportResponse:
-    """Read an uploaded template (.xlsx/.csv) or legacy V7 workbook."""
-    upload = read_upload(http_request, file)
-    legacy = upload.legacy
-    return ImportResponse(
-        filename=upload.filename,
-        source_format="legacy" if legacy else "template",
-        problem=ProblemModel.from_domain(legacy.problem if legacy else upload.problem),
-        legacy=LegacyInfo(reference_order=list(legacy.reference_order), prescaled=list(legacy.prescaled))
-        if legacy
-        else None,
-    )
+# --- Uploads ------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -226,7 +137,7 @@ def read_upload(http_request: Request, file: UploadFile) -> Upload:
     return Upload(received.filename, parse_rows(rows), None)
 
 
-# --- Export ------------------------------------------------------------------
+# --- Template ------------------------------------------------------------------
 
 
 def _file_response(data: bytes, filename: str, media_type: str) -> Response:
@@ -260,40 +171,3 @@ EXAMPLE_PROBLEM = DecisionProblem(
 def template(file_format: Literal["xlsx", "csv"] = Query("xlsx", alias="format")) -> Response:
     """An example input file in the standard template layout."""
     return _problem_file(EXAMPLE_PROBLEM, file_format, "mcda-template")
-
-
-@router.post(
-    "/export/problem",
-    tags=["files"],
-    response_class=Response,
-    responses={200: {"content": {XLSX_MEDIA_TYPE: {}, "text/csv": {}}}},
-)
-def export_problem(
-    problem: ProblemModel, file_format: Literal["xlsx", "csv"] = Query("xlsx", alias="format")
-) -> Response:
-    return _problem_file(problem.to_domain(), file_format, "mcda-problem")
-
-
-@router.post(
-    "/export/report", tags=["files"], response_class=Response, responses={200: {"content": {XLSX_MEDIA_TYPE: {}}}}
-)
-def export_report(request: ReportRequest) -> Response:
-    """Excel report: results of every method, stability intervals, Pareto analysis and the input."""
-    problem = request.problem.to_domain()
-    results = [(spec.label(), compute(lambda spec=spec: spec.run(problem))) for spec in request.methods]
-    stability_sheets = None
-    if request.stability is not None:
-        options = request.stability
-        stability_sheets = {
-            scope: compute(
-                lambda scope=scope: weight_stability_intervals(
-                    problem, scope, Normalization(options.normalization), options.bounds
-                )
-            )
-            for scope in StabilityScope
-        }
-    pareto_info = pareto_analysis(problem) if request.include_pareto else None
-
-    buffer = io.BytesIO()
-    write_report(buffer, problem, results, stability_sheets, pareto_info)
-    return _file_response(buffer.getvalue(), "mcda-report.xlsx", XLSX_MEDIA_TYPE)

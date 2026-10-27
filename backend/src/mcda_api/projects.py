@@ -11,12 +11,14 @@ from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Body, File, Request, UploadFile
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from mcda_core import McdaError, MethodResult, StabilityScope
+from mcda_core.errors import render
 from mcda_core.io import write_report
 from mcda_core.project import PreparedProject, Project, migrate, pareto, prepare, project_from_problem, run_method
 from mcda_core.project import stability as stability_intervals
+from mcda_core.project.conclusions import Conclusion, conclude
 from mcda_core.project.curve import value_curve
 from mcda_core.project.model import (
     CompromiseProgrammingMethod,
@@ -27,6 +29,7 @@ from mcda_core.project.model import (
     WeightedSumMethod,
 )
 from mcda_core.project.quality import quality_report
+from mcda_core.project.report import conclusion_rows, data_handling_rows, robustness_rows, weights_rows
 from mcda_core.project.robustness import robustness
 from mcda_core.project.weighting import derive
 
@@ -83,6 +86,54 @@ class ProjectPareto(BaseModel):
     alternatives: list[ProjectDominance]
 
 
+class PlacedModel(BaseModel):
+    id: str
+    score: float
+    """Weighted sum, 0-100."""
+
+
+class ShareModel(BaseModel):
+    criterion_id: str
+    points: float
+    """Points of the 0-100 score (negative: a disadvantage)."""
+
+
+class CaveatModel(BaseModel):
+    code: str
+    params: dict[str, Any]
+    message: str
+    """English rendering; clients translate by code."""
+
+
+class ConclusionModel(BaseModel):
+    """Structured points for the conclusion; clients write the sentences (ADR 0007)."""
+
+    winner: PlacedModel
+    runner_up: PlacedModel
+    score_gap: float
+    tied: list[str]
+    top_contributions: list[ShareModel]
+    advantages: list[ShareModel]
+    disadvantages: list[ShareModel]
+    caveats: list[CaveatModel]
+
+    @classmethod
+    def build(cls, c: Conclusion) -> ConclusionModel:
+        def shares(items) -> list[ShareModel]:
+            return [ShareModel(criterion_id=s.criterion_id, points=s.points) for s in items]
+
+        return cls(
+            winner=PlacedModel(id=c.winner.alternative_id, score=c.winner.score),
+            runner_up=PlacedModel(id=c.runner_up.alternative_id, score=c.runner_up.score),
+            score_gap=c.score_gap,
+            tied=list(c.tied),
+            top_contributions=shares(c.top_contributions),
+            advantages=shares(c.advantages),
+            disadvantages=shares(c.disadvantages),
+            caveats=[CaveatModel(code=k.code, params=k.params, message=render(k.code, k.params)) for k in c.caveats],
+        )
+
+
 class ProjectEvaluation(BaseModel):
     eligible: list[str]
     excluded: list[ExclusionModel]
@@ -93,6 +144,8 @@ class ProjectEvaluation(BaseModel):
     """Value scores in [0, 1]: values[alternative_id][criterion_id], eligible alternatives only."""
     results: list[ProjectMethodResult]
     pareto: ProjectPareto
+    conclusion: ConclusionModel
+    """From the weighted sum, whichever methods are selected."""
 
 
 class ProjectInterval(IntervalModel):
@@ -113,6 +166,9 @@ class ReportRequest(BaseModel):
     project: Project
     include_stability: bool = True
     include_pareto: bool = True
+    include_robustness: bool = True
+    conclusion: Annotated[list[Annotated[str, Field(max_length=2000)]], Field(max_length=50)] = []
+    """Conclusion text as shown in the interface (rendered by the client, ADR 0007)."""
 
 
 class ProjectImport(BaseModel):
@@ -198,10 +254,8 @@ def evaluate_project(project: Project) -> ProjectEvaluation:
     criterion_ids = [c.id for c in project.criteria]
     alternative_ids, _ = _ids_by_name(prepared)
     shares = prepared.weights / prepared.weights.sum()
-    results = [
-        _result(prepared, spec, compute(lambda spec=spec: run_method(prepared, spec)))
-        for spec in project.analysis.methods
-    ]
+    computed = [(spec, compute(lambda spec=spec: run_method(prepared, spec))) for spec in project.analysis.methods]
+    results = [_result(prepared, spec, result) for spec, result in computed]
     dominance = pareto(prepared)
     return ProjectEvaluation(
         eligible=list(prepared.eligible),
@@ -228,7 +282,17 @@ def evaluate_project(project: Project) -> ProjectEvaluation:
                 for d in dominance
             ],
         ),
+        conclusion=ConclusionModel.build(_conclusion(prepared, computed)),
     )
+
+
+def _conclusion(prepared: PreparedProject, computed: list[tuple[ProjectMethod, MethodResult]]) -> Conclusion:
+    """Conclusion points from the weighted sum; other selected methods only feed the "disagree" caveat."""
+    weighted = next((r for s, r in computed if isinstance(s, WeightedSumMethod)), None)
+    if weighted is None:
+        weighted = compute(lambda: run_method(prepared, WeightedSumMethod()))
+    others = [(method_label(s), r) for s, r in computed if not isinstance(s, WeightedSumMethod)]
+    return conclude(prepared, weighted, others)
 
 
 @router.post("/stability", response_model=ProjectStability)
@@ -429,7 +493,7 @@ def project_quality(project: Project) -> list[IssueModel]:
 
 @router.post("/report", response_class=Response, responses={200: {"content": {XLSX_MEDIA_TYPE: {}}}})
 def project_report(request: ReportRequest) -> Response:
-    """Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data."""
+    """Excel report v2: conclusion, results, data handling, weights, stability, Pareto, robustness, raw data."""
     project = request.project
     prepared = _prepare(project)
     problem = prepared.value_problem()
@@ -442,6 +506,15 @@ def project_report(request: ReportRequest) -> Response:
         decision = prepared.raw_problem() if not prepared.imputed else None
     except McdaError:
         decision = None
+    computed = list(zip(project.analysis.methods, (r for _, r in results), strict=True))
+    conclusion = _conclusion(prepared, computed)
+    robust = compute(lambda: robustness(prepared)) if request.include_robustness else None
+    front = [
+        ("Conclusion", conclusion_rows(project, conclusion, request.conclusion, robust)),
+        ("Data handling", data_handling_rows(prepared)),
+        ("Weights", weights_rows(project, derive(project))),
+    ]
+    back = [("Robustness", robustness_rows(project, robust))] if robust is not None else []
     buffer = io.BytesIO()
     write_report(
         buffer,
@@ -450,5 +523,7 @@ def project_report(request: ReportRequest) -> Response:
         stability_sheets,
         pareto(prepared) if request.include_pareto else None,
         decision=decision,
+        front=front,
+        back=back,
     )
     return _file_response(buffer.getvalue(), "mcda-report.xlsx", XLSX_MEDIA_TYPE)

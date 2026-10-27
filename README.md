@@ -93,7 +93,7 @@ docker compose up --build
 
 API 是**无状态**的：前端在每次请求里带上完整的项目数据，服务器不保存任何内容。项目文件的格式见 `backend/project.schema.json`。
 
-`/projects/*` 是当前接口。下表中不带 `projects` 的旧接口会在 v0.1.0 发布前删除（ADR 0008）。在 v0.1.0 之前，外部程序不应依赖这个 API。
+旧的"问题"接口（`/problems/*`、`/evaluate`、`/pareto`、`/sensitivity/stability`、`/export/*`）已经删除（ADR 0008）。在 v0.1.0 之前，接口仍可能不兼容地改变，外部程序不应依赖这个 API。
 
 | 接口 | 作用 |
 |---|---|
@@ -103,22 +103,15 @@ API 是**无状态**的：前端在每次请求里带上完整的项目数据，
 | `POST /api/v1/projects/quality` | 数据质量报告（缺失值、常数列、极端值等） |
 | `POST /api/v1/projects/import` | 上传标准模板或旧版 V7 工作簿，转换成项目 |
 | `POST /api/v1/projects/validate` | 校验项目 |
-| `POST /api/v1/projects/evaluate` | 计算：合格和被排除的方案、补全的缺失值、权重、价值分、各方法结果、Pareto 分析 |
+| `POST /api/v1/projects/evaluate` | 计算：合格和被排除的方案、补全的缺失值、权重、价值分、各方法结果、Pareto 分析、结论要点 |
 | `POST /api/v1/projects/weights` | 各层的局部权重（含 AHP 一致性）和每个准则的最终权重 |
 | `POST /api/v1/projects/curve` | 某个准则的价值曲线及各方案在曲线上的位置 |
 | `POST /api/v1/projects/robustness` | 蒙特卡洛稳健性分析：名次分布、排第一的概率、两两胜率、可靠程度 |
 | `POST /api/v1/projects/stability` | 权重稳定区间（基于价值分上的加权和） |
-| `POST /api/v1/projects/report` | Excel 报告 |
+| `POST /api/v1/projects/report` | Excel 报告：结论、结果、数据处理说明、权重来源、稳定区间、Pareto、稳健性，以及可重新导入的原始数据 |
 | `GET /api/v1/health` | 健康检查 |
 | `GET /api/v1/methods` | 可用方法、可选的归一化方式和默认参数 |
-| `POST /api/v1/problems/import` | 上传 `.xlsx` / `.csv`，自动识别标准模板或旧版 V7 工作簿 |
-| `POST /api/v1/problems/validate` | 校验问题数据 |
-| `POST /api/v1/evaluate` | 用一种或多种方法计算得分和排名 |
-| `POST /api/v1/pareto` | Pareto 支配分析 |
-| `POST /api/v1/sensitivity/stability` | 权重稳定区间（全排序或第一名） |
 | `GET /api/v1/template` | 下载示例模板（xlsx / csv） |
-| `POST /api/v1/export/problem` | 把问题导出为模板文件 |
-| `POST /api/v1/export/report` | 导出 Excel 报告：结果、稳定区间、Pareto，以及可重新导入的原始数据 |
 
 所有错误都用同一种格式返回。`code` 是固定的错误代码，由前端翻译成用户的语言；`detail` 和 `message` 是英文备用文字：
 

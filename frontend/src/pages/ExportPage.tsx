@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ApiError, asApiError, downloadFile } from '../api/client'
 import { ApiErrorBox, IssueList } from '../components/IssueList'
 import { Button, Card, PageHeader, Spinner } from '../components/ui'
-import { useCheckedProject } from '../hooks'
+import { useCheckedProject, useConclusion } from '../hooks'
 import { useT } from '../i18n/useT'
 import { methodLabel } from '../lib/methods'
 import { projectFilename, saveProjectFile } from '../lib/projectFile'
@@ -14,6 +14,10 @@ export function ExportPage() {
   const { project, apiProject } = checked
   const [includeStability, setIncludeStability] = useState(true)
   const [includePareto, setIncludePareto] = useState(true)
+  const [includeRobustness, setIncludeRobustness] = useState(true)
+  // The report carries the conclusion exactly as the interface writes it (ADR 0007).
+  const conclusion = useConclusion(project, apiProject)
+  const preparing = conclusion.evaluation.loading || conclusion.robustness.loading
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ApiError | null>(null)
 
@@ -25,6 +29,8 @@ export function ExportPage() {
         project: apiProject,
         include_stability: includeStability,
         include_pareto: includePareto,
+        include_robustness: includeRobustness,
+        conclusion: conclusion.paragraphs.map((p) => p.text),
       })
     } catch (err) {
       setError(asApiError(err))
@@ -78,17 +84,26 @@ export function ExportPage() {
             />
             {t('export.includePareto')}
           </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={includeRobustness}
+              onChange={(e) => setIncludeRobustness(e.target.checked)}
+              className="accent-accent-600"
+            />
+            {t('export.includeRobustness')}
+          </label>
         </div>
         <div className="mt-5 flex items-center gap-3">
           <Button
             variant="primary"
             icon={<FileDown className="size-4" />}
-            disabled={!apiProject || busy}
+            disabled={!apiProject || busy || preparing}
             onClick={downloadReport}
           >
             {t('export.download')}
           </Button>
-          {busy && <Spinner />}
+          {(busy || preparing) && <Spinner />}
         </div>
       </Card>
 

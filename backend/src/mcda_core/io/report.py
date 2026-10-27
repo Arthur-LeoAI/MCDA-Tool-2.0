@@ -1,4 +1,4 @@
-"""Excel report with results, stability intervals and Pareto analysis.
+"""Excel report with results, stability intervals and Pareto analysis, plus any extra sheets.
 
 The report also contains the input as a "Decision" sheet, so it can be
 imported again with read_problem().
@@ -35,15 +35,27 @@ def write_report(
     stability: Mapping[StabilityScope, Sequence[WeightInterval]] | None = None,
     pareto: Sequence[DominanceInfo] | None = None,
     decision: DecisionProblem | Literal["same"] | None = "same",
+    front: Sequence[tuple[str, Sequence[Sequence[object]]]] = (),
+    back: Sequence[tuple[str, Sequence[Sequence[object]]]] = (),
 ) -> None:
     """Write an .xlsx report. ``results`` pairs a column label with each result.
 
     ``decision`` is the data written to the re-importable "Decision" sheet:
     by default ``problem`` itself; None leaves the sheet out (for example
     when ``problem`` holds derived value scores rather than raw data).
+    ``front`` sheets (title, rows) come before the results, ``back`` sheets
+    after Pareto; the first row of every sheet is the bold header.
     """
     workbook = openpyxl.Workbook()
     workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
+
+    def add_sheets(sheets: Sequence[tuple[str, Sequence[Sequence[object]]]]) -> None:
+        for title, rows in sheets:
+            extra = workbook.create_sheet(title)
+            for values in rows:
+                extra.append(list(values))
+
+    add_sheets(front[:1])  # the conclusion leads
 
     sheet = workbook.create_sheet("Results")
     header = ["Alternative"]
@@ -56,6 +68,7 @@ def write_report(
         for _, result in results:
             row += [float(result.scores[i]), int(result.ranks[i])]
         sheet.append(row)
+    add_sheets(front[1:])
 
     for scope, intervals in (stability or {}).items():
         sheet = workbook.create_sheet(_STABILITY_SHEETS[StabilityScope(scope)])
@@ -85,6 +98,8 @@ def write_report(
                 ]
             )
 
+    add_sheets(back)
+
     decision_data = problem if decision == "same" else decision
     if decision_data is not None:
         add_template_sheet(workbook, decision_data)
@@ -93,7 +108,7 @@ def write_report(
         for cell in sheet[1]:
             cell.font = Font(bold=True)
         for col_index, column in enumerate(sheet.columns, start=1):
-            width = max(len(str(cell.value)) for cell in column if cell.value is not None)
+            width = max((len(str(cell.value)) for cell in column if cell.value is not None), default=0)
             sheet.column_dimensions[get_column_letter(col_index)].width = min(max(width + 2, 10), 50)
         sheet.freeze_panes = "B2"
 

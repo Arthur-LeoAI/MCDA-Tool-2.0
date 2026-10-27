@@ -4,60 +4,6 @@
  */
 
 export interface paths {
-    "/api/v1/evaluate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Evaluate */
-        post: operations["evaluate_api_v1_evaluate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/export/problem": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Export Problem */
-        post: operations["export_problem_api_v1_export_problem_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/export/report": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Export Report
-         * @description Excel report: results of every method, stability intervals, Pareto analysis and the input.
-         */
-        post: operations["export_report_api_v1_export_report_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -89,63 +35,6 @@ export interface paths {
         get: operations["methods_api_v1_methods_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/pareto": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Pareto */
-        post: operations["pareto_api_v1_pareto_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/problems/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Import Problem
-         * @description Read an uploaded template (.xlsx/.csv) or legacy V7 workbook.
-         */
-        post: operations["import_problem_api_v1_problems_import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/problems/validate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate Problem
-         * @description Check a problem; returns it unchanged if valid, else 422 with all issues.
-         */
-        post: operations["validate_problem_api_v1_problems_validate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -263,7 +152,7 @@ export interface paths {
         put?: never;
         /**
          * Project Report
-         * @description Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data.
+         * @description Excel report v2: conclusion, results, data handling, weights, stability, Pareto, robustness, raw data.
          */
         post: operations["project_report_api_v1_projects_report_post"];
         delete?: never;
@@ -346,23 +235,6 @@ export interface paths {
          * @description Local weights of every level and the global criterion weights; the data need not be complete.
          */
         post: operations["project_weights_api_v1_projects_weights_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/sensitivity/stability": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Stability */
-        post: operations["stability_api_v1_sensitivity_stability_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -465,17 +337,6 @@ export interface components {
             /** Note */
             note?: string | null;
         };
-        /** AlternativeResult */
-        AlternativeResult: {
-            /** Contributions */
-            contributions?: number[] | null;
-            /** Name */
-            name: string;
-            /** Rank */
-            rank: number;
-            /** Score */
-            score: number;
-        };
         /** AnalysisSettings */
         AnalysisSettings: {
             /**
@@ -524,11 +385,6 @@ export interface components {
              */
             op: "between";
         };
-        /** Body_import_problem_api_v1_problems_import_post */
-        Body_import_problem_api_v1_problems_import_post: {
-            /** File */
-            file: string;
-        };
         /** Body_import_project_api_v1_projects_import_post */
         Body_import_project_api_v1_projects_import_post: {
             /** File */
@@ -545,6 +401,17 @@ export interface components {
             label: string;
             /** Score */
             score: number;
+        };
+        /** CaveatModel */
+        CaveatModel: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
         };
         /** CompareConstraint */
         CompareConstraint: {
@@ -584,38 +451,25 @@ export interface components {
              */
             p: number | "inf";
         };
-        /** CompromiseProgrammingSpec */
-        CompromiseProgrammingSpec: {
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            method: "compromise_programming";
-            /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range";
-            /**
-             * P
-             * @default 2
-             */
-            p: number | "inf";
+        /**
+         * ConclusionModel
+         * @description Structured points for the conclusion; clients write the sentences (ADR 0007).
+         */
+        ConclusionModel: {
+            /** Advantages */
+            advantages: components["schemas"]["ShareModel"][];
+            /** Caveats */
+            caveats: components["schemas"]["CaveatModel"][];
+            /** Disadvantages */
+            disadvantages: components["schemas"]["ShareModel"][];
+            runner_up: components["schemas"]["PlacedModel"];
+            /** Score Gap */
+            score_gap: number;
+            /** Tied */
+            tied: string[];
+            /** Top Contributions */
+            top_contributions: components["schemas"]["ShareModel"][];
+            winner: components["schemas"]["PlacedModel"];
         };
         /** ConfidenceModel */
         ConfidenceModel: {
@@ -659,15 +513,6 @@ export interface components {
             /** Value Function */
             value_function?: (components["schemas"]["LinearValueFunction"] | components["schemas"]["LogValueFunction"] | components["schemas"]["TargetValueFunction"] | components["schemas"]["PiecewiseValueFunction"]) | null;
         };
-        /** CriterionModel */
-        CriterionModel: {
-            /** @default benefit */
-            direction: components["schemas"]["Direction"];
-            /** Name */
-            name: string;
-            /** Weight */
-            weight: number;
-        };
         /** CurveAlternative */
         CurveAlternative: {
             /** Id */
@@ -705,17 +550,6 @@ export interface components {
          * @enum {string}
          */
         Direction: "benefit" | "cost";
-        /** DominanceModel */
-        DominanceModel: {
-            /** Alternative */
-            alternative: string;
-            /** Dominated By */
-            dominated_by: string[];
-            /** Dominates */
-            dominates: string[];
-            /** Is Pareto Optimal */
-            is_pareto_optimal: boolean;
-        };
         /** ErrorResponse */
         ErrorResponse: {
             /** Code */
@@ -737,17 +571,6 @@ export interface components {
             /** Request Id */
             request_id?: string | null;
         };
-        /** EvaluateRequest */
-        EvaluateRequest: {
-            /** Methods */
-            methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
-            problem: components["schemas"]["ProblemModel"];
-        };
-        /** EvaluateResponse */
-        EvaluateResponse: {
-            /** Results */
-            results: components["schemas"]["MethodResultModel"][];
-        };
         /** ExclusionModel */
         ExclusionModel: {
             /** Alternative Id */
@@ -761,18 +584,6 @@ export interface components {
             id: string;
             /** Name */
             name: string;
-        };
-        /** ImportResponse */
-        ImportResponse: {
-            /** Filename */
-            filename: string;
-            legacy?: components["schemas"]["LegacyInfo"] | null;
-            problem: components["schemas"]["ProblemModel"];
-            /**
-             * Source Format
-             * @enum {string}
-             */
-            source_format: "template" | "legacy";
         };
         /** ImputationModel */
         ImputationModel: {
@@ -802,21 +613,6 @@ export interface components {
              */
             op: "in";
         };
-        /** IntervalModel */
-        IntervalModel: {
-            /** Criterion */
-            criterion: string;
-            /** Lower */
-            lower: number;
-            /** Lower Share */
-            lower_share: number;
-            /** Upper */
-            upper: number | null;
-            /** Upper Share */
-            upper_share: number;
-            /** Weight */
-            weight: number;
-        };
         /** IssueModel */
         IssueModel: {
             /** Code */
@@ -831,18 +627,6 @@ export interface components {
             params: {
                 [key: string]: unknown;
             };
-        };
-        /** LegacyInfo */
-        LegacyInfo: {
-            /**
-             * Note
-             * @default Legacy workbooks store values already on a 0-100 benefit scale; use weighted_sum with normalization 'none' to reproduce the workbook's ranking.
-             */
-            note: string;
-            /** Prescaled */
-            prescaled: boolean[];
-            /** Reference Order */
-            reference_order: string[];
         };
         /** LevelModel */
         LevelModel: {
@@ -924,7 +708,7 @@ export interface components {
          *     cell: ``ref`` ("B4") · alternative/criterion/group: ``name`` or 1-based ``index`` ·
          *     constraint: id in ``ref`` ·
          *     value: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·
-         *     field: request path in ``ref`` ("problem.matrix.0.1")
+         *     field: request path in ``ref`` ("data.c1.a1")
          */
         LocationModel: {
             /** Alternative */
@@ -1004,34 +788,6 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** MethodResultModel */
-        MethodResultModel: {
-            /** Alternatives */
-            alternatives: components["schemas"]["AlternativeResult"][];
-            /** Higher Is Better */
-            higher_is_better: boolean;
-            /** Label */
-            label: string;
-            /** Method */
-            method: string;
-            /** Order */
-            order: string[];
-            /** Spec */
-            spec: components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"];
-        };
-        /** ParetoRequest */
-        ParetoRequest: {
-            /** Criteria */
-            criteria?: string[] | null;
-            problem: components["schemas"]["ProblemModel"];
-        };
-        /** ParetoResponse */
-        ParetoResponse: {
-            /** Alternatives */
-            alternatives: components["schemas"]["DominanceModel"][];
-            /** Front */
-            front: string[];
-        };
         /**
          * PiecewiseValueFunction
          * @description Straight lines between (x, value) points; constant beyond the first and last point.
@@ -1047,6 +803,13 @@ export interface components {
                 number,
                 number
             ][];
+        };
+        /** PlacedModel */
+        PlacedModel: {
+            /** Id */
+            id: string;
+            /** Score */
+            score: number;
         };
         /** PresentConstraint */
         PresentConstraint: {
@@ -1064,18 +827,6 @@ export interface components {
              * @enum {string}
              */
             op: "present";
-        };
-        /**
-         * ProblemModel
-         * @description A decision problem; ``matrix[i][j]`` is alternative i on criterion j.
-         */
-        ProblemModel: {
-            /** Alternatives */
-            alternatives: string[];
-            /** Criteria */
-            criteria: components["schemas"]["CriterionModel"][];
-            /** Matrix */
-            matrix: number[][];
         };
         /** Project */
         Project: {
@@ -1181,6 +932,7 @@ export interface components {
         };
         /** ProjectEvaluation */
         ProjectEvaluation: {
+            conclusion: components["schemas"]["ConclusionModel"];
             /** Eligible */
             eligible: string[];
             /** Excluded */
@@ -1257,6 +1009,30 @@ export interface components {
             intervals: components["schemas"]["ProjectInterval"][];
             scope: components["schemas"]["StabilityScope"];
         };
+        /** ReportRequest */
+        ReportRequest: {
+            /**
+             * Conclusion
+             * @default []
+             */
+            conclusion: string[];
+            /**
+             * Include Pareto
+             * @default true
+             */
+            include_pareto: boolean;
+            /**
+             * Include Robustness
+             * @default true
+             */
+            include_robustness: boolean;
+            /**
+             * Include Stability
+             * @default true
+             */
+            include_stability: boolean;
+            project: components["schemas"]["Project"];
+        };
         /** RobustAlternative */
         RobustAlternative: {
             /** Id */
@@ -1303,6 +1079,13 @@ export interface components {
              */
             spread: number;
         };
+        /** ShareModel */
+        ShareModel: {
+            /** Criterion Id */
+            criterion_id: string;
+            /** Points */
+            points: number;
+        };
         /** Source */
         Source: {
             /** Column Map */
@@ -1326,38 +1109,10 @@ export interface components {
             /** Sheet */
             sheet?: string | null;
         };
-        /**
-         * StabilityOptions
-         * @description Normalisation of the weighted sum whose ranking is analysed.
-         */
-        StabilityOptions: {
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
-            /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range" | "none";
-        };
-        /** StabilityResponse */
-        StabilityResponse: {
-            /** Intervals */
-            intervals: components["schemas"]["IntervalModel"][];
-            /** Normalization */
-            normalization: string;
+        /** StabilityRequest */
+        StabilityRequest: {
+            project: components["schemas"]["Project"];
+            /** @default full_order */
             scope: components["schemas"]["StabilityScope"];
         };
         /**
@@ -1497,34 +1252,6 @@ export interface components {
              */
             method: "topsis";
         };
-        /** TopsisSpec */
-        TopsisSpec: {
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            method: "topsis";
-            /**
-             * Normalization
-             * @default vector
-             * @enum {string}
-             */
-            normalization: "vector" | "min_max" | "fixed_range" | "none";
-        };
         /** Validity */
         Validity: {
             /**
@@ -1541,34 +1268,6 @@ export interface components {
              * @enum {string}
              */
             method: "weighted_sum";
-        };
-        /** WeightedSumSpec */
-        WeightedSumSpec: {
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            method: "weighted_sum";
-            /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range" | "none";
         };
         /** Weighting */
         Weighting: {
@@ -1590,73 +1289,6 @@ export interface components {
                 [key: string]: number;
             };
         };
-        /** ReportRequest */
-        mcda_api__projects__ReportRequest: {
-            /**
-             * Include Pareto
-             * @default true
-             */
-            include_pareto: boolean;
-            /**
-             * Include Stability
-             * @default true
-             */
-            include_stability: boolean;
-            project: components["schemas"]["Project"];
-        };
-        /** StabilityRequest */
-        mcda_api__projects__StabilityRequest: {
-            project: components["schemas"]["Project"];
-            /** @default full_order */
-            scope: components["schemas"]["StabilityScope"];
-        };
-        /** ReportRequest */
-        mcda_api__schemas__ReportRequest: {
-            /**
-             * Include Pareto
-             * @default true
-             */
-            include_pareto: boolean;
-            /** Methods */
-            methods: (components["schemas"]["WeightedSumSpec"] | components["schemas"]["TopsisSpec"] | components["schemas"]["CompromiseProgrammingSpec"])[];
-            problem: components["schemas"]["ProblemModel"];
-            /**
-             * @default {
-             *       "bounds": [
-             *         0,
-             *         100
-             *       ],
-             *       "normalization": "min_max"
-             *     }
-             */
-            stability: components["schemas"]["StabilityOptions"] | null;
-        };
-        /** StabilityRequest */
-        mcda_api__schemas__StabilityRequest: {
-            /**
-             * Bounds
-             * @default [
-             *       0,
-             *       100
-             *     ]
-             */
-            bounds: [
-                number,
-                number
-            ] | [
-                number,
-                number
-            ][];
-            /**
-             * Normalization
-             * @default min_max
-             * @enum {string}
-             */
-            normalization: "min_max" | "fixed_range" | "none";
-            problem: components["schemas"]["ProblemModel"];
-            /** @default full_order */
-            scope: components["schemas"]["StabilityScope"];
-        };
     };
     responses: never;
     parameters: never;
@@ -1666,108 +1298,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    evaluate_api_v1_evaluate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EvaluateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EvaluateResponse"];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    export_problem_api_v1_export_problem_post: {
-        parameters: {
-            query?: {
-                format?: "xlsx" | "csv";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProblemModel"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
-                    "text/csv": unknown;
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    export_report_api_v1_export_report_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["mcda_api__schemas__ReportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": unknown;
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     health_api_v1_health_get: {
         parameters: {
             query?: never;
@@ -1815,123 +1345,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MethodInfo"][];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    pareto_api_v1_pareto_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ParetoRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParetoResponse"];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    import_problem_api_v1_problems_import_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_import_problem_api_v1_problems_import_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ImportResponse"];
-                };
-            };
-            /** @description Content Too Large */
-            413: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unsupported Media Type */
-            415: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    validate_problem_api_v1_problems_validate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProblemModel"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProblemModel"];
                 };
             };
             /** @description Unprocessable Content */
@@ -2139,7 +1552,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["mcda_api__projects__ReportRequest"];
+                "application/json": components["schemas"]["ReportRequest"];
             };
         };
         responses: {
@@ -2205,7 +1618,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["mcda_api__projects__StabilityRequest"];
+                "application/json": components["schemas"]["StabilityRequest"];
             };
         };
         responses: {
@@ -2282,39 +1695,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WeightsModel"];
-                };
-            };
-            /** @description Unprocessable Content */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    stability_api_v1_sensitivity_stability_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["mcda_api__schemas__StabilityRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StabilityResponse"];
                 };
             };
             /** @description Unprocessable Content */

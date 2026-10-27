@@ -95,43 +95,6 @@
         "title": "Alternative",
         "type": "object"
       },
-      "AlternativeResult": {
-        "properties": {
-          "contributions": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "number"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Contributions"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "rank": {
-            "title": "Rank",
-            "type": "integer"
-          },
-          "score": {
-            "title": "Score",
-            "type": "number"
-          }
-        },
-        "required": [
-          "name",
-          "score",
-          "rank"
-        ],
-        "title": "AlternativeResult",
-        "type": "object"
-      },
       "AnalysisSettings": {
         "additionalProperties": false,
         "properties": {
@@ -235,20 +198,6 @@
         "title": "BetweenConstraint",
         "type": "object"
       },
-      "Body_import_problem_api_v1_problems_import_post": {
-        "properties": {
-          "file": {
-            "contentMediaType": "application/octet-stream",
-            "title": "File",
-            "type": "string"
-          }
-        },
-        "required": [
-          "file"
-        ],
-        "title": "Body_import_problem_api_v1_problems_import_post",
-        "type": "object"
-      },
       "Body_import_project_api_v1_projects_import_post": {
         "properties": {
           "file": {
@@ -295,6 +244,30 @@
           "score"
         ],
         "title": "Category",
+        "type": "object"
+      },
+      "CaveatModel": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "code",
+          "params",
+          "message"
+        ],
+        "title": "CaveatModel",
         "type": "object"
       },
       "CompareConstraint": {
@@ -379,78 +352,66 @@
         "title": "CompromiseProgrammingMethod",
         "type": "object"
       },
-      "CompromiseProgrammingSpec": {
+      "ConclusionModel": {
+        "description": "Structured points for the conclusion; clients write the sentences (ADR 0007).",
         "properties": {
-          "bounds": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "items": {
-                  "maxItems": 2,
-                  "minItems": 2,
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array"
-                },
-                "maxItems": 200,
-                "type": "array"
-              }
-            ],
-            "default": [
-              0.0,
-              100.0
-            ],
-            "title": "Bounds"
+          "advantages": {
+            "items": {
+              "$ref": "#/components/schemas/ShareModel"
+            },
+            "title": "Advantages",
+            "type": "array"
           },
-          "method": {
-            "const": "compromise_programming",
-            "default": "compromise_programming",
-            "title": "Method",
-            "type": "string"
+          "caveats": {
+            "items": {
+              "$ref": "#/components/schemas/CaveatModel"
+            },
+            "title": "Caveats",
+            "type": "array"
           },
-          "normalization": {
-            "default": "min_max",
-            "enum": [
-              "min_max",
-              "fixed_range"
-            ],
-            "title": "Normalization",
-            "type": "string"
+          "disadvantages": {
+            "items": {
+              "$ref": "#/components/schemas/ShareModel"
+            },
+            "title": "Disadvantages",
+            "type": "array"
           },
-          "p": {
-            "anyOf": [
-              {
-                "minimum": 1.0,
-                "type": "number"
-              },
-              {
-                "const": "inf",
-                "type": "string"
-              }
-            ],
-            "default": 2.0,
-            "title": "P"
+          "runner_up": {
+            "$ref": "#/components/schemas/PlacedModel"
+          },
+          "score_gap": {
+            "title": "Score Gap",
+            "type": "number"
+          },
+          "tied": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tied",
+            "type": "array"
+          },
+          "top_contributions": {
+            "items": {
+              "$ref": "#/components/schemas/ShareModel"
+            },
+            "title": "Top Contributions",
+            "type": "array"
+          },
+          "winner": {
+            "$ref": "#/components/schemas/PlacedModel"
           }
         },
-        "title": "CompromiseProgrammingSpec",
+        "required": [
+          "winner",
+          "runner_up",
+          "score_gap",
+          "tied",
+          "top_contributions",
+          "advantages",
+          "disadvantages",
+          "caveats"
+        ],
+        "title": "ConclusionModel",
         "type": "object"
       },
       "ConfidenceModel": {
@@ -622,30 +583,6 @@
         "title": "Criterion",
         "type": "object"
       },
-      "CriterionModel": {
-        "properties": {
-          "direction": {
-            "$ref": "#/components/schemas/Direction",
-            "default": "benefit"
-          },
-          "name": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
-          },
-          "weight": {
-            "title": "Weight",
-            "type": "number"
-          }
-        },
-        "required": [
-          "name",
-          "weight"
-        ],
-        "title": "CriterionModel",
-        "type": "object"
-      },
       "CurveAlternative": {
         "properties": {
           "id": {
@@ -751,40 +688,6 @@
         "title": "Direction",
         "type": "string"
       },
-      "DominanceModel": {
-        "properties": {
-          "alternative": {
-            "title": "Alternative",
-            "type": "string"
-          },
-          "dominated_by": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Dominated By",
-            "type": "array"
-          },
-          "dominates": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Dominates",
-            "type": "array"
-          },
-          "is_pareto_optimal": {
-            "title": "Is Pareto Optimal",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "alternative",
-          "is_pareto_optimal",
-          "dominates",
-          "dominated_by"
-        ],
-        "title": "DominanceModel",
-        "type": "object"
-      },
       "ErrorResponse": {
         "properties": {
           "code": {
@@ -826,62 +729,6 @@
           "detail"
         ],
         "title": "ErrorResponse",
-        "type": "object"
-      },
-      "EvaluateRequest": {
-        "properties": {
-          "methods": {
-            "items": {
-              "discriminator": {
-                "mapping": {
-                  "compromise_programming": "#/components/schemas/CompromiseProgrammingSpec",
-                  "topsis": "#/components/schemas/TopsisSpec",
-                  "weighted_sum": "#/components/schemas/WeightedSumSpec"
-                },
-                "propertyName": "method"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/WeightedSumSpec"
-                },
-                {
-                  "$ref": "#/components/schemas/TopsisSpec"
-                },
-                {
-                  "$ref": "#/components/schemas/CompromiseProgrammingSpec"
-                }
-              ]
-            },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Methods",
-            "type": "array"
-          },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
-          }
-        },
-        "required": [
-          "problem",
-          "methods"
-        ],
-        "title": "EvaluateRequest",
-        "type": "object"
-      },
-      "EvaluateResponse": {
-        "properties": {
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/MethodResultModel"
-            },
-            "title": "Results",
-            "type": "array"
-          }
-        },
-        "required": [
-          "results"
-        ],
-        "title": "EvaluateResponse",
         "type": "object"
       },
       "ExclusionModel": {
@@ -926,42 +773,6 @@
           "name"
         ],
         "title": "Group",
-        "type": "object"
-      },
-      "ImportResponse": {
-        "properties": {
-          "filename": {
-            "title": "Filename",
-            "type": "string"
-          },
-          "legacy": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/LegacyInfo"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
-          },
-          "source_format": {
-            "enum": [
-              "template",
-              "legacy"
-            ],
-            "title": "Source Format",
-            "type": "string"
-          }
-        },
-        "required": [
-          "filename",
-          "source_format",
-          "problem"
-        ],
-        "title": "ImportResponse",
         "type": "object"
       },
       "ImputationModel": {
@@ -1032,51 +843,6 @@
         "title": "InConstraint",
         "type": "object"
       },
-      "IntervalModel": {
-        "properties": {
-          "criterion": {
-            "title": "Criterion",
-            "type": "string"
-          },
-          "lower": {
-            "title": "Lower",
-            "type": "number"
-          },
-          "lower_share": {
-            "title": "Lower Share",
-            "type": "number"
-          },
-          "upper": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Upper"
-          },
-          "upper_share": {
-            "title": "Upper Share",
-            "type": "number"
-          },
-          "weight": {
-            "title": "Weight",
-            "type": "number"
-          }
-        },
-        "required": [
-          "criterion",
-          "weight",
-          "lower",
-          "upper",
-          "lower_share",
-          "upper_share"
-        ],
-        "title": "IntervalModel",
-        "type": "object"
-      },
       "IssueModel": {
         "properties": {
           "code": {
@@ -1110,35 +876,6 @@
           "message"
         ],
         "title": "IssueModel",
-        "type": "object"
-      },
-      "LegacyInfo": {
-        "properties": {
-          "note": {
-            "default": "Legacy workbooks store values already on a 0-100 benefit scale; use weighted_sum with normalization 'none' to reproduce the workbook's ranking.",
-            "title": "Note",
-            "type": "string"
-          },
-          "prescaled": {
-            "items": {
-              "type": "boolean"
-            },
-            "title": "Prescaled",
-            "type": "array"
-          },
-          "reference_order": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Reference Order",
-            "type": "array"
-          }
-        },
-        "required": [
-          "reference_order",
-          "prescaled"
-        ],
-        "title": "LegacyInfo",
         "type": "object"
       },
       "LevelModel": {
@@ -1286,7 +1023,7 @@
         "type": "object"
       },
       "LocationModel": {
-        "description": "Where an issue is; which fields are set depends on ``kind``.\n\ncell: ``ref`` (\"B4\") · alternative/criterion/group: ``name`` or 1-based ``index`` ·\nconstraint: id in ``ref`` ·\nvalue: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·\nfield: request path in ``ref`` (\"problem.matrix.0.1\")",
+        "description": "Where an issue is; which fields are set depends on ``kind``.\n\ncell: ``ref`` (\"B4\") · alternative/criterion/group: ``name`` or 1-based ``index`` ·\nconstraint: id in ``ref`` ·\nvalue: ``alternative`` + ``criterion`` · row: 1-based ``index`` ·\nfield: request path in ``ref`` (\"data.c1.a1\")",
         "properties": {
           "alternative": {
             "anyOf": [
@@ -1506,118 +1243,6 @@
         "title": "MethodInfo",
         "type": "object"
       },
-      "MethodResultModel": {
-        "properties": {
-          "alternatives": {
-            "items": {
-              "$ref": "#/components/schemas/AlternativeResult"
-            },
-            "title": "Alternatives",
-            "type": "array"
-          },
-          "higher_is_better": {
-            "title": "Higher Is Better",
-            "type": "boolean"
-          },
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "method": {
-            "title": "Method",
-            "type": "string"
-          },
-          "order": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Order",
-            "type": "array"
-          },
-          "spec": {
-            "discriminator": {
-              "mapping": {
-                "compromise_programming": "#/components/schemas/CompromiseProgrammingSpec",
-                "topsis": "#/components/schemas/TopsisSpec",
-                "weighted_sum": "#/components/schemas/WeightedSumSpec"
-              },
-              "propertyName": "method"
-            },
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/WeightedSumSpec"
-              },
-              {
-                "$ref": "#/components/schemas/TopsisSpec"
-              },
-              {
-                "$ref": "#/components/schemas/CompromiseProgrammingSpec"
-              }
-            ],
-            "title": "Spec"
-          }
-        },
-        "required": [
-          "method",
-          "label",
-          "spec",
-          "higher_is_better",
-          "alternatives",
-          "order"
-        ],
-        "title": "MethodResultModel",
-        "type": "object"
-      },
-      "ParetoRequest": {
-        "properties": {
-          "criteria": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Criteria"
-          },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
-          }
-        },
-        "required": [
-          "problem"
-        ],
-        "title": "ParetoRequest",
-        "type": "object"
-      },
-      "ParetoResponse": {
-        "properties": {
-          "alternatives": {
-            "items": {
-              "$ref": "#/components/schemas/DominanceModel"
-            },
-            "title": "Alternatives",
-            "type": "array"
-          },
-          "front": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Front",
-            "type": "array"
-          }
-        },
-        "required": [
-          "front",
-          "alternatives"
-        ],
-        "title": "ParetoResponse",
-        "type": "object"
-      },
       "PiecewiseValueFunction": {
         "additionalProperties": false,
         "description": "Straight lines between (x, value) points; constant beyond the first and last point.",
@@ -1654,6 +1279,24 @@
         "title": "PiecewiseValueFunction",
         "type": "object"
       },
+      "PlacedModel": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "score"
+        ],
+        "title": "PlacedModel",
+        "type": "object"
+      },
       "PresentConstraint": {
         "additionalProperties": false,
         "properties": {
@@ -1688,48 +1331,6 @@
           "op"
         ],
         "title": "PresentConstraint",
-        "type": "object"
-      },
-      "ProblemModel": {
-        "description": "A decision problem; ``matrix[i][j]`` is alternative i on criterion j.",
-        "properties": {
-          "alternatives": {
-            "items": {
-              "maxLength": 200,
-              "minLength": 1,
-              "type": "string"
-            },
-            "maxItems": 500,
-            "title": "Alternatives",
-            "type": "array"
-          },
-          "criteria": {
-            "items": {
-              "$ref": "#/components/schemas/CriterionModel"
-            },
-            "maxItems": 200,
-            "title": "Criteria",
-            "type": "array"
-          },
-          "matrix": {
-            "items": {
-              "items": {
-                "type": "number"
-              },
-              "maxItems": 200,
-              "type": "array"
-            },
-            "maxItems": 500,
-            "title": "Matrix",
-            "type": "array"
-          }
-        },
-        "required": [
-          "alternatives",
-          "criteria",
-          "matrix"
-        ],
-        "title": "ProblemModel",
         "type": "object"
       },
       "Project": {
@@ -1993,6 +1594,9 @@
       },
       "ProjectEvaluation": {
         "properties": {
+          "conclusion": {
+            "$ref": "#/components/schemas/ConclusionModel"
+          },
           "eligible": {
             "items": {
               "type": "string"
@@ -2049,7 +1653,8 @@
           "weights",
           "values",
           "results",
-          "pareto"
+          "pareto",
+          "conclusion"
         ],
         "title": "ProjectEvaluation",
         "type": "object"
@@ -2236,6 +1841,43 @@
         "title": "ProjectStability",
         "type": "object"
       },
+      "ReportRequest": {
+        "properties": {
+          "conclusion": {
+            "default": [],
+            "items": {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Conclusion",
+            "type": "array"
+          },
+          "include_pareto": {
+            "default": true,
+            "title": "Include Pareto",
+            "type": "boolean"
+          },
+          "include_robustness": {
+            "default": true,
+            "title": "Include Robustness",
+            "type": "boolean"
+          },
+          "include_stability": {
+            "default": true,
+            "title": "Include Stability",
+            "type": "boolean"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "required": [
+          "project"
+        ],
+        "title": "ReportRequest",
+        "type": "object"
+      },
       "RobustAlternative": {
         "properties": {
           "id": {
@@ -2342,6 +1984,24 @@
         "title": "RobustnessSettings",
         "type": "object"
       },
+      "ShareModel": {
+        "properties": {
+          "criterion_id": {
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "points"
+        ],
+        "title": "ShareModel",
+        "type": "object"
+      },
       "Source": {
         "additionalProperties": false,
         "properties": {
@@ -2420,85 +2080,20 @@
         "title": "Source",
         "type": "object"
       },
-      "StabilityOptions": {
-        "description": "Normalisation of the weighted sum whose ranking is analysed.",
+      "StabilityRequest": {
         "properties": {
-          "bounds": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "items": {
-                  "maxItems": 2,
-                  "minItems": 2,
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array"
-                },
-                "maxItems": 200,
-                "type": "array"
-              }
-            ],
-            "default": [
-              0.0,
-              100.0
-            ],
-            "title": "Bounds"
-          },
-          "normalization": {
-            "default": "min_max",
-            "enum": [
-              "min_max",
-              "fixed_range",
-              "none"
-            ],
-            "title": "Normalization",
-            "type": "string"
-          }
-        },
-        "title": "StabilityOptions",
-        "type": "object"
-      },
-      "StabilityResponse": {
-        "properties": {
-          "intervals": {
-            "items": {
-              "$ref": "#/components/schemas/IntervalModel"
-            },
-            "title": "Intervals",
-            "type": "array"
-          },
-          "normalization": {
-            "title": "Normalization",
-            "type": "string"
+          "project": {
+            "$ref": "#/components/schemas/Project"
           },
           "scope": {
-            "$ref": "#/components/schemas/StabilityScope"
+            "$ref": "#/components/schemas/StabilityScope",
+            "default": "full_order"
           }
         },
         "required": [
-          "scope",
-          "normalization",
-          "intervals"
+          "project"
         ],
-        "title": "StabilityResponse",
+        "title": "StabilityRequest",
         "type": "object"
       },
       "StabilityScope": {
@@ -2878,68 +2473,6 @@
         "title": "TopsisMethod",
         "type": "object"
       },
-      "TopsisSpec": {
-        "properties": {
-          "bounds": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "items": {
-                  "maxItems": 2,
-                  "minItems": 2,
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array"
-                },
-                "maxItems": 200,
-                "type": "array"
-              }
-            ],
-            "default": [
-              0.0,
-              100.0
-            ],
-            "title": "Bounds"
-          },
-          "method": {
-            "const": "topsis",
-            "default": "topsis",
-            "title": "Method",
-            "type": "string"
-          },
-          "normalization": {
-            "default": "vector",
-            "enum": [
-              "vector",
-              "min_max",
-              "fixed_range",
-              "none"
-            ],
-            "title": "Normalization",
-            "type": "string"
-          }
-        },
-        "title": "TopsisSpec",
-        "type": "object"
-      },
       "Validity": {
         "properties": {
           "valid": {
@@ -2963,67 +2496,6 @@
           }
         },
         "title": "WeightedSumMethod",
-        "type": "object"
-      },
-      "WeightedSumSpec": {
-        "properties": {
-          "bounds": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "items": {
-                  "maxItems": 2,
-                  "minItems": 2,
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array"
-                },
-                "maxItems": 200,
-                "type": "array"
-              }
-            ],
-            "default": [
-              0.0,
-              100.0
-            ],
-            "title": "Bounds"
-          },
-          "method": {
-            "const": "weighted_sum",
-            "default": "weighted_sum",
-            "title": "Method",
-            "type": "string"
-          },
-          "normalization": {
-            "default": "min_max",
-            "enum": [
-              "min_max",
-              "fixed_range",
-              "none"
-            ],
-            "title": "Normalization",
-            "type": "string"
-          }
-        },
-        "title": "WeightedSumSpec",
         "type": "object"
       },
       "Weighting": {
@@ -3074,171 +2546,6 @@
         ],
         "title": "WeightsModel",
         "type": "object"
-      },
-      "mcda_api__projects__ReportRequest": {
-        "properties": {
-          "include_pareto": {
-            "default": true,
-            "title": "Include Pareto",
-            "type": "boolean"
-          },
-          "include_stability": {
-            "default": true,
-            "title": "Include Stability",
-            "type": "boolean"
-          },
-          "project": {
-            "$ref": "#/components/schemas/Project"
-          }
-        },
-        "required": [
-          "project"
-        ],
-        "title": "ReportRequest",
-        "type": "object"
-      },
-      "mcda_api__projects__StabilityRequest": {
-        "properties": {
-          "project": {
-            "$ref": "#/components/schemas/Project"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/StabilityScope",
-            "default": "full_order"
-          }
-        },
-        "required": [
-          "project"
-        ],
-        "title": "StabilityRequest",
-        "type": "object"
-      },
-      "mcda_api__schemas__ReportRequest": {
-        "properties": {
-          "include_pareto": {
-            "default": true,
-            "title": "Include Pareto",
-            "type": "boolean"
-          },
-          "methods": {
-            "items": {
-              "discriminator": {
-                "mapping": {
-                  "compromise_programming": "#/components/schemas/CompromiseProgrammingSpec",
-                  "topsis": "#/components/schemas/TopsisSpec",
-                  "weighted_sum": "#/components/schemas/WeightedSumSpec"
-                },
-                "propertyName": "method"
-              },
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/WeightedSumSpec"
-                },
-                {
-                  "$ref": "#/components/schemas/TopsisSpec"
-                },
-                {
-                  "$ref": "#/components/schemas/CompromiseProgrammingSpec"
-                }
-              ]
-            },
-            "maxItems": 10,
-            "minItems": 1,
-            "title": "Methods",
-            "type": "array"
-          },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
-          },
-          "stability": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/StabilityOptions"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": {
-              "bounds": [
-                0.0,
-                100.0
-              ],
-              "normalization": "min_max"
-            }
-          }
-        },
-        "required": [
-          "problem",
-          "methods"
-        ],
-        "title": "ReportRequest",
-        "type": "object"
-      },
-      "mcda_api__schemas__StabilityRequest": {
-        "properties": {
-          "bounds": {
-            "anyOf": [
-              {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              {
-                "items": {
-                  "maxItems": 2,
-                  "minItems": 2,
-                  "prefixItems": [
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ],
-                  "type": "array"
-                },
-                "maxItems": 200,
-                "type": "array"
-              }
-            ],
-            "default": [
-              0.0,
-              100.0
-            ],
-            "title": "Bounds"
-          },
-          "normalization": {
-            "default": "min_max",
-            "enum": [
-              "min_max",
-              "fixed_range",
-              "none"
-            ],
-            "title": "Normalization",
-            "type": "string"
-          },
-          "problem": {
-            "$ref": "#/components/schemas/ProblemModel"
-          },
-          "scope": {
-            "$ref": "#/components/schemas/StabilityScope",
-            "default": "full_order"
-          }
-        },
-        "required": [
-          "problem"
-        ],
-        "title": "StabilityRequest",
-        "type": "object"
       }
     }
   },
@@ -3249,139 +2556,6 @@
   },
   "openapi": "3.1.0",
   "paths": {
-    "/api/v1/evaluate": {
-      "post": {
-        "operationId": "evaluate_api_v1_evaluate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EvaluateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EvaluateResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Evaluate",
-        "tags": [
-          "analysis"
-        ]
-      }
-    },
-    "/api/v1/export/problem": {
-      "post": {
-        "operationId": "export_problem_api_v1_export_problem_post",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "format",
-            "required": false,
-            "schema": {
-              "default": "xlsx",
-              "enum": [
-                "xlsx",
-                "csv"
-              ],
-              "title": "Format",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProblemModel"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {},
-              "text/csv": {}
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Export Problem",
-        "tags": [
-          "files"
-        ]
-      }
-    },
-    "/api/v1/export/report": {
-      "post": {
-        "description": "Excel report: results of every method, stability intervals, Pareto analysis and the input.",
-        "operationId": "export_report_api_v1_export_report_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/mcda_api__schemas__ReportRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {}
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Export Report",
-        "tags": [
-          "files"
-        ]
-      }
-    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",
@@ -3450,151 +2624,6 @@
         "summary": "Methods",
         "tags": [
           "meta"
-        ]
-      }
-    },
-    "/api/v1/pareto": {
-      "post": {
-        "operationId": "pareto_api_v1_pareto_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ParetoRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ParetoResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Pareto",
-        "tags": [
-          "analysis"
-        ]
-      }
-    },
-    "/api/v1/problems/import": {
-      "post": {
-        "description": "Read an uploaded template (.xlsx/.csv) or legacy V7 workbook.",
-        "operationId": "import_problem_api_v1_problems_import_post",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_import_problem_api_v1_problems_import_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ImportResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "413": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Content Too Large"
-          },
-          "415": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unsupported Media Type"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Import Problem",
-        "tags": [
-          "files"
-        ]
-      }
-    },
-    "/api/v1/problems/validate": {
-      "post": {
-        "description": "Check a problem; returns it unchanged if valid, else 422 with all issues.",
-        "operationId": "validate_problem_api_v1_problems_validate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProblemModel"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemModel"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Validate Problem",
-        "tags": [
-          "analysis"
         ]
       }
     },
@@ -3835,13 +2864,13 @@
     },
     "/api/v1/projects/report": {
       "post": {
-        "description": "Excel report: every method, stability intervals, Pareto analysis and, when possible, the raw data.",
+        "description": "Excel report v2: conclusion, results, data handling, weights, stability, Pareto, robustness, raw data.",
         "operationId": "project_report_api_v1_projects_report_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/mcda_api__projects__ReportRequest"
+                "$ref": "#/components/schemas/ReportRequest"
               }
             }
           },
@@ -3921,7 +2950,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/mcda_api__projects__StabilityRequest"
+                "$ref": "#/components/schemas/StabilityRequest"
               }
             }
           },
@@ -4036,47 +3065,6 @@
         "summary": "Project Weights",
         "tags": [
           "projects"
-        ]
-      }
-    },
-    "/api/v1/sensitivity/stability": {
-      "post": {
-        "operationId": "stability_api_v1_sensitivity_stability_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/mcda_api__schemas__StabilityRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StabilityResponse"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Unprocessable Content"
-          }
-        },
-        "summary": "Stability",
-        "tags": [
-          "analysis"
         ]
       }
     },

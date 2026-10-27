@@ -232,3 +232,18 @@ test('robustness: rank distribution and confidence, sampling mode changes the re
   await expect(card.getByRole('slider', { name: '波动幅度' })).toBeHidden()
   await expect(card.locator('tbody')).not.toHaveText(before)
 })
+
+test('conclusion: recommendation, reasons and confidence on the results page', async ({ page }) => {
+  await loadExample(page)
+  await nav(page, '结果').click()
+  // The heading is translated too, so find the card by either title.
+  const card = page.locator('section').filter({ has: page.getByRole('heading', { name: /^(结论|Conclusion)$/ }) })
+  await expect(card.getByText(/^推荐 Option [ABC]/)).toBeVisible()
+  await expect(card.getByText(/的得分主要来自/)).toBeVisible()
+  await expect(card.getByText(/^可靠程度：.。在/)).toBeVisible()
+
+  // The same conclusion in English.
+  await page.getByRole('button', { name: 'English' }).click()
+  await expect(card.getByText(/^Recommended: Option [ABC]/)).toBeVisible()
+  await expect(card.getByText(/^Confidence: \w+\. In /)).toBeVisible() // the sentence, not the badge
+})

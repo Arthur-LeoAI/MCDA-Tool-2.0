@@ -1,6 +1,6 @@
 # MCDA 决策分析工具（重构版）
 
-多准则决策分析（MCDA）工具的重构版本，用来替代旧仓库 [MCDA-Tool-2.0](https://github.com/Arthur-LeoAI/MCDA-Tool-2.0)。
+多准则决策分析（MCDA）工具，是对本仓库原有版本的完整重构。重构前的旧版本保留在标签 [`v1-legacy`](https://github.com/Arthur-LeoAI/MCDA-Tool-2.0/tree/v1-legacy) 上。
 
 所有计算都只在 Python 计算核心 `mcda_core` 里实现一次，后端 API 和前端只调用它，不再像旧版那样在 JS 和 Python 里各写一套。
 

@@ -104,3 +104,23 @@ def test_windows_codepage_csv(tmp_path):
     problem = read_problem(path)
     assert problem.criterion_names == ("Größe",)
     assert problem.alternatives == ("Ä", "Ö")
+
+
+def test_column_letters_match_openpyxl():
+    # The helper replaces openpyxl's get_column_letter so that openpyxl is imported lazily (ADR 0009).
+    from openpyxl.utils import get_column_letter
+
+    from mcda_core.io._cells import column_letter
+
+    assert all(column_letter(i) == get_column_letter(i) for i in range(1, 18279))
+
+
+def test_openpyxl_is_not_imported_at_startup():
+    import subprocess
+    import sys
+
+    code = "import sys, mcda_api.main; print('openpyxl' in sys.modules)"
+    assert (
+        subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True).stdout.strip()
+        == "False"
+    )

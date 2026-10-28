@@ -2,6 +2,7 @@ import { Activity, CircleAlert, Download, Languages, Save, SlidersHorizontal, Ta
 import { lazy, Suspense, useEffect } from 'react'
 import { Segmented, Spinner } from './components/ui'
 import { useMigratePendingDraft } from './hooks'
+import { EngineProgress } from './components/EngineProgress'
 import { saveProjectFile } from './lib/projectFile'
 import { navigate } from './router'
 import type { MessageKey } from './i18n/messages'
@@ -131,6 +132,7 @@ export default function App() {
         )}
 
         <main className="min-w-0 flex-1 p-4 md:p-8">
+          <EngineProgress />
           {(migration.migrating || migration.error || storageFull) && (
             <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
               {migration.migrating ? <Spinner /> : <CircleAlert className="size-4 shrink-0" />}

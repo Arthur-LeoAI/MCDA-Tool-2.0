@@ -21,7 +21,20 @@ export default defineConfig({
     locale: 'zh-CN',
     trace: 'retain-on-failure',
   },
-  projects: [{ name: 'desktop', use: { ...devices['Desktop Chrome'], channel: CI ? undefined : 'msedge' } }],
+  projects: [
+    // The same tests against both calculation engines (ADR 0009).
+    {
+      name: 'server',
+      use: { ...devices['Desktop Chrome'], channel: CI ? undefined : 'msedge', baseURL: 'http://localhost:4319' },
+    },
+    {
+      // The static build: Python starts in each new browser context, so allow for that.
+      name: 'browser',
+      use: { ...devices['Desktop Chrome'], channel: CI ? undefined : 'msedge', baseURL: 'http://localhost:4331' },
+      timeout: 180_000,
+      expect: { timeout: 60_000 },
+    },
+  ],
   webServer: [
     {
       command: 'uv run --directory ../backend uvicorn mcda_api.main:app --port 8000',
@@ -35,6 +48,14 @@ export default defineConfig({
       url: 'http://localhost:4319',
       reuseExistingServer: false,
       timeout: 180_000,
+    },
+    {
+      // The static build with the browser engine; no API server involved.
+      command:
+        'node scripts/prepare-pyodide.mjs && npx vite build --mode static && npx vite preview --mode static --port 4331 --strictPort',
+      url: 'http://localhost:4331',
+      reuseExistingServer: false,
+      timeout: 300_000,
     },
   ],
 })

@@ -91,6 +91,25 @@ docker compose up --build
 
 Then open http://localhost:8080 .
 
+### Static site with calculations in the browser (Cloudflare)
+
+The tool can also run without a server: the same Python code runs in the browser with Pyodide (ADR 0009, [design note](docs/design/browser-engine.md)). Project data then never leave the user's device, and the whole site is static files, which Cloudflare hosts on its free plan.
+
+```bash
+cd frontend
+npm run build:static    # downloads Pyodide and the packages once, builds into dist-static/
+npx vite preview --mode static
+```
+
+The first visit downloads about 11 MB and starts Python in the background (about 10 s on a fast PC, longer on slow connections and devices); later visits use the browser cache.
+
+**Deploying to Cloudflare** (done by the repository owner):
+
+1. Create a Cloudflare account (the free plan is enough).
+2. In the dashboard: Workers & Pages → Create application → connect the GitHub repository.
+3. Root directory `frontend`, build command `npm run build:static`, deploy command `npx wrangler deploy`. `frontend/wrangler.jsonc` serves `dist-static/` with single-page-application routing.
+4. Every push to `main` then builds and deploys the site (on the free plan: 3,000 build minutes per month, one build at a time).
+
 ### Development
 
 For the development workflow, code conventions, tests and commit conventions, see [CONTRIBUTING.md](CONTRIBUTING.md).

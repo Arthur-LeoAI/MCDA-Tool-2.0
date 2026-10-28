@@ -10,15 +10,11 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-import openpyxl
-from openpyxl.styles import Font
-from openpyxl.utils import get_column_letter
-
 from ..methods import MethodResult
 from ..model import DecisionProblem
 from ..pareto import DominanceInfo
 from ..sensitivity import StabilityScope, WeightInterval
-from ._cells import Source
+from ._cells import Source, column_letter
 from .template import add_template_sheet
 
 UNBOUNDED = "unbounded"
@@ -46,6 +42,10 @@ def write_report(
     ``front`` sheets (title, rows) come before the results, ``back`` sheets
     after Pareto; the first row of every sheet is the bold header.
     """
+    # Imported here, not at module level: importing openpyxl is slow in the browser engine (ADR 0009).
+    import openpyxl
+    from openpyxl.styles import Font
+
     workbook = openpyxl.Workbook()
     workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
 
@@ -109,7 +109,7 @@ def write_report(
             cell.font = Font(bold=True)
         for col_index, column in enumerate(sheet.columns, start=1):
             width = max((len(str(cell.value)) for cell in column if cell.value is not None), default=0)
-            sheet.column_dimensions[get_column_letter(col_index)].width = min(max(width + 2, 10), 50)
+            sheet.column_dimensions[column_letter(col_index)].width = min(max(width + 2, 10), 50)
         sheet.freeze_panes = "B2"
 
     workbook.save(target)

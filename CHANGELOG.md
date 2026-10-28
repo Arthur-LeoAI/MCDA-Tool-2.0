@@ -6,6 +6,12 @@ This file records all notable changes. The format is based on [Keep a Changelog]
 
 ### Added
 
+- **Calculations in the browser** (ADR 0009): a second calculation engine runs the same Python code with Pyodide in a Web Worker, so the site can be hosted as static files (for example on Cloudflare's free plan) and project data never leave the browser.
+  - `npm run build:static` builds this version into `frontend/dist-static/`; it serves Pyodide, the packages (checked against their SHA-256) and our code itself.
+  - The engine starts as soon as a page opens and shows its progress in the tool; the home page states that data stay in the browser.
+  - `frontend/wrangler.jsonc` for Cloudflare; the Docker image keeps the server engine.
+  - The end-to-end tests run against both engines.
+  - openpyxl is imported only when a workbook is read or written, which shortens the browser engine's start.
 - **Website home page**: `/` is an introduction page (how to use it, features, use cases, the two modes, data and privacy), and the tool has moved to `/app`; Chinese and English; guided mode can be opened with sample data directly from the home page. The tool's code is loaded on demand.
 - **Guided mode (M2 S8)**:
   - Seven steps: scenario → import → map columns → check → criteria → weights → conclusion, reusing the components of expert mode;

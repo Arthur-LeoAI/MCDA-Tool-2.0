@@ -1,0 +1,11 @@
+{
+  // Cloudflare: the static build (browser engine, ADR 0009) served as static assets, no Worker code.
+  // Build command: npm run build:static  ·  Deploy command: npx wrangler deploy
+  "name": "mcda",
+  "compatibility_date": "2026-10-28",
+  "assets": {
+    "directory": "./dist-static/",
+    // Paths such as /app return index.html; the app routes on the client.
+    "not_found_handling": "single-page-application",
+  },
+}

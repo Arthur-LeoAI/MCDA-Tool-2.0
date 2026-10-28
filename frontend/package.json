@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "prepare:pyodide": "node scripts/prepare-pyodide.mjs",
+    "build:static": "node scripts/prepare-pyodide.mjs && tsc -b && vite build --mode static",
     "lint": "oxlint",
     "preview": "vite preview",
     "gen:api": "cd ../backend && uv run python -m mcda_api.export_openapi openapi.json && uv run python -m mcda_core.project.export_schema project.schema.json && cd ../frontend && npx -y openapi-typescript@7 ../backend/openapi.json -o src/api/schema.d.ts",
@@ -35,6 +37,7 @@
     "oxlint": "^1.88.0",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "pyodide": "314.0.7",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.3",
     "vite": "^8.3.4",

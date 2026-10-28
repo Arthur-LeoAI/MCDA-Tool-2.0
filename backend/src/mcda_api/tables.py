@@ -10,7 +10,6 @@ import io
 import math
 from typing import Annotated, Literal
 
-import openpyxl
 from fastapi import APIRouter, File, Query, Request, UploadFile
 from pydantic import BaseModel, Field
 
@@ -115,6 +114,9 @@ def inspect_table(
         if received.suffix == ".csv":
             rows = read_csv_rows(received.data)
         else:
+            # Imported here, not at module level: importing openpyxl is slow in the browser engine (ADR 0009).
+            import openpyxl
+
             workbook = openpyxl.load_workbook(io.BytesIO(received.data), read_only=True)
             sheets = list(workbook.sheetnames)
             workbook.close()

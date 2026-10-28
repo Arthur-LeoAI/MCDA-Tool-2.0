@@ -1,11 +1,13 @@
 // The calculation engine behind /api/v1 (ADR 0009): the server (fetch) or the browser (a Pyodide worker).
-// Chosen at build time with VITE_ENGINE; the rest of the app only sees standard Responses.
+// Chosen at build time: `vite build --mode static` (npm run build:static) selects the browser engine.
+// The mode is built into Vite, so no .env file is needed (one was once excluded by .gitignore).
+// The rest of the app only sees standard Responses.
 import { useSyncExternalStore } from 'react'
 import type { EngineMessage, EnginePhase, EngineRequest } from './protocol'
 
 export type EngineKind = 'server' | 'browser'
 
-export const ENGINE: EngineKind = import.meta.env.VITE_ENGINE === 'browser' ? 'browser' : 'server'
+export const ENGINE: EngineKind = import.meta.env.MODE === 'static' ? 'browser' : 'server'
 
 const API_ROOT = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 

@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => ({
   },
   server: {
     // The FastAPI backend (see ../backend); same-origin in dev, so no CORS needed.
-    proxy: { '/api': 'http://127.0.0.1:8000' },
+    // Not for the static build: it must never reach a server (a wrong build then fails visibly).
+    proxy: mode === 'static' ? undefined : { '/api': 'http://127.0.0.1:8000' },
   },
 }))

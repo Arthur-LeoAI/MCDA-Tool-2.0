@@ -23,6 +23,7 @@ import { ApiErrorBox } from '../components/IssueList'
 import { Spinner } from '../components/ui'
 import type { MessageKey } from '../i18n/messages'
 import { useT } from '../i18n/useT'
+import { ENGINE } from '../engine'
 import { APP_PATH, navigate } from '../router'
 import { useStore } from '../store'
 
@@ -154,7 +155,9 @@ export function HomePage() {
                 </button>
                 {busy && <Spinner />}
               </div>
-              <p className="mt-4 text-xs text-slate-500">{t('home.hero.facts')}</p>
+              <p className="mt-4 text-xs text-slate-500">
+                {t(ENGINE === 'browser' ? 'home.hero.facts.browser' : 'home.hero.facts')}
+              </p>
               {error && (
                 <div className="mt-4 max-w-xl">
                   <ApiErrorBox error={error} />
@@ -217,7 +220,7 @@ export function HomePage() {
             {(['1', '2', '3'] as const).map((n) => (
               <li key={n} className="flex gap-3 rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-600">
                 <ShieldCheck className="size-5 shrink-0 text-emerald-600" />
-                {t(`home.privacy.${n}` as MessageKey)}
+                {t((n === '2' && ENGINE === 'browser' ? 'home.privacy.2.browser' : `home.privacy.${n}`) as MessageKey)}
               </li>
             ))}
           </ul>

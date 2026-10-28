@@ -15,12 +15,14 @@ import csv
 import io
 import re
 from pathlib import Path
-
-import openpyxl
+from typing import TYPE_CHECKING
 
 from ..errors import McdaError, ProblemValidationError, ValidationIssue
 from ..model import Criterion, DecisionProblem, Direction
 from ._cells import Rows, Source, as_text, cell_location, is_blank, parse_number, read_xlsx_rows
+
+if TYPE_CHECKING:
+    import openpyxl
 
 TEMPLATE_SHEET = "Decision"
 HEADER_LABELS = ("Criterion", "Direction", "Weight")
@@ -179,6 +181,9 @@ def write_problem(problem: DecisionProblem, target: Source, suffix: str | None =
         else:
             target.write(data)
     elif suffix == ".xlsx":
+        # Imported here, not at module level: importing openpyxl is slow in the browser engine (ADR 0009).
+        import openpyxl
+
         workbook = openpyxl.Workbook()
         workbook.remove(workbook.worksheets[0])  # drop the default empty sheet
         add_template_sheet(workbook, problem)

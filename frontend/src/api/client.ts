@@ -1,7 +1,5 @@
+import { EngineError, engineFetch } from '../engine'
 import type { Issue } from './types'
-
-/** All endpoints live under one versioned root; callers pass paths like "/evaluate". */
-const API_ROOT = `${import.meta.env.VITE_API_BASE ?? ''}/api/v1`
 
 /**
  * A failed API call. `code` and each issue's `code` are stable identifiers
@@ -59,9 +57,12 @@ async function toApiError(response: Response): Promise<ApiError> {
 async function request(path: string, init: RequestInit): Promise<Response> {
   let response: Response
   try {
-    response = await fetch(`${API_ROOT}${path}`, init)
+    // Paths are below /api/v1; the engine is the server or the browser (ADR 0009).
+    response = await engineFetch(path, init)
   } catch (error) {
     if ((error as Error).name === 'AbortError') throw error
+    if (error instanceof EngineError)
+      throw new ApiError(0, 'engine', error.message, { params: { detail: error.message } })
     throw new ApiError(0, 'network', (error as Error).message)
   }
   if (!response.ok) throw await toApiError(response)

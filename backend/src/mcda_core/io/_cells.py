@@ -6,17 +6,23 @@ import math
 from pathlib import Path
 from typing import BinaryIO
 
-import openpyxl
-from openpyxl.utils import get_column_letter
-
 from ..errors import Location
 
 Rows = list[list[object]]
 
 
+def column_letter(index: int) -> str:
+    """Excel column name for a 1-based index: 1 -> 'A', 27 -> 'AA'."""
+    letters = ""
+    while index:
+        index, rest = divmod(index - 1, 26)
+        letters = chr(ord("A") + rest) + letters
+    return letters
+
+
 def cell_ref(row: int, col: int) -> str:
     """Excel-style reference for 0-based indices, e.g. (2, 1) -> 'B3'."""
-    return f"{get_column_letter(col + 1)}{row + 1}"
+    return f"{column_letter(col + 1)}{row + 1}"
 
 
 def cell_location(row: int, col: int) -> Location:
@@ -51,6 +57,9 @@ def read_xlsx_rows(source: Source, prefer_sheet: str | None = None) -> Rows:
 
     Uses the sheet named ``prefer_sheet`` if present, else the first sheet.
     """
+    # Imported here, not at module level: importing openpyxl is slow in the browser engine (ADR 0009).
+    import openpyxl
+
     workbook = openpyxl.load_workbook(source, data_only=True, read_only=True)
     try:
         sheets = workbook.sheetnames

@@ -98,6 +98,7 @@ const zh: Record<string, string> = {
   empty_selection: '请至少选择一个准则',
   internal_error: '服务器内部错误',
   network: '无法连接后端服务，请确认 API 已启动（端口 8000）。',
+  engine: '浏览器里的计算引擎无法启动：{detail}。请刷新页面重试。',
   unknown: '发生了未知错误',
 }
 
@@ -191,6 +192,7 @@ const en: Record<string, string> = {
   empty_selection: 'Select at least one criterion',
   internal_error: 'Internal server error',
   network: 'Cannot reach the backend. Is the API running (port 8000)?',
+  engine: 'The calculation engine in your browser could not start: {detail}. Please reload the page.',
   unknown: 'Something went wrong',
 }
 

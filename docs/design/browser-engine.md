@@ -13,7 +13,7 @@ To host the site for free on Cloudflare, it must consist of static files only. T
   - **server**: `fetch` to `/api/v1` (today's behavior).
   - **browser**: the request goes to a Web Worker; the worker answers with status, headers and body, and the main thread turns that into a `Response`.
 - `api/client.ts` sends every request through the engine, so JSON calls, uploads (`FormData`) and downloads (reports, templates) work unchanged.
-- The engine is fixed at build time with `VITE_ENGINE=server|browser` (default `server`). `npm run build:static` builds the browser version.
+- The engine is fixed at build time by Vite's build mode: `npm run build:static` (`vite build --mode static`) builds the browser version, every other build the server version.
 
 ## The worker
 

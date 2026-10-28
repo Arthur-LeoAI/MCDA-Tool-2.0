@@ -33,3 +33,20 @@ test('home page: English by default, Chinese on request', async ({ page }) => {
   await page.getByRole('button', { name: '中文' }).click()
   await expect(page.getByRole('heading', { name: '比较多个方案，做出有依据的选择', level: 1 })).toBeVisible()
 })
+
+test('the build uses the calculation engine of its test project', async ({ page }, testInfo) => {
+  // Guards against a static build that silently falls back to the server (ADR 0009).
+  const browserEngine = testInfo.project.name === 'browser'
+  const apiRequests: string[] = []
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname.startsWith('/api/')) apiRequests.push(request.url())
+  })
+  await page.goto('/')
+  await expect(
+    page.getByText(browserEngine ? /Your data never leave your browser/ : /The server keeps none of your data/),
+  ).toBeVisible()
+  await page.getByRole('button', { name: 'Try it with example data' }).click()
+  await expect(page.getByText('6 product(s), 10 criteria')).toBeVisible()
+  if (browserEngine) expect(apiRequests).toEqual([])
+  else expect(apiRequests.length).toBeGreaterThan(0)
+})

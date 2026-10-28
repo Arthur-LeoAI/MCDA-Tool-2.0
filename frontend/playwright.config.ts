@@ -31,8 +31,9 @@ export default defineConfig({
       // The static build: Python starts in each new browser context, so allow for that.
       name: 'browser',
       use: { ...devices['Desktop Chrome'], channel: CI ? undefined : 'msedge', baseURL: 'http://localhost:4331' },
-      timeout: 180_000,
-      expect: { timeout: 60_000 },
+      // Two tests may start Python at the same time; on a busy machine that can take over a minute.
+      timeout: 240_000,
+      expect: { timeout: 120_000 },
     },
   ],
   webServer: [

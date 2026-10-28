@@ -67,6 +67,10 @@ This file records all notable changes. The format is based on [Keep a Changelog]
   - Request IDs (`X-Request-ID`) and structured logging (`MCDA_LOG_FORMAT=json`).
   - CONTRIBUTING, SECURITY, ADRs, Apache-2.0 license.
 
+### Fixed
+
+- The static build (`npm run build:static`) now always uses the browser engine. It used to depend on `frontend/.env.static`, which `.gitignore` excluded, so builds from GitHub (Cloudflare, CI) silently used the server engine. The static build no longer proxies `/api`, and a test checks which engine each build uses.
+
 ### Changed
 
 - English is the default interface language; Chinese remains available through the language switch, and Chinese column names and values are still recognized on import. Projects and templates default to English.

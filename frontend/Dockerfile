@@ -1,5 +1,5 @@
 # Build the static app, then serve it with nginx, which also forwards /api to the API container.
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci

@@ -1,5 +1,5 @@
 # API image: dependencies are installed in a separate layer, so code changes rebuild quickly.
-FROM python:3.14-slim
+FROM python:3.15-slim
 
 COPY --from=ghcr.io/astral-sh/uv:0.11.11 /uv /bin/uv
 
